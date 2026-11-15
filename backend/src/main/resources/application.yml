@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: mogo-backend
+  datasource:
+    url: jdbc:sqlite:data/mogo.db
+    driver-class-name: org.sqlite.JDBC
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  jackson:
+    time-zone: Asia/Shanghai
+
+server:
+  port: 8080
+
+mogo:
+  cors-origins: http://localhost:3000,http://localhost:3001
