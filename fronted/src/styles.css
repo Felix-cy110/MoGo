@@ -86,3 +86,50 @@ button, input, select, textarea { font: inherit; }
 .notice-success { border-color: #bbf7d0; background: #f0fdf4; color: #15803d; }
 .dark .notice-error { border-color: #7f1d1d; background: #450a0a; color: #fecaca; }
 .dark .notice-success { border-color: #166534; background: #052e16; color: #bbf7d0; }
+
+.tool-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.875rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 0.25rem;
+  color: inherit;
+  cursor: pointer;
+}
+.tool-row:first-child { border-top: 1px solid #e2e8f0; }
+.tool-row:hover { background: #f8fafc; }
+.dark .tool-row { border-color: #1e293b; }
+.dark .tool-row:hover { background: #0f172a; }
+
+.tool-row-icon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  place-items: center;
+  border-radius: 0.5rem;
+  background: #e2e8f0;
+  font-weight: 600;
+  color: #334155;
+}
+.dark .tool-row-icon { background: #1e293b; color: #e2e8f0; }
+
+.back-button {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  line-height: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  color: #475569;
+  cursor: pointer;
+}
+.back-button svg { display: block; }
+.back-button:hover { background: #f8fafc; }
+.back-button:focus-visible { outline: 2px solid #64748b; outline-offset: 2px; }
+.dark .back-button { border-color: #475569; color: #cbd5e1; }
+.dark .back-button:hover { background: #1e293b; }
