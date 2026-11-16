@@ -1,39 +1,9 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { zhFinanceMessages } from '@mogo/finance-core';
 
 const resources = {
-  zh: {
-    translation: {
-      appName: 'MoGo',
-      appSubtitle: '个人财务管理',
-      today: '今天',
-      budget: '每日预算',
-      budgetPlaceholder: '输入今日最多可花金额',
-      saveBudget: '保存预算',
-      spent: '已消费',
-      remaining: '剩余预算',
-      usage: '预算使用率',
-      addExpense: '记一笔',
-      amount: '金额',
-      amountPlaceholder: '例如 25.50',
-      category: '分类',
-      note: '备注',
-      notePlaceholder: '写点说明（可选）',
-      noteRequired: '该分类必须填写备注',
-      submit: '保存记录',
-      recentExpenses: '今日记录',
-      noExpenses: '今天还没有消费记录',
-      categorySummary: '分类汇总',
-      warning: '预算预警',
-      alertWarning: '今天的消费已达到每日预算的 80%。',
-      alertExceeded: '今天已经超出每日预算，请注意控制消费。',
-      budgetMissing: '请先设置今日预算',
-      saved: '已保存',
-      loadFailed: '数据加载失败，请确认后端服务已启动',
-      saveFailed: '保存失败，请稍后重试',
-      currency: '元'
-    }
-  }
+  zh: { translation: zhFinanceMessages }
 };
 
 i18n.use(initReactI18next).init({
