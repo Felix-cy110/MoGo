@@ -31,6 +31,10 @@ handle_signal() {
 cleanup() {
   local exit_code=$?
 
+  if [[ -z "$FRONTEND_PID" && -z "$BACKEND_PID" ]]; then
+    return
+  fi
+
   if [[ "$SHUTTING_DOWN" -eq 1 ]]; then
     return
   fi
@@ -53,8 +57,42 @@ trap handle_signal INT TERM
 require_command npm
 require_command mvn
 require_command pgrep
+require_command lsof
 
 cd "$ROOT_DIR"
+
+port_pid() {
+  lsof -nP -tiTCP:"$1" -sTCP:LISTEN 2>/dev/null | head -n 1
+}
+
+process_summary() {
+  local pid="$1"
+  ps -p "$pid" -o command= 2>/dev/null | cut -c1-120
+}
+
+WEB_PID="$(port_pid 3000)"
+API_PID="$(port_pid 8080)"
+
+if [[ -n "$WEB_PID" && -n "$API_PID" ]]; then
+  printf 'MoGo 已经在运行，无需重复启动。\n'
+  printf '  Web：  http://localhost:3000（PID %s）\n' "$WEB_PID"
+  printf '  API：  http://localhost:8080（PID %s）\n' "$API_PID"
+  exit 0
+fi
+
+if [[ -n "$WEB_PID" ]]; then
+  printf '无法启动：Web 端口 3000 已被占用。\n' >&2
+  printf '  PID %s：%s\n' "$WEB_PID" "$(process_summary "$WEB_PID")" >&2
+  printf '请先停止该进程，再重新运行 make dev-gui。\n' >&2
+  exit 1
+fi
+
+if [[ -n "$API_PID" ]]; then
+  printf '无法启动：API 端口 8080 已被占用。\n' >&2
+  printf '  PID %s：%s\n' "$API_PID" "$(process_summary "$API_PID")" >&2
+  printf '请先停止该进程，再重新运行 make dev-gui。\n' >&2
+  exit 1
+fi
 
 if [[ ! -d node_modules ]]; then
   printf '首次启动，正在安装前端依赖...\n'
