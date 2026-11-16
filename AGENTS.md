@@ -32,3 +32,12 @@
 - 涉及数据库结构或持久化行为的变更，需要考虑兼容已有数据和升级路径。
 - 前后端接口应保持稳定、明确，并尽量复用共享的数据模型或协议约定。
 - 完成改动后，运行与变更范围匹配的构建、检查和测试。
+
+## Git 提交与 Pull Request 规范
+
+- 所有 Git commit message 必须遵循 Conventional Commits 规范。
+- 所有 Pull Request 标题必须遵循 Conventional Commits 规范。
+- 推荐格式：`<type>(<scope>): <description>`；没有明确 scope 时可使用 `<type>: <description>`。
+- 常用 type 包括 `feat`、`fix`、`docs`、`refactor`、`test`、`build`、`ci`、`chore` 和 `perf`。
+- description 应简洁明确，描述本次提交或 PR 的实际变更，不使用含糊标题。
+- 存在破坏性变更时，应使用 `!` 标记或在正文中添加 `BREAKING CHANGE:` 说明。
