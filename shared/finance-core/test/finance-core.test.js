@@ -74,3 +74,12 @@ test('formats currency and dates for the active language', async () => {
   assert.notEqual(formatDisplayDate('2026-11-16', 'zh'), formatDisplayDate('2026-11-16', 'en'));
   assert.doesNotThrow(() => formatTime('2026-11-16T08:30:00', 'en'));
 });
+
+
+test('includes localized color theme controls', async () => {
+  const { financeMessages } = await import('../src/index.js');
+  assert.equal(financeMessages.zh.switchToLightTheme, '开灯');
+  assert.equal(financeMessages.zh.switchToDarkTheme, '关灯');
+  assert.equal(financeMessages.en.switchToLightTheme, 'Turn on the lights');
+  assert.equal(financeMessages.en.switchToDarkTheme, 'Turn off the lights');
+});

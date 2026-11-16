@@ -9,7 +9,7 @@
 - `shared/finance-react/`：Web 与未来 React Native 共用的 React Hook 和页面状态
 - `backend/`：JDK 17、Spring Boot、Maven 和 SQLite 后端
 - `docs/frontend-architecture.md`：前端跨平台复用边界和开发规则
-- 全局支持中文和英文，可在页面右上角切换；Web 会保存上次选择的语言
+- 全局支持中文和英文以及明暗主题，可在页面右上角切换；Web 会保存上次选择的语言和主题
 
 ## 安装依赖
 
