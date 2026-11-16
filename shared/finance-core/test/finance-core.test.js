@@ -83,3 +83,10 @@ test('includes localized color theme controls', async () => {
   assert.equal(financeMessages.en.switchToLightTheme, 'Turn on the lights');
   assert.equal(financeMessages.en.switchToDarkTheme, 'Turn off the lights');
 });
+
+test('validates and normalizes custom category drafts', async () => {
+  const { buildCategoryPayload, validateCategoryDraft } = await import('../src/index.js');
+  assert.equal(validateCategoryDraft({ name: '  ' }), 'categoryNameRequired');
+  assert.equal(validateCategoryDraft({ name: '日用品' }), null);
+  assert.deepEqual(buildCategoryPayload({ name: '  日用品  ' }), { name: '日用品' });
+});

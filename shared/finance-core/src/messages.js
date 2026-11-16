@@ -24,6 +24,14 @@ export const financeMessages = Object.freeze({
     budgetWithCurrency: '每日预算（元）',
     amountPlaceholder: '例如 25.50',
     category: '分类',
+    manageCategories: '管理分类',
+    addCategory: '添加分类',
+    categoryName: '分类名称',
+    categoryNamePlaceholder: '例如：日用品',
+    categoryNameRequired: '请输入分类名称',
+    categoryNameExists: '该分类名称已经存在',
+    customCategoryHint: '新增后会直接出现在记账分类中，备注默认为选填',
+    cancel: '取消',
     note: '备注',
     noteOptional: '备注（选填）',
     noteRequiredLabel: '备注（必填）',
@@ -76,6 +84,14 @@ export const financeMessages = Object.freeze({
     budgetWithCurrency: 'Daily budget (CNY)',
     amountPlaceholder: 'e.g. 25.50',
     category: 'Category',
+    manageCategories: 'Manage categories',
+    addCategory: 'Add category',
+    categoryName: 'Category name',
+    categoryNamePlaceholder: 'e.g. Household',
+    categoryNameRequired: 'Enter a category name',
+    categoryNameExists: 'A category with this name already exists',
+    customCategoryHint: 'New categories appear immediately and notes are optional by default',
+    cancel: 'Cancel',
     note: 'Note',
     noteOptional: 'Note (optional)',
     noteRequiredLabel: 'Note (required)',
@@ -122,7 +138,8 @@ export const apiErrorMessageKeys = Object.freeze({
   CATEGORY_NOT_FOUND: 'categoryNotFound',
   NOTE_REQUIRED: 'noteRequired',
   VALIDATION_ERROR: 'validationError',
-  REQUEST_FAILED: 'requestFailed'
+  REQUEST_FAILED: 'requestFailed',
+  CATEGORY_NAME_EXISTS: 'categoryNameExists'
 });
 
 export const resolveCategoryMessageKey = (category) =>

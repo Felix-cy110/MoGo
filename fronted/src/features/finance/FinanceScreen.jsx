@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDisplayDate } from '@mogo/finance-core';
 import { useDailyFinance } from '@mogo/finance-react';
@@ -6,6 +6,7 @@ import { api } from '../../services/api';
 import { useColorTheme } from '../../hooks/useColorTheme';
 import { AlertDialog } from './components/AlertDialog';
 import { BudgetOverview } from './components/BudgetOverview';
+import { CategoryDialog } from './components/CategoryDialog';
 import { CategorySummary } from './components/CategorySummary';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseList } from './components/ExpenseList';
@@ -17,6 +18,7 @@ export function FinanceScreen() {
   const language = i18n.resolvedLanguage || i18n.language;
   const finance = useDailyFinance({ api });
   const { isDark, toggleTheme } = useColorTheme();
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const feedbackText = finance.feedback ? t(finance.feedback.key) : '';
 
   useEffect(() => {
@@ -34,6 +36,11 @@ export function FinanceScreen() {
   const handleAddExpense = async (event) => {
     event.preventDefault();
     await finance.addExpense();
+  };
+
+  const handleAddCategory = async (event) => {
+    event.preventDefault();
+    if (await finance.addCategory()) setCategoryDialogOpen(false);
   };
 
   return (
@@ -72,6 +79,7 @@ export function FinanceScreen() {
             form={finance.form}
             selectedCategory={finance.selectedCategory}
             onFormChange={updateForm}
+            onManageCategories={() => setCategoryDialogOpen(true)}
             onSubmit={handleAddExpense}
           />
           <ExpenseList t={t} language={language} expenses={finance.dashboard?.expenses} />
@@ -80,6 +88,16 @@ export function FinanceScreen() {
         <CategorySummary t={t} language={language} categoryTotals={finance.dashboard?.categoryTotals} />
       </div>
 
+      <CategoryDialog
+        t={t}
+        open={categoryDialogOpen}
+        form={finance.categoryForm}
+        onFormChange={(patch) => finance.setCategoryForm((current) => ({ ...current, ...patch }))}
+        feedback={finance.feedback}
+        feedbackText={feedbackText}
+        onClose={() => setCategoryDialogOpen(false)}
+        onSubmit={handleAddCategory}
+      />
       <AlertDialog t={t} alerts={finance.alerts} onDismiss={finance.dismissAlerts} />
     </main>
   );

@@ -26,6 +26,10 @@ export const createFinanceApi = ({ baseUrl = '', fetchImpl = globalThis.fetch } 
 
   return Object.freeze({
     getCategories: () => request('/categories'),
+    addCategory: (payload) => request('/categories', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }),
     getDashboard: (date) => request(`/dashboard?date=${encodeURIComponent(date)}`),
     saveBudget: (date, amountCents) => request('/budgets/daily', {
       method: 'PUT',

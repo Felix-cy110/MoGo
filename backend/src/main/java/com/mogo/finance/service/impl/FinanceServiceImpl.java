@@ -2,6 +2,7 @@ package com.mogo.finance.service.impl;
 
 import com.mogo.finance.entity.*;
 import com.mogo.finance.entity.ApiModels.BudgetRequest;
+import com.mogo.finance.entity.ApiModels.CategoryRequest;
 import com.mogo.finance.entity.ApiModels.ExpenseRequest;
 import com.mogo.finance.entity.ApiModels.ExpenseResponse;
 import com.mogo.finance.repository.*;
@@ -15,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
 
 @Service
 public class FinanceServiceImpl implements FinanceService {
@@ -44,8 +47,29 @@ public class FinanceServiceImpl implements FinanceService {
     public List<ExpenseCategoryView> getCategories() {
         return categoryRepository.findByActiveTrueOrderBySortOrderAscIdAsc().stream()
                 .map(category -> new ExpenseCategoryView(category.getId(), category.getCode(), category.getName(),
-                        category.getI18nKey(), category.getNotePolicy(), category.getSortOrder()))
+                        category.getI18nKey(), category.getNotePolicy(), category.isSystem(), category.getSortOrder()))
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public ExpenseCategoryView addCategory(CategoryRequest request) {
+        String name = request.name().trim();
+        if (categoryRepository.existsByNameIgnoreCase(name)) {
+            throw new FinanceException(HttpStatus.CONFLICT, "CATEGORY_NAME_EXISTS", "分类名称已存在");
+        }
+
+        ExpenseCategoryEntity category = new ExpenseCategoryEntity();
+        category.setCode("CUSTOM_" + UUID.randomUUID().toString().replace("-", "").toUpperCase(Locale.ROOT));
+        category.setName(name);
+        category.setI18nKey(null);
+        category.setNotePolicy("OPTIONAL");
+        category.setSystem(false);
+        category.setActive(true);
+        category.setSortOrder(categoryRepository.findMaxSortOrder() + 10);
+        category = categoryRepository.save(category);
+        return new ExpenseCategoryView(category.getId(), category.getCode(), category.getName(),
+                category.getI18nKey(), category.getNotePolicy(), category.isSystem(), category.getSortOrder());
     }
 
     @Override

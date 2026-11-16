@@ -1,7 +1,7 @@
 import React from 'react';
 import { NOTE_POLICY, resolveCategoryMessageKey } from '@mogo/finance-core';
 
-export function ExpenseForm({ t, categories, form, selectedCategory, onFormChange, onSubmit }) {
+export function ExpenseForm({ t, categories, form, selectedCategory, onFormChange, onManageCategories, onSubmit }) {
   return (
     <form onSubmit={onSubmit}>
       <h2 className="section-title">{t('addExpense')}</h2>
@@ -19,7 +19,12 @@ export function ExpenseForm({ t, categories, form, selectedCategory, onFormChang
         required
       />
 
-      <label className="form-label mt-4" htmlFor="category">{t('category')}</label>
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <label className="form-label" htmlFor="category">{t('category')}</label>
+        <button className="text-sm text-slate-500 underline-offset-4 hover:underline dark:text-slate-400" type="button" onClick={onManageCategories}>
+          {t('addCategory')}
+        </button>
+      </div>
       <select
         id="category"
         className="field mt-2"

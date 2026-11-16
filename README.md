@@ -10,6 +10,7 @@
 - `backend/`：JDK 17、Spring Boot、Maven 和 SQLite 后端
 - `docs/frontend-architecture.md`：前端跨平台复用边界和开发规则
 - 全局支持中文和英文以及明暗主题，可在页面右上角切换；Web 会保存上次选择的语言和主题
+- 内置正餐、通勤、随心吃和其他分类，也支持新增自定义消费分类；自定义分类的备注默认为选填
 
 ## 安装依赖
 
