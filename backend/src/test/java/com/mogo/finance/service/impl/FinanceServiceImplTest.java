@@ -46,13 +46,13 @@ class FinanceServiceImplTest {
         when(categoryRepository.findMaxSortOrder()).thenReturn(40);
         when(categoryRepository.save(org.mockito.ArgumentMatchers.any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        var result = service.addCategory(new CategoryRequest("  日用品  ", "REQUIRED"));
+        var result = service.addCategory(new CategoryRequest("  日用品  "));
 
         ArgumentCaptor<ExpenseCategoryEntity> captor = ArgumentCaptor.forClass(ExpenseCategoryEntity.class);
         verify(categoryRepository).save(captor.capture());
         ExpenseCategoryEntity saved = captor.getValue();
         assertEquals("日用品", saved.getName());
-        assertEquals("REQUIRED", saved.getNotePolicy());
+        assertEquals("OPTIONAL", saved.getNotePolicy());
         assertEquals(50, saved.getSortOrder());
         assertTrue(saved.isActive());
         assertFalse(saved.isSystem());
@@ -66,7 +66,7 @@ class FinanceServiceImplTest {
         when(categoryRepository.existsByNameIgnoreCase("日用品")).thenReturn(true);
 
         FinanceException exception = assertThrows(FinanceException.class,
-                () -> service.addCategory(new CategoryRequest("日用品", "OPTIONAL")));
+                () -> service.addCategory(new CategoryRequest("日用品")));
 
         assertEquals("CATEGORY_NAME_EXISTS", exception.getCode());
         verify(categoryRepository, never()).save(org.mockito.ArgumentMatchers.any());

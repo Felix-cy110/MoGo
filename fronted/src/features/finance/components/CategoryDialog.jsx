@@ -1,5 +1,4 @@
 import React from 'react';
-import { NOTE_POLICY } from '@mogo/finance-core';
 
 export function CategoryDialog({ t, open, form, feedback, feedbackText, onFormChange, onClose, onSubmit }) {
   if (!open) return null;
@@ -23,17 +22,6 @@ export function CategoryDialog({ t, open, form, feedback, feedbackText, onFormCh
           autoFocus
           required
         />
-
-        <label className="form-label mt-4" htmlFor="category-note-policy">{t('notePolicy')}</label>
-        <select
-          id="category-note-policy"
-          className="field mt-2"
-          value={form.notePolicy}
-          onChange={(event) => onFormChange({ notePolicy: event.target.value })}
-        >
-          <option value={NOTE_POLICY.OPTIONAL}>{t('notePolicyOptional')}</option>
-          <option value={NOTE_POLICY.REQUIRED}>{t('notePolicyRequired')}</option>
-        </select>
 
         <div className="mt-6 flex justify-end gap-2">
           <button className="button-secondary" type="button" onClick={onClose}>{t('cancel')}</button>

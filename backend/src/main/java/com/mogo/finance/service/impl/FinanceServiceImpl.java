@@ -63,7 +63,7 @@ public class FinanceServiceImpl implements FinanceService {
         category.setCode("CUSTOM_" + UUID.randomUUID().toString().replace("-", "").toUpperCase(Locale.ROOT));
         category.setName(name);
         category.setI18nKey(null);
-        category.setNotePolicy(request.notePolicy());
+        category.setNotePolicy("OPTIONAL");
         category.setSystem(false);
         category.setActive(true);
         category.setSortOrder(categoryRepository.findMaxSortOrder() + 10);

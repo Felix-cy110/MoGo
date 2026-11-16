@@ -13,7 +13,7 @@ import {
 } from '@mogo/finance-core';
 
 const EMPTY_FORM = Object.freeze({ amount: '', categoryId: '', note: '' });
-const EMPTY_CATEGORY_FORM = Object.freeze({ name: '', notePolicy: 'OPTIONAL' });
+const EMPTY_CATEGORY_FORM = Object.freeze({ name: '' });
 
 export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
   const [date] = useState(initialDate);
