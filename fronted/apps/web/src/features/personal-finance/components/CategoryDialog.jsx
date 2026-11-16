@@ -1,4 +1,5 @@
 import React from 'react';
+import { FormFieldRow } from './FormFieldRow';
 
 export function CategoryDialog({ t, open, form, feedback, feedbackText, onFormChange, onClose, onSubmit }) {
   if (!open) return null;
@@ -10,18 +11,21 @@ export function CategoryDialog({ t, open, form, feedback, feedbackText, onFormCh
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t('customCategoryHint')}</p>
         {feedback?.type === 'error' && <div className="notice notice-error mt-4 mb-0">{feedbackText}</div>}
 
-        <label className="form-label mt-5" htmlFor="category-name">{t('categoryName')}</label>
-        <input
-          id="category-name"
-          className="field mt-2"
-          type="text"
-          maxLength="80"
-          value={form.name}
-          onChange={(event) => onFormChange({ name: event.target.value })}
-          placeholder={t('categoryNamePlaceholder')}
-          autoFocus
-          required
-        />
+        <div className="form-sheet mt-5">
+          <FormFieldRow label={t('categoryName')} htmlFor="category-name">
+            <input
+              id="category-name"
+              className="field form-row-field"
+              type="text"
+              maxLength="80"
+              value={form.name}
+              onChange={(event) => onFormChange({ name: event.target.value })}
+              placeholder={t('categoryNamePlaceholder')}
+              autoFocus
+              required
+            />
+          </FormFieldRow>
+        </div>
 
         <div className="mt-6 flex justify-end gap-2">
           <button className="button-secondary" type="button" onClick={onClose}>{t('cancel')}</button>
