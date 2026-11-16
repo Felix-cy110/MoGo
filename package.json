@@ -1,0 +1,18 @@
+{
+  "name": "mogo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "fronted",
+    "shared/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace mogo-fronted",
+    "build:web": "npm run build --workspace mogo-fronted",
+    "test:shared": "npm test --workspace @mogo/finance-core",
+    "check": "npm run test:shared && npm run build:web"
+  },
+  "devDependencies": {
+    "react": "18.3.1"
+  }
+}

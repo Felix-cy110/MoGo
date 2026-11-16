@@ -41,3 +41,14 @@
 - 常用 type 包括 `feat`、`fix`、`docs`、`refactor`、`test`、`build`、`ci`、`chore` 和 `perf`。
 - description 应简洁明确，描述本次提交或 PR 的实际变更，不使用含糊标题。
 - 存在破坏性变更时，应使用 `!` 标记或在正文中添加 `BREAKING CHANGE:` 说明。
+
+## 前端跨平台复用规范
+
+- Web 与未来 React Native 手机端采用“共享业务逻辑，平台独立渲染”的架构。
+- 与平台无关的领域逻辑、数据协议、金额和日期工具、校验规则、API 客户端及 i18n 业务文案放入 `shared/finance-core`。
+- 可由 Web 和 React Native 共用的 React 状态与业务流程放入 `shared/finance-react`，优先通过 Hook 暴露。
+- Web 的 HTML、DOM、Tailwind 样式和浏览器交互只允许存在于 `fronted/`；React Native 原生组件只允许存在于未来的手机端目录。
+- 共享模块不得依赖 `window`、`document`、`localStorage` 等浏览器专属能力，也不得依赖 React Native 专属模块；平台能力必须通过参数或适配器注入。
+- 不强求直接复用 Web 和 React Native 的视图组件。优先复用业务逻辑、状态管理、接口协议、校验规则和展示模型，避免在共享代码中堆积平台判断。
+- 新增业务规则时优先修改共享模块并补充单元测试，禁止在 Web 与 React Native 中分别实现同一规则。
+- 具体目录职责和依赖关系见 `docs/frontend-architecture.md`。
