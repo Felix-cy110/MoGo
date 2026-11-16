@@ -17,7 +17,6 @@ export function ToolboxHome({ onOpenFinance }) {
         <div className="mx-auto flex max-w-xl items-center justify-between gap-5 px-5 py-5">
           <div>
             <h1 className="text-xl font-semibold">{t('toolboxName')}</h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t('toolboxSubtitle')}</p>
           </div>
           <AppControls />
         </div>
