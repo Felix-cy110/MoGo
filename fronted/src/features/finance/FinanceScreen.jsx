@@ -3,21 +3,18 @@ import { useTranslation } from 'react-i18next';
 import { formatDisplayDate } from '@mogo/finance-core';
 import { useDailyFinance } from '@mogo/finance-react';
 import { api } from '../../services/api';
-import { useColorTheme } from '../../hooks/useColorTheme';
+import { AppControls } from '../../components/AppControls';
 import { AlertDialog } from './components/AlertDialog';
 import { BudgetOverview } from './components/BudgetOverview';
 import { CategoryDialog } from './components/CategoryDialog';
 import { CategorySummary } from './components/CategorySummary';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseList } from './components/ExpenseList';
-import { LanguageSwitcher } from './components/LanguageSwitcher';
-import { ThemeSwitcher } from './components/ThemeSwitcher';
 
-export function FinanceScreen() {
+export function FinanceScreen({ onBack }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
   const finance = useDailyFinance({ api });
-  const { isDark, toggleTheme } = useColorTheme();
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const feedbackText = finance.feedback ? t(finance.feedback.key) : '';
 
@@ -47,15 +44,14 @@ export function FinanceScreen() {
     <main className="min-h-screen bg-white text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
       <header className="border-b border-slate-200 dark:border-slate-800">
         <div className="mx-auto flex max-w-5xl items-end justify-between gap-5 px-5 py-5 sm:px-8">
-          <div>
-            <h1 className="text-xl font-semibold">{t('appName')}</h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t('appSubtitle')}</p>
+          <div className="flex min-w-0 items-center gap-3">
+            <button className="back-button" type="button" onClick={onBack} aria-label={t('backToToolbox')}>‹</button>
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-semibold">{t('financeFeatureName')}</h1>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatDisplayDate(finance.date, language)}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <ThemeSwitcher t={t} isDark={isDark} onToggle={toggleTheme} />
-            <LanguageSwitcher t={t} language={language} onChange={i18n.changeLanguage} />
-            <time className="hidden text-sm text-slate-500 dark:text-slate-400 sm:block">{formatDisplayDate(finance.date, language)}</time>
-          </div>
+          <AppControls />
         </div>
       </header>
 
