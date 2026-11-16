@@ -1,7 +1,7 @@
 import React from 'react';
-import { centsToYuan } from '@mogo/finance-core';
+import { formatMoney, resolveCategoryMessageKey } from '@mogo/finance-core';
 
-export function CategorySummary({ t, categoryTotals = [] }) {
+export function CategorySummary({ t, language, categoryTotals = [] }) {
   return (
     <section className="border-t border-slate-200 pt-7">
       <h2 className="section-title">{t('categorySummary')}</h2>
@@ -11,22 +11,25 @@ export function CategorySummary({ t, categoryTotals = [] }) {
             <thead>
               <tr className="border-b border-slate-200 text-slate-500">
                 <th className="py-2 font-medium">{t('category')}</th>
-                <th className="py-2 text-right font-medium">笔数</th>
-                <th className="py-2 text-right font-medium">金额</th>
+                <th className="py-2 text-right font-medium">{t('count')}</th>
+                <th className="py-2 text-right font-medium">{t('amount')}</th>
               </tr>
             </thead>
             <tbody>
-              {categoryTotals.map((item) => (
-                <tr className="border-b border-slate-100" key={item.categoryId}>
-                  <td className="py-3">{item.categoryName}</td>
-                  <td className="py-3 text-right text-slate-500">{item.expenseCount}</td>
-                  <td className="py-3 text-right font-medium tabular-nums">¥{centsToYuan(item.amountCents)}</td>
-                </tr>
-              ))}
+              {categoryTotals.map((item) => {
+                const categoryKey = resolveCategoryMessageKey({ code: item.categoryCode });
+                return (
+                  <tr className="border-b border-slate-100" key={item.categoryId}>
+                    <td className="py-3">{categoryKey ? t(categoryKey) : item.categoryName}</td>
+                    <td className="py-3 text-right text-slate-500">{item.expenseCount}</td>
+                    <td className="py-3 text-right font-medium tabular-nums">{formatMoney(item.amountCents, language)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-      ) : <p className="mt-3 text-sm text-slate-400">暂无分类数据</p>}
+      ) : <p className="mt-3 text-sm text-slate-400">{t('noCategoryData')}</p>}
     </section>
   );
 }

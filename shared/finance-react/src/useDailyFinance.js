@@ -5,6 +5,7 @@ import {
   createClientRequestId,
   findCategory,
   formatLocalDate,
+  resolveApiErrorMessageKey,
   validateExpenseDraft,
   yuanToCents
 } from '@mogo/finance-core';
@@ -40,7 +41,7 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
   }, [api, date]);
 
   useEffect(() => {
-    refresh().catch((error) => setFeedback({ type: 'error', key: 'loadFailed', message: error.message }));
+    refresh().catch(() => setFeedback({ type: 'error', key: 'loadFailed' }));
   }, [refresh]);
 
   const saveBudget = useCallback(async () => {
@@ -51,7 +52,7 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
       setFeedback({ type: 'success', key: 'saved' });
       return true;
     } catch (error) {
-      setFeedback({ type: 'error', key: 'saveFailed', message: error.message });
+      setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
       return false;
     }
   }, [api, budgetInput, date, refresh]);
@@ -83,7 +84,7 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
       await refresh();
       return true;
     } catch (error) {
-      setFeedback({ type: 'error', key: 'saveFailed', message: error.message });
+      setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
       return false;
     }
   }, [api, dashboard?.budgetSet, date, form, refresh, selectedCategory]);
