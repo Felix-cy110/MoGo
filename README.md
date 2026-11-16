@@ -5,8 +5,8 @@
 ## 目录
 
 - `fronted/`：React、Tailwind CSS、i18next 和 Rsbuild Web 调试端，首页按功能列表组织
-- `shared/finance-core/`：Web 与未来 React Native 共用的领域逻辑、API 客户端和业务文案
-- `shared/finance-react/`：Web 与未来 React Native 共用的 React Hook 和页面状态
+- `fronted/shared/finance-core/`：Web 与未来 React Native 共用的领域逻辑、API 客户端和业务文案
+- `fronted/shared/finance-react/`：Web 与未来 React Native 共用的 React Hook 和页面状态
 - `backend/`：JDK 17、Spring Boot、Maven 和 SQLite 后端
 - `docs/frontend-architecture.md`：前端跨平台复用边界和开发规则
 - 全局支持中文和英文以及明暗主题，可在页面右上角切换；Web 会保存上次选择的语言和主题
