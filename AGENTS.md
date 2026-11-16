@@ -45,8 +45,8 @@
 ## 前端跨平台复用规范
 
 - Web 与未来 React Native 手机端采用“共享业务逻辑，平台独立渲染”的架构。
-- 与平台无关的领域逻辑、数据协议、金额和日期工具、校验规则、API 客户端及 i18n 业务文案放入 `shared/finance-core`。
-- 可由 Web 和 React Native 共用的 React 状态与业务流程放入 `shared/finance-react`，优先通过 Hook 暴露。
+- 与平台无关的领域逻辑、数据协议、金额和日期工具、校验规则、API 客户端及 i18n 业务文案放入 `fronted/shared/finance-core`。
+- 可由 Web 和 React Native 共用的 React 状态与业务流程放入 `fronted/shared/finance-react`，优先通过 Hook 暴露。
 - Web 的 HTML、DOM、Tailwind 样式和浏览器交互只允许存在于 `fronted/`；React Native 原生组件只允许存在于未来的手机端目录。
 - 共享模块不得依赖 `window`、`document`、`localStorage` 等浏览器专属能力，也不得依赖 React Native 专属模块；平台能力必须通过参数或适配器注入。
 - 不强求直接复用 Web 和 React Native 的视图组件。优先复用业务逻辑、状态管理、接口协议、校验规则和展示模型，避免在共享代码中堆积平台判断。
@@ -56,7 +56,7 @@
 ## 国际化规范
 
 - 所有面向用户的界面文案必须接入 i18n，不允许在 Web 或未来 React Native 组件中硬编码中文或英文。
-- Web 与 React Native 共用的业务文案、分类翻译键、接口错误映射和语言资源统一维护在 `shared/finance-core`。
+- Web 与 React Native 共用的业务文案、分类翻译键、接口错误映射和语言资源统一维护在 `fronted/shared/finance-core`。
 - 新增界面功能时必须同时补齐当前支持语言的翻译；不得只添加一种语言后依赖 fallback 交付。
 - 分类、预警和接口错误应使用稳定的 code 或 i18n key 翻译，不以数据库中的中文名称或后端中文 message 作为主要展示内容。
 - 金额、日期和时间必须使用当前语言对应的 `Intl` 格式化能力，不手动拼接货币符号、日期分隔符或固定区域格式。
