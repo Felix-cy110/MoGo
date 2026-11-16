@@ -1,6 +1,8 @@
 node_modules/
 fronted/node_modules/
 fronted/dist/
+fronted/apps/*/node_modules/
+fronted/apps/*/dist/
 backend/target/
 backend/data/*.db
 backend/data/*.db-shm

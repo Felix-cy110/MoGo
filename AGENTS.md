@@ -42,12 +42,19 @@
 - description 应简洁明确，描述本次提交或 PR 的实际变更，不使用含糊标题。
 - 存在破坏性变更时，应使用 `!` 标记或在正文中添加 `BREAKING CHANGE:` 说明。
 
+## 后端模块规范
+
+- 后端采用按业务功能拆分的模块化单体结构，应用入口位于 `com.mogo` 根包。
+- 跨功能共享的配置和基础设施放入 `com.mogo.coreshared`，不得将个人财务领域逻辑放入共享包。
+- 个人财务的 Controller、Entity、Repository、Service、配置和工具统一放入 `com.mogo.personalfinance`。
+- 后续百宝箱功能在 `com.mogo` 下建立与 `personalfinance` 平级的业务包，禁止跨模块直接访问 Entity、Repository 或 ServiceImpl。
+
 ## 前端跨平台复用规范
 
 - Web 与未来 React Native 手机端采用“共享业务逻辑，平台独立渲染”的架构。
-- 与平台无关的领域逻辑、数据协议、金额和日期工具、校验规则、API 客户端及 i18n 业务文案放入 `fronted/shared/finance-core`。
-- 可由 Web 和 React Native 共用的 React 状态与业务流程放入 `fronted/shared/finance-react`，优先通过 Hook 暴露。
-- Web 的 HTML、DOM、Tailwind 样式和浏览器交互只允许存在于 `fronted/`；React Native 原生组件只允许存在于未来的手机端目录。
+- 与平台无关的领域逻辑、数据协议、金额和日期工具、校验规则、API 客户端及 i18n 业务文案放入 `fronted/features/personal-finance/core`。
+- 可由 Web 和 React Native 共用的 React 状态与业务流程放入 `fronted/features/personal-finance/react`，优先通过 Hook 暴露。
+- Web 的 HTML、DOM、Tailwind 样式和浏览器交互只允许存在于 `fronted/apps/web/`；React Native 原生组件只允许存在于未来的 `fronted/apps/mobile/`。
 - 共享模块不得依赖 `window`、`document`、`localStorage` 等浏览器专属能力，也不得依赖 React Native 专属模块；平台能力必须通过参数或适配器注入。
 - 不强求直接复用 Web 和 React Native 的视图组件。优先复用业务逻辑、状态管理、接口协议、校验规则和展示模型，避免在共享代码中堆积平台判断。
 - 新增业务规则时优先修改共享模块并补充单元测试，禁止在 Web 与 React Native 中分别实现同一规则。
@@ -56,7 +63,7 @@
 ## 国际化规范
 
 - 所有面向用户的界面文案必须接入 i18n，不允许在 Web 或未来 React Native 组件中硬编码中文或英文。
-- Web 与 React Native 共用的业务文案、分类翻译键、接口错误映射和语言资源统一维护在 `fronted/shared/finance-core`。
+- Web 与 React Native 共用的业务文案、分类翻译键、接口错误映射和语言资源统一维护在 `fronted/features/personal-finance/core`。
 - 新增界面功能时必须同时补齐当前支持语言的翻译；不得只添加一种语言后依赖 fallback 交付。
 - 分类、预警和接口错误应使用稳定的 code 或 i18n key 翻译，不以数据库中的中文名称或后端中文 message 作为主要展示内容。
 - 金额、日期和时间必须使用当前语言对应的 `Intl` 格式化能力，不手动拼接货币符号、日期分隔符或固定区域格式。
