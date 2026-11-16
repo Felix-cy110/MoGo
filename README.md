@@ -31,7 +31,7 @@ npm install
 make dev-gui
 ```
 
-该命令会同时启动 Spring Boot 后端和 Web 前端；首次运行时会自动安装 npm 依赖。按 `Ctrl+C` 会同时停止两个服务。
+该命令会同时启动 Spring Boot 后端和 Web 前端；首次运行时会自动安装 npm 依赖。按 `Ctrl+C` 会同时停止两个服务。重复执行时，如果 3000 和 8080 上已有 MoGo 服务，会直接提示服务已运行。
 
 - Web：`http://localhost:3000`
 - API：`http://localhost:8080`
