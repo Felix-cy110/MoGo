@@ -45,7 +45,11 @@ export function FinanceScreen({ onBack }) {
       <header className="border-b border-slate-200 dark:border-slate-800">
         <div className="mx-auto flex max-w-5xl items-end justify-between gap-5 px-5 py-5 sm:px-8">
           <div className="flex min-w-0 items-center gap-3">
-            <button className="back-button" type="button" onClick={onBack} aria-label={t('backToToolbox')}>‹</button>
+            <button className="back-button" type="button" onClick={onBack} aria-label={t('backToToolbox')}>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none">
+                <path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
             <div className="min-w-0">
               <h1 className="truncate text-xl font-semibold">{t('financeFeatureName')}</h1>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatDisplayDate(finance.date, language)}</p>
