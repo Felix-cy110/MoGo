@@ -1,5 +1,6 @@
 import React from 'react';
 import { clampPercent, formatMoney } from '@mogo/personal-finance-core';
+import { FormFieldRow } from './FormFieldRow';
 
 export function BudgetOverview({ t, language, dashboard, budgetInput, onBudgetChange, onSaveBudget }) {
   const progress = clampPercent(dashboard?.usagePercent);
@@ -7,7 +8,7 @@ export function BudgetOverview({ t, language, dashboard, budgetInput, onBudgetCh
 
   return (
     <section className="border-b border-slate-200 pb-7 dark:border-slate-800">
-      <div className="grid gap-6 md:grid-cols-[1fr_300px] md:items-end">
+      <div className="grid gap-6 md:grid-cols-[1fr_360px] md:items-end">
         <div>
           <p className="section-label">{t('today')}</p>
           <div className="mt-2 flex flex-wrap items-baseline gap-x-6 gap-y-2">
@@ -23,20 +24,23 @@ export function BudgetOverview({ t, language, dashboard, budgetInput, onBudgetCh
         </div>
 
         <form onSubmit={onSaveBudget}>
-          <label className="form-label" htmlFor="budget">{t('budgetWithCurrency')}</label>
-          <div className="mt-2 flex gap-2">
-            <input
-              id="budget"
-              className="field"
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={budgetInput}
-              onChange={(event) => onBudgetChange(event.target.value)}
-              placeholder={t('budgetPlaceholder')}
-              required
-            />
-            <button className="button-primary shrink-0" type="submit">{t('saveBudget')}</button>
+          <div className="form-sheet">
+            <FormFieldRow label={t('budgetWithCurrency')} htmlFor="budget">
+              <div className="flex min-w-0 items-center gap-2">
+                <input
+                  id="budget"
+                  className="field form-row-field min-w-0 flex-1"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={budgetInput}
+                  onChange={(event) => onBudgetChange(event.target.value)}
+                  placeholder={t('budgetPlaceholder')}
+                  required
+                />
+                <button className="form-row-submit" type="submit">{t('saveBudget')}</button>
+              </div>
+            </FormFieldRow>
           </div>
         </form>
       </div>

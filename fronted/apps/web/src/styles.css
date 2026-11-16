@@ -133,3 +133,67 @@ button, input, select, textarea { font: inherit; }
 .back-button:focus-visible { outline: 2px solid #64748b; outline-offset: 2px; }
 .dark .back-button { border-color: #475569; color: #cbd5e1; }
 .dark .back-button:hover { background: #1e293b; }
+
+.form-sheet {
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 34%) minmax(0, 1fr);
+  align-items: center;
+  min-height: 3.75rem;
+  padding: 0 1rem;
+}
+.form-row + .form-row { border-top: 1px solid #e2e8f0; }
+.form-row-start { align-items: start; padding-top: 0.875rem; padding-bottom: 0.875rem; }
+.form-row-label {
+  padding-right: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+}
+.form-row-control { min-width: 0; }
+.form-row-field {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding-right: 0;
+  padding-left: 0;
+}
+.form-row-field:focus { border-color: transparent; box-shadow: none; }
+.form-row-action,
+.form-row-submit {
+  flex: none;
+  border: 0;
+  background: transparent;
+  padding: 0.5rem 0;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.form-row-action:hover,
+.form-row-submit:hover { color: #0f172a; }
+.form-row-action:focus-visible,
+.form-row-submit:focus-visible { outline: 2px solid #64748b; outline-offset: 2px; }
+.dark .form-sheet { border-color: #1e293b; background: #0f172a; }
+.dark .form-row + .form-row { border-color: #1e293b; }
+.dark .form-row-label { color: #e2e8f0; }
+.dark .form-row-field { border-color: transparent; background: transparent; }
+.dark .form-row-field:focus { border-color: transparent; box-shadow: none; }
+.dark .form-row-action,
+.dark .form-row-submit { color: #94a3b8; }
+.dark .form-row-action:hover,
+.dark .form-row-submit:hover { color: #f8fafc; }
+
+@media (max-width: 420px) {
+  .form-row {
+    grid-template-columns: minmax(5.5rem, 34%) minmax(0, 1fr);
+    padding-right: 0.875rem;
+    padding-left: 0.875rem;
+  }
+  .form-row-label { padding-right: 0.75rem; }
+}
