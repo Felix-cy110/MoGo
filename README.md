@@ -20,20 +20,25 @@ npm install
 
 ## 启动
 
-先在一个终端启动后端：
+在仓库根目录运行：
 
 ```bash
-cd backend
-mvn spring-boot:run
+make dev-gui
 ```
 
-再在仓库根目录启动 Web 前端：
+该命令会同时启动 Spring Boot 后端和 Web 前端；首次运行时会自动安装 npm 依赖。按 `Ctrl+C` 会同时停止两个服务。
+
+- Web：`http://localhost:3000`
+- API：`http://localhost:8080`
+
+SQLite 数据库默认保存在 `backend/data/mogo.db`。
+
+如需分别启动，也可以运行：
 
 ```bash
+mvn -f backend/pom.xml spring-boot:run
 npm run dev:web
 ```
-
-打开 `http://localhost:3000`。SQLite 数据库默认保存在 `backend/data/mogo.db`。
 
 ## 验证
 
