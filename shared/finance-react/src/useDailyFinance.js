@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  buildCategoryPayload,
   buildExpensePayload,
   centsToYuan,
   createClientRequestId,
   findCategory,
   formatLocalDate,
   resolveApiErrorMessageKey,
+  validateCategoryDraft,
   validateExpenseDraft,
   yuanToCents
 } from '@mogo/finance-core';
 
 const EMPTY_FORM = Object.freeze({ amount: '', categoryId: '', note: '' });
+const EMPTY_CATEGORY_FORM = Object.freeze({ name: '', notePolicy: 'OPTIONAL' });
 
 export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
   const [date] = useState(initialDate);
@@ -18,6 +21,7 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
   const [dashboard, setDashboard] = useState(null);
   const [budgetInput, setBudgetInput] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
+  const [categoryForm, setCategoryForm] = useState(EMPTY_CATEGORY_FORM);
   const [alerts, setAlerts] = useState([]);
   const [feedback, setFeedback] = useState(null);
 
@@ -56,6 +60,27 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
       return false;
     }
   }, [api, budgetInput, date, refresh]);
+
+  const addCategory = useCallback(async () => {
+    setFeedback(null);
+    const validationKey = validateCategoryDraft(categoryForm);
+    if (validationKey) {
+      setFeedback({ type: 'error', key: validationKey });
+      return false;
+    }
+
+    try {
+      const category = await api.addCategory(buildCategoryPayload(categoryForm));
+      setCategoryForm(EMPTY_CATEGORY_FORM);
+      await refresh();
+      setForm((current) => ({ ...current, categoryId: String(category.id) }));
+      setFeedback({ type: 'success', key: 'saved' });
+      return true;
+    } catch (error) {
+      setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
+      return false;
+    }
+  }, [api, categoryForm, refresh]);
 
   const addExpense = useCallback(async () => {
     setFeedback(null);
@@ -97,11 +122,14 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
     setBudgetInput,
     form,
     setForm,
+    categoryForm,
+    setCategoryForm,
     selectedCategory,
     alerts,
     dismissAlerts: () => setAlerts([]),
     feedback,
     saveBudget,
+    addCategory,
     addExpense
   };
 };

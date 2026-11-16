@@ -83,3 +83,14 @@ test('includes localized color theme controls', async () => {
   assert.equal(financeMessages.en.switchToLightTheme, 'Turn on the lights');
   assert.equal(financeMessages.en.switchToDarkTheme, 'Turn off the lights');
 });
+
+test('validates and normalizes custom category drafts', async () => {
+  const { buildCategoryPayload, NOTE_POLICY, validateCategoryDraft } = await import('../src/index.js');
+  assert.equal(validateCategoryDraft({ name: '  ', notePolicy: NOTE_POLICY.OPTIONAL }), 'categoryNameRequired');
+  assert.equal(validateCategoryDraft({ name: '日用品', notePolicy: 'UNKNOWN' }), 'invalidNotePolicy');
+  assert.equal(validateCategoryDraft({ name: '日用品', notePolicy: NOTE_POLICY.REQUIRED }), null);
+  assert.deepEqual(buildCategoryPayload({ name: '  日用品  ', notePolicy: NOTE_POLICY.REQUIRED }), {
+    name: '日用品',
+    notePolicy: NOTE_POLICY.REQUIRED
+  });
+});
