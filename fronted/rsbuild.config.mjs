@@ -9,8 +9,8 @@ export default defineConfig({
     }
   },
   html: {
-    title: 'MoGo 个人财务管理',
-    meta: { description: '简单、清晰的每日消费管理工具' }
+    title: 'MoGo',
+    meta: { description: 'MoGo' }
   },
   server: {
     port: 3000,

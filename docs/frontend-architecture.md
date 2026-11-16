@@ -44,3 +44,11 @@ Web 的 `<input>`、`<table>` 和 Tailwind 样式无法直接在 React Native �
 - Web 组件不得直接拼装接口载荷或复制后端错误码判断。
 - 共享代码不得使用 `window`、`document`、`localStorage` 或浏览器专属 API；平台能力通过参数注入。
 - API 地址和 `fetch` 实现通过 `createFinanceApi` 注入，RN 可传入自己的服务地址和网络实现。
+
+## 国际化
+
+- 中英文资源、分类翻译键和接口错误码映射统一存放在 `shared/finance-core`。
+- Web 和 React Native 使用同一套翻译 key，不复制业务文案。
+- 平台层可分别实现语言选择持久化；Web 当前使用 `localStorage`，共享层不依赖该实现。
+- 金额、日期和时间统一通过共享的 `Intl` 格式化工具展示。
+- 新功能必须一次性补齐全部受支持语言，并验证语言切换后的布局和业务反馈。

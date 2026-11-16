@@ -1,12 +1,12 @@
 import React from 'react';
-import { NOTE_POLICY } from '@mogo/finance-core';
+import { NOTE_POLICY, resolveCategoryMessageKey } from '@mogo/finance-core';
 
 export function ExpenseForm({ t, categories, form, selectedCategory, onFormChange, onSubmit }) {
   return (
     <form onSubmit={onSubmit}>
       <h2 className="section-title">{t('addExpense')}</h2>
 
-      <label className="form-label mt-5" htmlFor="amount">{t('amount')}（元）</label>
+      <label className="form-label mt-5" htmlFor="amount">{t('amountWithCurrency')}</label>
       <input
         id="amount"
         className="field mt-2"
@@ -27,13 +27,14 @@ export function ExpenseForm({ t, categories, form, selectedCategory, onFormChang
         onChange={(event) => onFormChange({ categoryId: event.target.value })}
         required
       >
-        {categories.map((category) => (
-          <option key={category.id} value={category.id}>{category.name}</option>
-        ))}
+        {categories.map((category) => {
+          const messageKey = resolveCategoryMessageKey(category);
+          return <option key={category.id} value={category.id}>{messageKey ? t(messageKey) : category.name}</option>;
+        })}
       </select>
 
       <label className="form-label mt-4" htmlFor="note">
-        {t('note')}{selectedCategory?.notePolicy === NOTE_POLICY.REQUIRED ? '（必填）' : '（选填）'}
+        {t(selectedCategory?.notePolicy === NOTE_POLICY.REQUIRED ? 'noteRequiredLabel' : 'noteOptional')}
       </label>
       <textarea
         id="note"

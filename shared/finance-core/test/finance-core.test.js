@@ -50,3 +50,27 @@ test('normalizes expense payloads', () => {
     clientRequestId: 'request-1'
   });
 });
+
+test('keeps translation keys aligned across supported languages', async () => {
+  const { financeMessages, supportedLanguages } = await import('../src/index.js');
+  const expectedKeys = Object.keys(financeMessages[supportedLanguages[0]]).sort();
+  for (const language of supportedLanguages) {
+    assert.deepEqual(Object.keys(financeMessages[language]).sort(), expectedKeys);
+  }
+});
+
+test('resolves category and API error translation keys', async () => {
+  const { resolveApiErrorMessageKey, resolveCategoryMessageKey } = await import('../src/index.js');
+  assert.equal(resolveCategoryMessageKey({ i18nKey: 'category.meal' }), 'categoryMeal');
+  assert.equal(resolveCategoryMessageKey({ code: 'OTHER' }), 'categoryOther');
+  assert.equal(resolveApiErrorMessageKey('NOTE_REQUIRED'), 'noteRequired');
+  assert.equal(resolveApiErrorMessageKey('UNKNOWN'), 'requestFailed');
+});
+
+test('formats currency and dates for the active language', async () => {
+  const { formatDisplayDate, formatMoney, formatTime } = await import('../src/index.js');
+  assert.match(formatMoney(2550, 'zh'), /25\.50/);
+  assert.match(formatMoney(2550, 'en'), /25\.50/);
+  assert.notEqual(formatDisplayDate('2026-11-16', 'zh'), formatDisplayDate('2026-11-16', 'en'));
+  assert.doesNotThrow(() => formatTime('2026-11-16T08:30:00', 'en'));
+});

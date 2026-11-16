@@ -1,7 +1,7 @@
 import React from 'react';
-import { centsToYuan, clampPercent } from '@mogo/finance-core';
+import { clampPercent, formatMoney } from '@mogo/finance-core';
 
-export function BudgetOverview({ t, dashboard, budgetInput, onBudgetChange, onSaveBudget }) {
+export function BudgetOverview({ t, language, dashboard, budgetInput, onBudgetChange, onSaveBudget }) {
   const progress = clampPercent(dashboard?.usagePercent);
   const progressClass = progress >= 100 ? 'bg-red-600' : progress >= 80 ? 'bg-amber-500' : 'bg-slate-700';
 
@@ -11,19 +11,19 @@ export function BudgetOverview({ t, dashboard, budgetInput, onBudgetChange, onSa
         <div>
           <p className="section-label">{t('today')}</p>
           <div className="mt-2 flex flex-wrap items-baseline gap-x-6 gap-y-2">
-            <p className="text-3xl font-semibold">¥{centsToYuan(dashboard?.totalAmountCents)}</p>
+            <p className="text-3xl font-semibold">{formatMoney(dashboard?.totalAmountCents, language)}</p>
             <p className="text-sm text-slate-500">
-              {t('budget')} ¥{centsToYuan(dashboard?.budgetAmountCents)} · {t('remaining')} ¥{centsToYuan(dashboard?.remainingAmountCents)}
+              {t('budget')} {formatMoney(dashboard?.budgetAmountCents, language)} · {t('remaining')} {formatMoney(dashboard?.remainingAmountCents, language)}
             </p>
           </div>
           <div className="mt-4 h-2 max-w-2xl overflow-hidden bg-slate-100">
             <div className={`h-full ${progressClass}`} style={{ width: `${progress}%` }} />
           </div>
-          <p className="mt-2 text-sm text-slate-500">{t('usage')}：{dashboard?.usagePercent || 0}%</p>
+          <p className="mt-2 text-sm text-slate-500">{t('usage')}: {dashboard?.usagePercent || 0}%</p>
         </div>
 
         <form onSubmit={onSaveBudget}>
-          <label className="form-label" htmlFor="budget">{t('budget')}（元）</label>
+          <label className="form-label" htmlFor="budget">{t('budgetWithCurrency')}</label>
           <div className="mt-2 flex gap-2">
             <input
               id="budget"
