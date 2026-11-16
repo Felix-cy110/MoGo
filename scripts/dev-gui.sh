@@ -62,7 +62,9 @@ require_command lsof
 cd "$ROOT_DIR"
 
 port_pid() {
-  lsof -nP -tiTCP:"$1" -sTCP:LISTEN 2>/dev/null | head -n 1
+  local pid
+  pid="$(lsof -nP -tiTCP:"$1" -sTCP:LISTEN 2>/dev/null | head -n 1 || true)"
+  printf '%s' "$pid"
 }
 
 process_summary() {
