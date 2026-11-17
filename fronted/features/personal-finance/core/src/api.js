@@ -39,6 +39,9 @@ export const createFinanceApi = ({ baseUrl = '', fetchImpl = globalThis.fetch } 
       method: 'DELETE'
     }),
     getDashboard: (date) => request(`/dashboard?date=${encodeURIComponent(date)}`),
+    getAnalytics: (startDate, endDate) => request(
+      `/analytics?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
+    ),
     saveBudget: (date, amountCents) => request('/budgets/daily', {
       method: 'PUT',
       body: JSON.stringify({ date, amountCents })

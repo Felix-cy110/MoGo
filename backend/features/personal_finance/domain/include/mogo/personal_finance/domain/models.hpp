@@ -60,6 +60,21 @@ struct Dashboard {
     std::vector<Expense> expenses;
 };
 
+struct DailyTotal {
+    std::string date;
+    MoneyCents amount_cents{};
+    int expense_count{};
+};
+
+struct AnalyticsDashboard {
+    std::string start_date;
+    std::string end_date;
+    MoneyCents total_amount_cents{};
+    int expense_count{};
+    std::vector<DailyTotal> days;
+    std::vector<CategoryTotal> category_totals;
+};
+
 struct ExpenseMutationResult {
     Expense expense;
     MoneyCents total_amount_cents{};

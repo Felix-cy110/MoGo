@@ -13,6 +13,7 @@ HTTP API 仅服务于 Web 调试端，默认监听 `127.0.0.1:8080`。未来 Rea
 | `PUT` | `/api/categories/{categoryId}` | 修改启用分类的名称 |
 | `DELETE` | `/api/categories/{categoryId}` | 软删除分类；历史消费仍保留分类名称 |
 | `GET` | `/api/dashboard?date=YYYY-MM-DD` | 获取指定日期的预算、消费与分类汇总 |
+| `GET` | `/api/analytics?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD` | 获取日期范围内的消费总额、每日趋势和分类汇总 |
 | `PUT` | `/api/budgets/daily` | 新增或更新每日预算 |
 | `POST` | `/api/expenses` | 新增消费并返回本次跨越的预警阈值 |
 | `PUT` | `/api/expenses/{expenseId}` | 编辑已有消费，保持记录 ID 和发生时间不变 |

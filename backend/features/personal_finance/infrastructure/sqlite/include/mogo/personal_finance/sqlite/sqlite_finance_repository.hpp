@@ -32,6 +32,8 @@ public:
 
     std::vector<Expense> expensesForDate(const std::string& date) override;
     MoneyCents sumExpensesForDate(const std::string& date) override;
+    AnalyticsDashboard analyticsForRange(const std::string& start_date,
+                                         const std::string& end_date) override;
     std::optional<Expense> expenseById(std::int64_t id) override;
     std::optional<Expense> expenseByClientRequestId(const std::string& request_id) override;
     Expense insertExpense(const std::string& date, MoneyCents amount_cents,

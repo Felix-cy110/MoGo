@@ -50,6 +50,35 @@ hv::Json alertJson(const Alert& alert) {
     };
 }
 
+hv::Json analyticsJson(const AnalyticsDashboard& dashboard) {
+    hv::Json days = hv::Json::array();
+    for (const auto& day : dashboard.days) {
+        days.push_back({
+            {"date", day.date},
+            {"amountCents", day.amount_cents},
+            {"expenseCount", day.expense_count},
+        });
+    }
+    hv::Json totals = hv::Json::array();
+    for (const auto& total : dashboard.category_totals) {
+        totals.push_back({
+            {"categoryId", total.category_id},
+            {"categoryCode", total.category_code},
+            {"categoryName", total.category_name},
+            {"amountCents", total.amount_cents},
+            {"expenseCount", total.expense_count},
+        });
+    }
+    return {
+        {"startDate", dashboard.start_date},
+        {"endDate", dashboard.end_date},
+        {"totalAmountCents", dashboard.total_amount_cents},
+        {"expenseCount", dashboard.expense_count},
+        {"days", std::move(days)},
+        {"categoryTotals", std::move(totals)},
+    };
+}
+
 hv::Json mutationJson(const ExpenseMutationResult& result) {
     hv::Json alerts = hv::Json::array();
     for (const auto& alert : result.alerts) alerts.push_back(alertJson(alert));
@@ -205,6 +234,17 @@ void FinanceHttpRoutes::registerRoutes(hv::HttpService& router) {
             const std::string date = context->param("date");
             if (date.empty()) throw ApplicationError(400, "VALIDATION_ERROR", "缺少日期参数");
             return dashboardJson(service_.getDashboard(date));
+        });
+    });
+
+    router.GET("/api/analytics", [this](const HttpContextPtr& context) {
+        return respond(context, [this, context] {
+            const std::string start_date = context->param("startDate");
+            const std::string end_date = context->param("endDate");
+            if (start_date.empty() || end_date.empty()) {
+                throw ApplicationError(400, "VALIDATION_ERROR", "缺少统计日期范围");
+            }
+            return analyticsJson(service_.getAnalytics(start_date, end_date));
         });
     });
 

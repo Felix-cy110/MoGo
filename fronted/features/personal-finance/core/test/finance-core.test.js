@@ -164,3 +164,53 @@ test('uses the category management API contract', async () => {
   assert.equal(calls[2].url, '/api/categories/12');
   assert.equal(calls[2].options.method, 'DELETE');
 });
+
+test('builds weekly and monthly analytics ranges', async () => {
+  const { ANALYTICS_PERIOD, buildAnalyticsRange, buildAnalyticsView } = await import('../src/index.js');
+  const reference = new Date(2026, 10, 18);
+  assert.deepEqual(buildAnalyticsRange(ANALYTICS_PERIOD.WEEK, reference), {
+    startDate: '2026-11-16',
+    endDate: '2026-11-18'
+  });
+  assert.deepEqual(buildAnalyticsRange(ANALYTICS_PERIOD.MONTH, reference), {
+    startDate: '2026-11-01',
+    endDate: '2026-11-18'
+  });
+  assert.deepEqual(buildAnalyticsView({
+    startDate: '2026-11-16',
+    endDate: '2026-11-17',
+    totalAmountCents: 3000,
+    expenseCount: 2,
+    days: [
+      { date: '2026-11-16', amountCents: 1000 },
+      { date: '2026-11-17', amountCents: 2000 }
+    ],
+    categoryTotals: []
+  }, ANALYTICS_PERIOD.WEEK), {
+    period: ANALYTICS_PERIOD.WEEK,
+    totalAmountCents: 3000,
+    expenseCount: 2,
+    activeDayCount: 2,
+    averageAmountCents: 1500,
+    maxAmountCents: 2000,
+    days: [
+      { date: '2026-11-16', amountCents: 1000 },
+      { date: '2026-11-17', amountCents: 2000 }
+    ],
+    categoryTotals: []
+  });
+});
+
+test('uses the finance analytics API contract', async () => {
+  const { createFinanceApi } = await import('../src/index.js');
+  const calls = [];
+  const api = createFinanceApi({
+    baseUrl: '/api',
+    fetchImpl: async (url, options = {}) => {
+      calls.push({ url, options });
+      return { ok: true, json: async () => ({}) };
+    }
+  });
+  await api.getAnalytics('2026-11-16', '2026-11-18');
+  assert.equal(calls[0].url, '/api/analytics?startDate=2026-11-16&endDate=2026-11-18');
+});

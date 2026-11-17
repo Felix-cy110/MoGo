@@ -10,7 +10,7 @@ import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseEditDialog } from './components/ExpenseEditDialog';
 import { ExpenseList } from './components/ExpenseList';
 
-export function FinanceScreen({ onBack, onManageCategories }) {
+export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
   const finance = useDailyFinance({ api });
@@ -67,6 +67,7 @@ export function FinanceScreen({ onBack, onManageCategories }) {
           budgetInput={finance.budgetInput}
           onBudgetChange={finance.setBudgetInput}
           onSaveBudget={handleSaveBudget}
+          onOpenAnalytics={onOpenAnalytics}
         />
 
         <section className="grid gap-8 py-7 lg:grid-cols-[320px_1fr]">
