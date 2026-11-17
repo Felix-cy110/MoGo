@@ -17,6 +17,9 @@ public final class ApiModels {
     public record ExpenseRequest(@NotNull LocalDate date, @Positive long amountCents,
                                  @NotNull Long categoryId, String note, String clientRequestId) {}
 
+    public record ExpenseUpdateRequest(@Positive long amountCents,
+                                       @NotNull Long categoryId, String note) {}
+
     public record ExpenseResponse(ExpenseView expense, long totalAmountCents,
                                   long budgetAmountCents, long remainingAmountCents,
                                   int usagePercent, List<AlertView> alerts) {}

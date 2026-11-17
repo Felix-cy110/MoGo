@@ -46,6 +46,10 @@ export const financeMessages = Object.freeze({
     noteRequired: '该分类必须填写备注',
     invalidAmount: '请输入大于 0 的消费金额',
     submit: '保存记录',
+    editExpense: '编辑',
+    editExpenseTitle: '编辑消费记录',
+    updateExpense: '保存修改',
+    expenseNotFound: '消费记录不存在',
     recentExpenses: '今日记录',
     noExpenses: '今天还没有消费记录',
     noNote: '无备注',
@@ -113,6 +117,10 @@ export const financeMessages = Object.freeze({
     noteRequired: 'A note is required for this category',
     invalidAmount: 'Enter an amount greater than zero',
     submit: 'Save expense',
+    editExpense: 'Edit',
+    editExpenseTitle: 'Edit expense',
+    updateExpense: 'Save changes',
+    expenseNotFound: 'The expense record no longer exists',
     recentExpenses: 'Today’s expenses',
     noExpenses: 'No expenses recorded today',
     noNote: 'No note',
@@ -153,7 +161,8 @@ export const apiErrorMessageKeys = Object.freeze({
   NOTE_REQUIRED: 'noteRequired',
   VALIDATION_ERROR: 'validationError',
   REQUEST_FAILED: 'requestFailed',
-  CATEGORY_NAME_EXISTS: 'categoryNameExists'
+  CATEGORY_NAME_EXISTS: 'categoryNameExists',
+  EXPENSE_NOT_FOUND: 'expenseNotFound'
 });
 
 export const resolveCategoryMessageKey = (category) =>

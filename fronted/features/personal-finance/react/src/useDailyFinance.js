@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   buildCategoryPayload,
   buildExpensePayload,
+  buildExpenseUpdatePayload,
   centsToYuan,
   createClientRequestId,
+  createExpenseDraft,
   findCategory,
   formatLocalDate,
   resolveApiErrorMessageKey,
@@ -22,12 +24,18 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
   const [budgetInput, setBudgetInput] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
   const [categoryForm, setCategoryForm] = useState(EMPTY_CATEGORY_FORM);
+  const [editingExpenseId, setEditingExpenseId] = useState(null);
+  const [editForm, setEditForm] = useState(EMPTY_FORM);
   const [alerts, setAlerts] = useState([]);
   const [feedback, setFeedback] = useState(null);
 
   const selectedCategory = useMemo(
     () => findCategory(categories, form.categoryId),
     [categories, form.categoryId]
+  );
+  const selectedEditCategory = useMemo(
+    () => findCategory(categories, editForm.categoryId),
+    [categories, editForm.categoryId]
   );
 
   const refresh = useCallback(async () => {
@@ -114,6 +122,48 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
     }
   }, [api, dashboard?.budgetSet, date, form, refresh, selectedCategory]);
 
+  const startEditingExpense = useCallback((expense) => {
+    setFeedback(null);
+    setEditingExpenseId(expense.id);
+    setEditForm(createExpenseDraft(expense));
+  }, []);
+
+  const cancelEditingExpense = useCallback(() => {
+    setEditingExpenseId(null);
+    setEditForm(EMPTY_FORM);
+  }, []);
+
+  const updateExpense = useCallback(async () => {
+    setFeedback(null);
+    const amountCents = yuanToCents(editForm.amount);
+    const validationKey = validateExpenseDraft({
+      budgetSet: dashboard?.budgetSet,
+      amountCents,
+      category: selectedEditCategory,
+      note: editForm.note
+    });
+    if (validationKey) {
+      setFeedback({ type: 'error', key: validationKey });
+      return false;
+    }
+
+    try {
+      const response = await api.updateExpense(editingExpenseId, buildExpenseUpdatePayload({
+        amountCents,
+        categoryId: editForm.categoryId,
+        note: editForm.note
+      }));
+      setAlerts(response.alerts || []);
+      cancelEditingExpense();
+      await refresh();
+      setFeedback({ type: 'success', key: 'saved' });
+      return true;
+    } catch (error) {
+      setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
+      return false;
+    }
+  }, [api, cancelEditingExpense, dashboard?.budgetSet, editForm, editingExpenseId, refresh, selectedEditCategory]);
+
   return {
     date,
     categories,
@@ -125,11 +175,18 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
     categoryForm,
     setCategoryForm,
     selectedCategory,
+    editingExpenseId,
+    editForm,
+    setEditForm,
+    selectedEditCategory,
     alerts,
     dismissAlerts: () => setAlerts([]),
     feedback,
     saveBudget,
     addCategory,
-    addExpense
+    addExpense,
+    startEditingExpense,
+    cancelEditingExpense,
+    updateExpense
   };
 };

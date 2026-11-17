@@ -5,6 +5,7 @@ import com.mogo.personalfinance.entity.ApiModels.BudgetRequest;
 import com.mogo.personalfinance.entity.ApiModels.CategoryRequest;
 import com.mogo.personalfinance.entity.ApiModels.ExpenseRequest;
 import com.mogo.personalfinance.entity.ApiModels.ExpenseResponse;
+import com.mogo.personalfinance.entity.ApiModels.ExpenseUpdateRequest;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,4 +16,5 @@ public interface FinanceService {
     DashboardView getDashboard(LocalDate date);
     DailyBudgetEntity saveBudget(BudgetRequest request);
     ExpenseResponse addExpense(ExpenseRequest request);
+    ExpenseResponse updateExpense(Long expenseId, ExpenseUpdateRequest request);
 }
