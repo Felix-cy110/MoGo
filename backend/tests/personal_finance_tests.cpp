@@ -125,6 +125,46 @@ void testDeletedCategoryKeepsHistoricalName() {
     });
 }
 
+void testOtherCategoryIsProtected() {
+    TemporaryDatabase database;
+    SqliteFinanceRepository repository(database.path());
+    FinanceService service(repository);
+    const Category other = categoryByCode(service.getCategories(), "OTHER");
+
+    for (const std::string name : {"重命名", "其他", ""}) {
+        requireApplicationError("CATEGORY_PROTECTED", [&] {
+            service.updateCategory(other.id, CategoryInput{.name = name});
+        });
+    }
+    requireApplicationError("CATEGORY_PROTECTED", [&] {
+        service.deleteCategory(other.id);
+    });
+
+    const Category preserved = categoryByCode(service.getCategories(), "OTHER");
+    require(preserved.id == other.id && preserved.name == other.name && preserved.active,
+            "rejected mutations must leave Other available and unchanged");
+    require(preserved.i18n_key == other.i18n_key && preserved.note_policy == "REQUIRED",
+            "rejected mutations must preserve Other translation and note policy");
+    const auto expense = service.addExpense(ExpenseInput{
+        .date = "2026-11-18",
+        .amount_cents = 100,
+        .category_id = other.id,
+        .note = "测试",
+    });
+    require(expense.expense.category_code == "OTHER", "Other must remain usable for expenses");
+
+    const Category meal = categoryByCode(service.getCategories(), "MEAL");
+    require(service.updateCategory(meal.id, CategoryInput{.name = "三餐"}).name == "三餐",
+            "other built-in categories must remain editable");
+    require(!service.deleteCategory(meal.id).active,
+            "other built-in categories must remain deletable");
+    const Category custom = service.addCategory(CategoryInput{.name = "Other"});
+    require(service.updateCategory(custom.id, CategoryInput{.name = "Misc"}).name == "Misc",
+            "custom categories named Other must remain editable");
+    require(!service.deleteCategory(custom.id).active,
+            "custom categories must remain deletable");
+}
+
 void testAnalyticsDashboard() {
     TemporaryDatabase database;
     SqliteFinanceRepository repository(database.path());
@@ -252,6 +292,7 @@ int main() {
     const std::vector<std::pair<std::string, std::function<void()>>> tests = {
         {"seed and categories", testSeedAndCategories},
         {"deleted category history", testDeletedCategoryKeepsHistoricalName},
+        {"protected Other category", testOtherCategoryIsProtected},
         {"analytics dashboard", testAnalyticsDashboard},
         {"expense workflow", testExpenseWorkflow},
     };

@@ -1,4 +1,5 @@
 import { formatLocalDate } from './date.js';
+import { sortCategoriesOtherLast } from './category.js';
 
 export const ANALYTICS_PERIOD = Object.freeze({
   WEEK: 'week',
@@ -62,6 +63,6 @@ export const buildAnalyticsView = (dashboard, period) => {
     averageAmountCents: Math.round(totalAmountCents / dayCount),
     maxAmountCents: Math.max(0, ...days.map((day) => Number(day.amountCents || 0))),
     days,
-    categoryTotals: dashboard?.categoryTotals || []
+    categoryTotals: sortCategoriesOtherLast(dashboard?.categoryTotals || [])
   };
 };

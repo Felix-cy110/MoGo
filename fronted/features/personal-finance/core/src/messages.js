@@ -68,6 +68,8 @@ export const financeMessages = Object.freeze({
     categoryNamePlaceholder: '例如：日用品',
     categoryNameRequired: '请输入分类名称',
     categoryNameExists: '该分类名称已经存在',
+    categoryProtectedTitle: '操作受限',
+    categoryProtected: '“其他”是内置分类，不能修改或删除。',
     customCategoryHint: '新增后会直接出现在记账分类中，备注默认为选填',
     cancel: '取消',
     note: '备注',
@@ -170,6 +172,8 @@ export const financeMessages = Object.freeze({
     categoryNamePlaceholder: 'e.g. Household',
     categoryNameRequired: 'Enter a category name',
     categoryNameExists: 'A category with this name already exists',
+    categoryProtectedTitle: 'Action not allowed',
+    categoryProtected: '“Other” is a built-in category and cannot be edited or deleted.',
     customCategoryHint: 'New categories appear immediately and notes are optional by default',
     cancel: 'Cancel',
     note: 'Note',
@@ -224,6 +228,7 @@ export const apiErrorMessageKeys = Object.freeze({
   VALIDATION_ERROR: 'validationError',
   REQUEST_FAILED: 'requestFailed',
   CATEGORY_NAME_EXISTS: 'categoryNameExists',
+  CATEGORY_PROTECTED: 'categoryProtected',
   EXPENSE_NOT_FOUND: 'expenseNotFound'
 });
 

@@ -8,6 +8,7 @@ import {
   findCategory,
   formatLocalDate,
   resolveApiErrorMessageKey,
+  sortCategoriesOtherLast,
   validateExpenseDraft,
   yuanToCents
 } from '@mogo/personal-finance-core';
@@ -39,12 +40,16 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
       api.getCategories(),
       api.getDashboard(date)
     ]);
-    setCategories(categoryData);
-    setDashboard(dashboardData);
+    const orderedCategories = sortCategoriesOtherLast(categoryData);
+    setCategories(orderedCategories);
+    setDashboard({
+      ...dashboardData,
+      categoryTotals: sortCategoriesOtherLast(dashboardData.categoryTotals || [])
+    });
     setBudgetInput(dashboardData.budgetSet ? centsToYuan(dashboardData.budgetAmountCents) : '');
     setForm((current) => ({
       ...current,
-      categoryId: current.categoryId || String(categoryData[0]?.id || '')
+      categoryId: current.categoryId || String(orderedCategories[0]?.id || '')
     }));
   }, [api, date]);
 

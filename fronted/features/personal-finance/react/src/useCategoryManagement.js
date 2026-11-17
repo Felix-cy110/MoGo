@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   buildCategoryPayload,
+  findCategory,
+  isOtherCategory,
   resolveApiErrorMessageKey,
+  sortCategoriesOtherLast,
   validateCategoryDraft
 } from '@mogo/personal-finance-core';
 
@@ -18,12 +21,18 @@ export const useCategoryManagement = ({ api }) => {
 
   const requestSequence = useRef(0);
 
+  const checkCategoryMutable = useCallback((category) => {
+    if (!isOtherCategory(category)) return true;
+    setFeedback({ type: 'error', key: 'categoryProtected' });
+    return false;
+  }, []);
+
   const refresh = useCallback(async () => {
     const requestId = ++requestSequence.current;
     setLoading(true);
     try {
       const items = await api.searchCategories(query);
-      if (requestId === requestSequence.current) setCategories(items);
+      if (requestId === requestSequence.current) setCategories(sortCategoriesOtherLast(items));
       return true;
     } catch (error) {
       if (requestId === requestSequence.current) {
@@ -42,7 +51,7 @@ export const useCategoryManagement = ({ api }) => {
     const timer = setTimeout(() => {
       api.searchCategories(query)
         .then((items) => {
-          if (requestId === requestSequence.current) setCategories(items);
+          if (requestId === requestSequence.current) setCategories(sortCategoriesOtherLast(items));
         })
         .catch((error) => {
           if (requestId === requestSequence.current) {
@@ -76,10 +85,11 @@ export const useCategoryManagement = ({ api }) => {
   }, [api, form, refresh]);
 
   const startEditing = useCallback((category) => {
+    if (!checkCategoryMutable(category)) return;
     setFeedback(null);
     setEditingCategory(category);
     setEditForm({ name: category.name });
-  }, []);
+  }, [checkCategoryMutable]);
 
   const cancelEditing = useCallback(() => {
     setEditingCategory(null);
@@ -88,6 +98,7 @@ export const useCategoryManagement = ({ api }) => {
 
   const updateCategory = useCallback(async () => {
     if (!editingCategory) return false;
+    if (!checkCategoryMutable(editingCategory)) return false;
     setFeedback(null);
     const validationKey = validateCategoryDraft(editForm);
     if (validationKey) {
@@ -104,9 +115,10 @@ export const useCategoryManagement = ({ api }) => {
       setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
       return false;
     }
-  }, [api, cancelEditing, editForm, editingCategory, refresh]);
+  }, [api, cancelEditing, checkCategoryMutable, editForm, editingCategory, refresh]);
 
   const deleteCategory = useCallback(async (categoryId) => {
+    if (!checkCategoryMutable(findCategory(categories, categoryId))) return false;
     setFeedback(null);
     try {
       await api.deleteCategory(categoryId);
@@ -118,7 +130,7 @@ export const useCategoryManagement = ({ api }) => {
       setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
       return false;
     }
-  }, [api, cancelEditing, editingCategory?.id, refresh]);
+  }, [api, cancelEditing, categories, checkCategoryMutable, editingCategory?.id, refresh]);
 
   return {
     query,
@@ -131,6 +143,8 @@ export const useCategoryManagement = ({ api }) => {
     setEditForm,
     loading,
     feedback,
+    dismissFeedback: () => setFeedback(null),
+    checkCategoryMutable,
     addCategory,
     startEditing,
     cancelEditing,

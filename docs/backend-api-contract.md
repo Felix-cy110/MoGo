@@ -18,6 +18,8 @@ HTTP API 仅服务于 Web 调试端，默认监听 `127.0.0.1:8080`。未来 Rea
 | `POST` | `/api/expenses` | 新增消费并返回本次跨越的预警阈值 |
 | `PUT` | `/api/expenses/{expenseId}` | 编辑已有消费，保持记录 ID 和发生时间不变 |
 
+内置 `code=OTHER`（“其他”）分类禁止修改和删除，两种操作均返回 `403 CATEGORY_PROTECTED`。其他默认分类和自定义分类仍可编辑、软删除；保护规则与分类显示名称无关。
+
 ## 主要载荷
 
 每日预算：
@@ -60,6 +62,7 @@ HTTP API 仅服务于 Web 调试端，默认监听 `127.0.0.1:8080`。未来 Rea
 | `400` | `VALIDATION_ERROR` | 日期、金额、字段类型或长度不合法 |
 | `400` | `CATEGORY_NOT_FOUND` | 分类不存在或不可用 |
 | `400` | `NOTE_REQUIRED` | 必填备注分类未填写备注 |
+| `403` | `CATEGORY_PROTECTED` | 内置“其他”分类不允许修改或删除 |
 | `404` | `EXPENSE_NOT_FOUND` | 编辑的消费记录不存在 |
 | `409` | `CATEGORY_NAME_EXISTS` | 分类名称重复 |
 | `500` | `INTERNAL_ERROR` | 未映射的服务端错误 |
