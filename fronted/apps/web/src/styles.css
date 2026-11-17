@@ -314,17 +314,26 @@ button, input, select, textarea { font: inherit; }
   border-bottom: 1px solid #e2e8f0;
   background: #ffffff;
 }
-.analytics-line-svg { display: block; width: 100%; height: auto; min-height: 16rem; }
+.analytics-line-svg { display: block; width: 100%; height: auto; min-height: 16rem; touch-action: none; user-select: none; }
 .analytics-grid-line { stroke: #e2e8f0; stroke-width: 1; }
 .analytics-area { fill: rgba(71, 85, 105, 0.09); }
 .analytics-line { fill: none; stroke: #475569; stroke-linecap: round; stroke-linejoin: round; stroke-width: 3; }
 .analytics-point { fill: #ffffff; stroke: #475569; stroke-width: 3; }
+.analytics-point-selected { fill: #475569; }
+.analytics-focus-line { stroke: #94a3b8; stroke-dasharray: 4 4; stroke-width: 1.5; }
 .analytics-axis-label { fill: #64748b; font-size: 12px; }
+.analytics-interaction-layer { cursor: crosshair; fill: transparent; }
+.analytics-tooltip rect { fill: #0f172a; }
+.analytics-tooltip-date,
+.analytics-tooltip-amount { fill: #f8fafc; font-size: 12px; }
+.analytics-tooltip-amount { font-weight: 600; }
 .dark .analytics-line-chart { border-color: #1e293b; background: #020617; }
 .dark .analytics-grid-line { stroke: #1e293b; }
 .dark .analytics-area { fill: rgba(203, 213, 225, 0.12); }
 .dark .analytics-line { stroke: #cbd5e1; }
 .dark .analytics-point { fill: #020617; stroke: #cbd5e1; }
+.dark .analytics-point-selected { fill: #cbd5e1; }
+.dark .analytics-focus-line { stroke: #64748b; }
 .dark .analytics-axis-label { fill: #94a3b8; }
 
 .analytics-category-row {

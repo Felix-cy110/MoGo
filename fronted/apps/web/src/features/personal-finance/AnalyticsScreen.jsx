@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ANALYTICS_PERIOD,
@@ -30,7 +30,8 @@ function Metric({ label, value }) {
   );
 }
 
-function LineChart({ days, language, label }) {
+function LineChart({ days, language, label, amountLabel }) {
+  const [selectedIndex, setSelectedIndex] = useState(null);
   const width = 760;
   const height = 300;
   const padding = { top: 24, right: 22, bottom: 48, left: 12 };
@@ -47,18 +48,75 @@ function LineChart({ days, language, label }) {
   const areaPoints = `${padding.left},${padding.top + chartHeight} ${linePoints} ${padding.left + chartWidth},${padding.top + chartHeight}`;
   const dateFormatter = new Intl.DateTimeFormat(getLocale(language), { month: 'numeric', day: 'numeric' });
   const labelStep = days.length > 12 ? Math.ceil(days.length / 7) : 1;
+  const selectedPoint = selectedIndex === null ? null : points[selectedIndex];
+  const tooltipWidth = 164;
+  const tooltipHeight = 52;
+  const tooltipX = selectedPoint
+    ? Math.min(Math.max(selectedPoint.x - tooltipWidth / 2, padding.left), width - padding.right - tooltipWidth)
+    : 0;
+  const tooltipY = selectedPoint
+    ? Math.max(padding.top, selectedPoint.y - tooltipHeight - 12)
+    : 0;
+
+  const getNearestPointIndex = (clientX, element) => {
+    const bounds = element.getBoundingClientRect();
+    const viewBoxX = ((clientX - bounds.left) / bounds.width) * width;
+    return points.reduce((nearestIndex, point, index) => (
+      Math.abs(point.x - viewBoxX) < Math.abs(points[nearestIndex].x - viewBoxX) ? index : nearestIndex
+    ), 0);
+  };
+
+  // Web 端用鼠标/指针移动模拟手机端手指滑动，RN 端复用同一交互意图。
+  const handlePointerMove = (event) => {
+    setSelectedIndex(getNearestPointIndex(event.clientX, event.currentTarget));
+  };
+
+  const handlePointerDown = (event) => {
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    setSelectedIndex(getNearestPointIndex(event.clientX, event.currentTarget));
+  };
+
+  const handlePointerLeave = (event) => {
+    if (event.pointerType === 'mouse') {
+      setSelectedIndex(null);
+    }
+  };
 
   return (
-    <svg className="analytics-line-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
+    <svg
+      className="analytics-line-svg"
+      viewBox={`0 0 ${width} ${height}`}
+      role="img"
+      aria-label={label}
+      onPointerMove={handlePointerMove}
+      onPointerDown={handlePointerDown}
+      onPointerLeave={handlePointerLeave}
+    >
       {[0, 0.5, 1].map((ratio) => {
         const y = padding.top + chartHeight * ratio;
         return <line className="analytics-grid-line" key={ratio} x1={padding.left} x2={padding.left + chartWidth} y1={y} y2={y} />;
       })}
       <polygon className="analytics-area" points={areaPoints} />
+      {selectedPoint && (
+        <line
+          className="analytics-focus-line"
+          x1={selectedPoint.x}
+          x2={selectedPoint.x}
+          y1={padding.top}
+          y2={padding.top + chartHeight}
+        />
+      )}
       <polyline className="analytics-line" points={linePoints} />
       {points.map((point, index) => (
         <g key={point.date}>
-          <circle className="analytics-point" cx={point.x} cy={point.y} r="4" />
+          <circle
+            className={index === selectedIndex ? 'analytics-point analytics-point-selected' : 'analytics-point'}
+            cx={point.x}
+            cy={point.y}
+            r={index === selectedIndex ? '6' : '4'}
+          >
+            <title>{`${dateFormatter.format(new Date(`${point.date}T00:00:00`))}: ${formatMoney(point.amountCents, language)}`}</title>
+          </circle>
           {(index % labelStep === 0 || index === points.length - 1) && (
             <text className="analytics-axis-label" x={point.x} y={height - 16} textAnchor="middle">
               {dateFormatter.format(new Date(`${point.date}T00:00:00`))}
@@ -66,6 +124,25 @@ function LineChart({ days, language, label }) {
           )}
         </g>
       ))}
+      {selectedPoint && (
+        <g className="analytics-tooltip" pointerEvents="none">
+          <rect x={tooltipX} y={tooltipY} width={tooltipWidth} height={tooltipHeight} rx="4" />
+          <text className="analytics-tooltip-date" x={tooltipX + 10} y={tooltipY + 19}>
+            {dateFormatter.format(new Date(`${selectedPoint.date}T00:00:00`))}
+          </text>
+          <text className="analytics-tooltip-amount" x={tooltipX + 10} y={tooltipY + 39}>
+            {amountLabel}: {formatMoney(selectedPoint.amountCents, language)}
+          </text>
+        </g>
+      )}
+      <rect
+        className="analytics-interaction-layer"
+        x={padding.left}
+        y={padding.top}
+        width={chartWidth}
+        height={chartHeight}
+        aria-hidden="true"
+      />
     </svg>
   );
 }
@@ -144,7 +221,12 @@ export function AnalyticsScreen({ onBack }) {
                 <section>
                   <h2 className="section-title">{t('spendingTrend')}</h2>
                   <div className="analytics-line-chart mt-4">
-                    <LineChart days={analytics.view.days} language={language} label={t('spendingTrend')} />
+                    <LineChart
+                      days={analytics.view.days}
+                      language={language}
+                      label={t('spendingTrend')}
+                      amountLabel={t('chartAmount')}
+                    />
                   </div>
                 </section>
 
