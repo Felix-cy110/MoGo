@@ -107,6 +107,14 @@ test('includes localized color theme controls', async () => {
   assert.equal(financeMessages.en.switchToDarkTheme, 'Turn off the lights');
 });
 
+test('includes localized language toggle labels', async () => {
+  const { financeMessages } = await import('../src/index.js');
+  assert.equal(financeMessages.zh.switchToEnglish, '切换为英文');
+  assert.equal(financeMessages.zh.switchToChinese, '切换为中文');
+  assert.equal(financeMessages.en.switchToEnglish, 'Switch to English');
+  assert.equal(financeMessages.en.switchToChinese, 'Switch to Chinese');
+});
+
 test('validates and normalizes custom category drafts', async () => {
   const { buildCategoryPayload, validateCategoryDraft } = await import('../src/index.js');
   assert.equal(validateCategoryDraft({ name: '  ' }), 'categoryNameRequired');
