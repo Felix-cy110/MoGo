@@ -130,3 +130,37 @@ test('includes localized toolbox entry labels', async () => {
   assert.equal(financeMessages.en.toolboxName, 'Mobile Toolbox');
   assert.equal(financeMessages.en.financeFeatureName, 'Personal Finance');
 });
+
+test('distinguishes category management from adding a category', async () => {
+  const { financeMessages } = await import('../src/index.js');
+  assert.equal(financeMessages.zh.manageCategories, '管理分类');
+  assert.equal(financeMessages.zh.addCategory, '添加分类');
+  assert.equal(financeMessages.en.manageCategories, 'Manage categories');
+  assert.equal(financeMessages.en.addCategory, 'Add category');
+});
+
+
+test('uses the category management API contract', async () => {
+  const { createFinanceApi } = await import('../src/index.js');
+  const calls = [];
+  const fetchImpl = async (url, options = {}) => {
+    calls.push({ url, options });
+    return {
+      ok: true,
+      json: async () => []
+    };
+  };
+  const api = createFinanceApi({ baseUrl: '/api/', fetchImpl });
+
+  await api.searchCategories('早 午');
+  await api.updateCategory(12, { name: '日用品' });
+  await api.deleteCategory(12);
+
+  assert.equal(calls[0].url, '/api/categories/manage?query=%E6%97%A9%20%E5%8D%88');
+  assert.equal(calls[0].options.method, undefined);
+  assert.equal(calls[1].url, '/api/categories/12');
+  assert.equal(calls[1].options.method, 'PUT');
+  assert.equal(calls[1].options.body, JSON.stringify({ name: '日用品' }));
+  assert.equal(calls[2].url, '/api/categories/12');
+  assert.equal(calls[2].options.method, 'DELETE');
+});

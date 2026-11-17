@@ -1,21 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDailyFinance } from '@mogo/personal-finance-react';
 import { api } from '../../services/api';
 import { AppControls } from '../../components/AppControls';
 import { AlertDialog } from './components/AlertDialog';
 import { BudgetOverview } from './components/BudgetOverview';
-import { CategoryDialog } from './components/CategoryDialog';
 import { CategorySummary } from './components/CategorySummary';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseEditDialog } from './components/ExpenseEditDialog';
 import { ExpenseList } from './components/ExpenseList';
 
-export function FinanceScreen({ onBack }) {
+export function FinanceScreen({ onBack, onManageCategories }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
   const finance = useDailyFinance({ api });
-  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const feedbackText = finance.feedback ? t(finance.feedback.key) : '';
 
   useEffect(() => {
@@ -33,11 +31,6 @@ export function FinanceScreen({ onBack }) {
   const handleAddExpense = async (event) => {
     event.preventDefault();
     await finance.addExpense();
-  };
-
-  const handleAddCategory = async (event) => {
-    event.preventDefault();
-    if (await finance.addCategory()) setCategoryDialogOpen(false);
   };
 
   const handleUpdateExpense = async (event) => {
@@ -83,7 +76,7 @@ export function FinanceScreen({ onBack }) {
             form={finance.form}
             selectedCategory={finance.selectedCategory}
             onFormChange={updateForm}
-            onManageCategories={() => setCategoryDialogOpen(true)}
+            onManageCategories={onManageCategories}
             onSubmit={handleAddExpense}
           />
           <ExpenseList
@@ -97,16 +90,6 @@ export function FinanceScreen({ onBack }) {
         <CategorySummary t={t} language={language} categoryTotals={finance.dashboard?.categoryTotals} />
       </div>
 
-      <CategoryDialog
-        t={t}
-        open={categoryDialogOpen}
-        form={finance.categoryForm}
-        onFormChange={(patch) => finance.setCategoryForm((current) => ({ ...current, ...patch }))}
-        feedback={finance.feedback}
-        feedbackText={feedbackText}
-        onClose={() => setCategoryDialogOpen(false)}
-        onSubmit={handleAddCategory}
-      />
       <ExpenseEditDialog
         t={t}
         open={finance.editingExpenseId !== null}

@@ -8,7 +8,10 @@ HTTP API 仅服务于 Web 调试端，默认监听 `127.0.0.1:8080`。未来 Rea
 | --- | --- | --- |
 | `GET` | `/api/health` | 后端健康检查 |
 | `GET` | `/api/categories` | 获取启用的消费分类 |
+| `GET` | `/api/categories/manage?query=关键字` | 查询全部分类，包含已删除分类并支持名称或 code 模糊搜索 |
 | `POST` | `/api/categories` | 新增自定义分类，备注规则固定为 `OPTIONAL` |
+| `PUT` | `/api/categories/{categoryId}` | 修改启用分类的名称 |
+| `DELETE` | `/api/categories/{categoryId}` | 软删除分类；历史消费仍保留分类名称 |
 | `GET` | `/api/dashboard?date=YYYY-MM-DD` | 获取指定日期的预算、消费与分类汇总 |
 | `PUT` | `/api/budgets/daily` | 新增或更新每日预算 |
 | `POST` | `/api/expenses` | 新增消费并返回本次跨越的预警阈值 |

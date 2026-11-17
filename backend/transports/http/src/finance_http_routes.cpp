@@ -20,6 +20,7 @@ hv::Json categoryJson(const Category& category) {
         {"name", category.name},
         {"i18nKey", category.i18n_key ? hv::Json(*category.i18n_key) : hv::Json(nullptr)},
         {"notePolicy", category.note_policy},
+        {"active", category.active},
         {"system", category.system},
         {"sortOrder", category.sort_order},
     };
@@ -117,6 +118,16 @@ std::int64_t requiredInteger(const hv::Json& body, const char* key) {
     return body.at(key).get<std::int64_t>();
 }
 
+std::int64_t pathInteger(const HttpContextPtr& context, const char* key, const char* message) {
+    try {
+        const auto value = std::stoll(context->param(key));
+        if (value <= 0) throw std::invalid_argument("non-positive id");
+        return value;
+    } catch (const std::exception&) {
+        throw ApplicationError(400, "VALIDATION_ERROR", message);
+    }
+}
+
 std::optional<std::string> optionalString(const hv::Json& body, const char* key) {
     if (!body.contains(key) || body.at(key).is_null()) return std::nullopt;
     if (!body.at(key).is_string()) {
@@ -156,11 +167,37 @@ void FinanceHttpRoutes::registerRoutes(hv::HttpService& router) {
         });
     });
 
+    router.GET("/api/categories/manage", [this](const HttpContextPtr& context) {
+        return respond(context, [this, context] {
+            hv::Json response = hv::Json::array();
+            for (const auto& category : service_.searchCategories(context->param("query"))) {
+                response.push_back(categoryJson(category));
+            }
+            return response;
+        });
+    });
+
     router.POST("/api/categories", [this](const HttpContextPtr& context) {
         return respond(context, [this, context] {
             const auto body = parseBody(context);
             return categoryJson(service_.addCategory(CategoryInput{.name = requiredString(body, "name")}));
         }, 200);
+    });
+
+    router.PUT("/api/categories/{categoryId}", [this](const HttpContextPtr& context) {
+        return respond(context, [this, context] {
+            const auto body = parseBody(context);
+            return categoryJson(service_.updateCategory(
+                pathInteger(context, "categoryId", "分类 ID 无效"),
+                CategoryInput{.name = requiredString(body, "name")}));
+        });
+    });
+
+    router.Delete("/api/categories/{categoryId}", [this](const HttpContextPtr& context) {
+        return respond(context, [this, context] {
+            return categoryJson(service_.deleteCategory(
+                pathInteger(context, "categoryId", "分类 ID 无效")));
+        });
     });
 
     router.GET("/api/dashboard", [this](const HttpContextPtr& context) {
@@ -198,12 +235,7 @@ void FinanceHttpRoutes::registerRoutes(hv::HttpService& router) {
 
     router.PUT("/api/expenses/{expenseId}", [this](const HttpContextPtr& context) {
         return respond(context, [this, context] {
-            std::int64_t expense_id{};
-            try {
-                expense_id = std::stoll(context->param("expenseId"));
-            } catch (const std::exception&) {
-                throw ApplicationError(400, "VALIDATION_ERROR", "消费记录 ID 无效");
-            }
+            const auto expense_id = pathInteger(context, "expenseId", "消费记录 ID 无效");
             const auto body = parseBody(context);
             return mutationJson(service_.updateExpense(expense_id, ExpenseUpdateInput{
                 .amount_cents = requiredInteger(body, "amountCents"),

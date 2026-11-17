@@ -17,10 +17,15 @@ public:
     void rollbackTransaction() noexcept override;
 
     std::vector<Category> categories() override;
+    std::vector<Category> searchCategories(const std::string& query) override;
     std::optional<Category> categoryById(std::int64_t id) override;
-    bool categoryNameExists(const std::string& name) override;
+    std::optional<Category> categoryByIdIncludingInactive(std::int64_t id) override;
+    bool categoryNameExists(const std::string& name,
+                            std::optional<std::int64_t> excluding_id = std::nullopt) override;
     int maxCategorySortOrder() override;
     Category insertCategory(const Category& category) override;
+    Category updateCategory(std::int64_t id, const std::string& name) override;
+    Category deactivateCategory(std::int64_t id) override;
 
     std::optional<MoneyCents> budgetForDate(const std::string& date) override;
     void saveBudget(const std::string& date, MoneyCents amount_cents) override;

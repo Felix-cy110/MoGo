@@ -87,8 +87,9 @@ Category readCategory(const Statement& statement) {
         .name = statement.text(2),
         .i18n_key = statement.optionalText(3),
         .note_policy = statement.text(4),
-        .system = statement.intValue(5) != 0,
-        .sort_order = statement.intValue(6),
+        .active = statement.intValue(5) != 0,
+        .system = statement.intValue(6) != 0,
+        .sort_order = statement.intValue(7),
     };
 }
 
@@ -106,7 +107,7 @@ Expense readExpense(const Statement& statement) {
 }
 
 constexpr std::string_view categorySelect = R"SQL(
-SELECT id, code, name, i18n_key, note_policy, is_system, sort_order
+SELECT id, code, name, i18n_key, note_policy, is_active, is_system, sort_order
 FROM expense_categories
 )SQL";
 
@@ -329,6 +330,28 @@ std::vector<Category> SqliteFinanceRepository::categories() {
     return result;
 }
 
+std::vector<Category> SqliteFinanceRepository::searchCategories(const std::string& query) {
+    std::string pattern;
+    pattern.reserve(query.size() + 2);
+    pattern.push_back('%');
+    for (const char value : query) {
+        if (value == '%' || value == '_' || value == '\\') pattern.push_back('\\');
+        pattern.push_back(value);
+    }
+    pattern.push_back('%');
+
+    Statement statement(database_.handle(), std::string(categorySelect) + R"SQL(
+WHERE (? = '' OR name LIKE ? ESCAPE '\' COLLATE NOCASE OR code LIKE ? ESCAPE '\' COLLATE NOCASE)
+ORDER BY is_active DESC, sort_order ASC, id ASC
+)SQL");
+    statement.bind(1, query);
+    statement.bind(2, pattern);
+    statement.bind(3, pattern);
+    std::vector<Category> result;
+    while (statement.row()) result.push_back(readCategory(statement));
+    return result;
+}
+
 std::optional<Category> SqliteFinanceRepository::categoryById(std::int64_t id) {
     Statement query(database_.handle(), std::string(categorySelect) + " WHERE id = ? AND is_active = 1");
     query.bind(1, id);
@@ -336,10 +359,23 @@ std::optional<Category> SqliteFinanceRepository::categoryById(std::int64_t id) {
     return readCategory(query);
 }
 
-bool SqliteFinanceRepository::categoryNameExists(const std::string& name) {
-    Statement query(database_.handle(),
-                    "SELECT 1 FROM expense_categories WHERE name = ? COLLATE NOCASE LIMIT 1");
+std::optional<Category> SqliteFinanceRepository::categoryByIdIncludingInactive(std::int64_t id) {
+    Statement query(database_.handle(), std::string(categorySelect) + " WHERE id = ?");
+    query.bind(1, id);
+    if (!query.row()) return std::nullopt;
+    return readCategory(query);
+}
+
+bool SqliteFinanceRepository::categoryNameExists(
+    const std::string& name, std::optional<std::int64_t> excluding_id) {
+    Statement query(database_.handle(), R"SQL(
+SELECT 1 FROM expense_categories
+WHERE name = ? COLLATE NOCASE AND (? IS NULL OR id != ?)
+LIMIT 1
+)SQL");
     query.bind(1, name);
+    excluding_id ? query.bind(2, *excluding_id) : query.bindNull(2);
+    excluding_id ? query.bind(3, *excluding_id) : query.bindNull(3);
     return query.row();
 }
 
@@ -364,6 +400,33 @@ VALUES (1, ?, ?, NULL, ?, ?, ?, 0, ?)
     insert.bind(6, timestamp);
     insert.execute();
     return *categoryById(sqlite3_last_insert_rowid(database_.handle()));
+}
+
+Category SqliteFinanceRepository::updateCategory(std::int64_t id, const std::string& name) {
+    Statement update(database_.handle(), R"SQL(
+UPDATE expense_categories
+SET name = ?, i18n_key = NULL, updated_at = ?
+WHERE id = ? AND is_active = 1
+)SQL");
+    update.bind(1, name);
+    update.bind(2, nowLocal());
+    update.bind(3, id);
+    update.execute();
+    const auto category = categoryById(id);
+    if (!category) throw std::runtime_error("Updated category disappeared");
+    return *category;
+}
+
+Category SqliteFinanceRepository::deactivateCategory(std::int64_t id) {
+    Statement update(database_.handle(), R"SQL(
+UPDATE expense_categories SET is_active = 0, updated_at = ? WHERE id = ? AND is_active = 1
+)SQL");
+    update.bind(1, nowLocal());
+    update.bind(2, id);
+    update.execute();
+    const auto category = categoryByIdIncludingInactive(id);
+    if (!category) throw std::runtime_error("Deleted category disappeared");
+    return *category;
 }
 
 std::optional<MoneyCents> SqliteFinanceRepository::budgetForDate(const std::string& date) {

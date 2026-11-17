@@ -15,6 +15,7 @@ struct Category {
     std::string name;
     std::optional<std::string> i18n_key;
     std::string note_policy;
+    bool active{};
     bool system{};
     int sort_order{};
 };
