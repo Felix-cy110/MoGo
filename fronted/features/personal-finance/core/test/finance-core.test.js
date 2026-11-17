@@ -130,3 +130,11 @@ test('includes localized toolbox entry labels', async () => {
   assert.equal(financeMessages.en.toolboxName, 'Mobile Toolbox');
   assert.equal(financeMessages.en.financeFeatureName, 'Personal Finance');
 });
+
+test('distinguishes category management from adding a category', async () => {
+  const { financeMessages } = await import('../src/index.js');
+  assert.equal(financeMessages.zh.manageCategories, '管理分类');
+  assert.equal(financeMessages.zh.addCategory, '添加分类');
+  assert.equal(financeMessages.en.manageCategories, 'Manage categories');
+  assert.equal(financeMessages.en.addCategory, 'Add category');
+});

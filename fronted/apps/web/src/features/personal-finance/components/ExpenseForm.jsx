@@ -37,7 +37,7 @@ export function ExpenseForm({ t, categories, form, selectedCategory, onFormChang
               })}
             </select>
             <button className="form-row-action" type="button" onClick={onManageCategories}>
-              {t('addCategory')}
+              {t('manageCategories')}
             </button>
           </div>
         </FormFieldRow>
