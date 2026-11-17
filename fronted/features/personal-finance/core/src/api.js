@@ -26,9 +26,17 @@ export const createFinanceApi = ({ baseUrl = '', fetchImpl = globalThis.fetch } 
 
   return Object.freeze({
     getCategories: () => request('/categories'),
+    searchCategories: (query = '') => request(`/categories/manage?query=${encodeURIComponent(query)}`),
     addCategory: (payload) => request('/categories', {
       method: 'POST',
       body: JSON.stringify(payload)
+    }),
+    updateCategory: (categoryId, payload) => request(`/categories/${categoryId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    }),
+    deleteCategory: (categoryId) => request(`/categories/${categoryId}`, {
+      method: 'DELETE'
     }),
     getDashboard: (date) => request(`/dashboard?date=${encodeURIComponent(date)}`),
     saveBudget: (date, amountCents) => request('/budgets/daily', {

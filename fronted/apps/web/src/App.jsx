@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { FinanceScreen } from './features/personal-finance/FinanceScreen';
+import { CategoryManagementScreen } from './features/personal-finance/CategoryManagementScreen';
 import { ToolboxHome } from './features/toolbox/ToolboxHome';
 
 const HOME_PATH = '/';
 const FINANCE_PATH = '/finance';
+const CATEGORY_MANAGEMENT_PATH = '/finance/categories';
 
-const resolveScreen = () => (globalThis.location?.pathname === FINANCE_PATH ? 'finance' : 'home');
+const resolveScreen = () => {
+  if (globalThis.location?.pathname === CATEGORY_MANAGEMENT_PATH) return 'categories';
+  if (globalThis.location?.pathname === FINANCE_PATH) return 'finance';
+  return 'home';
+};
 
 function App() {
   const [screen, setScreen] = useState(resolveScreen);
@@ -18,12 +24,23 @@ function App() {
 
   const navigate = (path) => {
     globalThis.history?.pushState({}, '', path);
-    setScreen(path === FINANCE_PATH ? 'finance' : 'home');
+    if (path === CATEGORY_MANAGEMENT_PATH) setScreen('categories');
+    else if (path === FINANCE_PATH) setScreen('finance');
+    else setScreen('home');
   };
 
-  return screen === 'finance'
-    ? <FinanceScreen onBack={() => navigate(HOME_PATH)} />
-    : <ToolboxHome onOpenFinance={() => navigate(FINANCE_PATH)} />;
+  if (screen === 'categories') {
+    return <CategoryManagementScreen onBack={() => navigate(FINANCE_PATH)} />;
+  }
+  if (screen === 'finance') {
+    return (
+      <FinanceScreen
+        onBack={() => navigate(HOME_PATH)}
+        onManageCategories={() => navigate(CATEGORY_MANAGEMENT_PATH)}
+      />
+    );
+  }
+  return <ToolboxHome onOpenFinance={() => navigate(FINANCE_PATH)} />;
 }
 
 export default App;

@@ -105,6 +105,52 @@ void testSeedAndCategories() {
     requireApplicationError("CATEGORY_NAME_EXISTS", [&] {
         service.addCategory(CategoryInput{.name = "日用品"});
     });
+
+    const Category renamed = service.updateCategory(custom.id, CategoryInput{.name = "家庭用品"});
+    require(renamed.name == "家庭用品", "category name must be editable");
+    require(!renamed.i18n_key, "edited category must use its user-defined name");
+    require(service.searchCategories("家庭").size() == 1, "category search must support partial names");
+
+    const Category deleted = service.deleteCategory(custom.id);
+    require(!deleted.active, "deleting a category must deactivate it");
+    require(service.getCategories().size() == 4, "deleted category must leave the expense selector");
+    const auto all_categories = service.searchCategories("");
+    require(all_categories.size() == 5, "management search must include deleted categories");
+    require(!all_categories.back().active, "deleted categories must sort after active categories");
+    requireApplicationError("CATEGORY_NOT_FOUND", [&] {
+        service.updateCategory(custom.id, CategoryInput{.name = "不能修改"});
+    });
+}
+
+void testDeletedCategoryKeepsHistoricalName() {
+    TemporaryDatabase database;
+    SqliteFinanceRepository repository(database.path());
+    FinanceService service(repository);
+    const std::string date = "2026-11-17";
+    const Category category = service.addCategory(CategoryInput{.name = "旅行"});
+
+    service.saveBudget(BudgetInput{.date = date, .amount_cents = 10000});
+    service.addExpense(ExpenseInput{
+        .date = date,
+        .amount_cents = 1200,
+        .category_id = category.id,
+        .note = "车票",
+    });
+    service.deleteCategory(category.id);
+
+    const Dashboard dashboard = service.getDashboard(date);
+    require(dashboard.expense_count == 1, "historical expense must survive category deletion");
+    require(dashboard.expenses.front().category_name == "旅行",
+            "historical expense must retain the deleted category name");
+    require(dashboard.category_totals.front().category_name == "旅行",
+            "historical category summary must retain the deleted category name");
+    requireApplicationError("CATEGORY_NOT_FOUND", [&] {
+        service.addExpense(ExpenseInput{
+            .date = date,
+            .amount_cents = 100,
+            .category_id = category.id,
+        });
+    });
 }
 
 void testExpenseWorkflow() {
@@ -261,6 +307,7 @@ CREATE TABLE alert_events (
 int main() {
     const std::vector<std::pair<std::string, std::function<void()>>> tests = {
         {"seed and categories", testSeedAndCategories},
+        {"deleted category history", testDeletedCategoryKeepsHistoricalName},
         {"expense workflow", testExpenseWorkflow},
         {"legacy schema compatibility", testLegacySchemaCompatibility},
     };

@@ -37,13 +37,17 @@ public:
     explicit FinanceService(FinanceRepository& repository);
 
     std::vector<Category> getCategories();
+    std::vector<Category> searchCategories(const std::string& query);
     Category addCategory(const CategoryInput& input);
+    Category updateCategory(std::int64_t category_id, const CategoryInput& input);
+    Category deleteCategory(std::int64_t category_id);
     Dashboard getDashboard(const std::string& date);
     BudgetInput saveBudget(const BudgetInput& input);
     ExpenseMutationResult addExpense(const ExpenseInput& input);
     ExpenseMutationResult updateExpense(std::int64_t expense_id, const ExpenseUpdateInput& input);
 
 private:
+    std::string validateCategoryName(const std::string& raw_name);
     Category requireActiveCategory(std::int64_t category_id);
     std::optional<std::string> normalizeNote(const Category& category,
                                              const std::optional<std::string>& note);

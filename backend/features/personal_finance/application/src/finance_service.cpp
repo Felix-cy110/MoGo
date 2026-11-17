@@ -118,12 +118,26 @@ std::vector<Category> FinanceService::getCategories() {
     return repository_.categories();
 }
 
-Category FinanceService::addCategory(const CategoryInput& input) {
+std::vector<Category> FinanceService::searchCategories(const std::string& raw_query) {
     std::scoped_lock lock(mutex_);
-    const std::string name = trim(input.name);
+    const std::string query = trim(raw_query);
+    if (utf8Length(query) > 80) {
+        throw ApplicationError(400, "VALIDATION_ERROR", "分类搜索内容不能超过 80 个字符");
+    }
+    return repository_.searchCategories(query);
+}
+
+std::string FinanceService::validateCategoryName(const std::string& raw_name) {
+    const std::string name = trim(raw_name);
     if (name.empty() || utf8Length(name) > 80) {
         throw ApplicationError(400, "VALIDATION_ERROR", "分类名称不能为空且不能超过 80 个字符");
     }
+    return name;
+}
+
+Category FinanceService::addCategory(const CategoryInput& input) {
+    std::scoped_lock lock(mutex_);
+    const std::string name = validateCategoryName(input.name);
     if (repository_.categoryNameExists(name)) {
         throw ApplicationError(409, "CATEGORY_NAME_EXISTS", "分类名称已存在");
     }
@@ -134,10 +148,36 @@ Category FinanceService::addCategory(const CategoryInput& input) {
         .name = name,
         .i18n_key = std::nullopt,
         .note_policy = "OPTIONAL",
+        .active = true,
         .system = false,
         .sort_order = repository_.maxCategorySortOrder() + 10,
     };
     category = repository_.insertCategory(category);
+    transaction.commit();
+    return category;
+}
+
+Category FinanceService::updateCategory(std::int64_t category_id, const CategoryInput& input) {
+    std::scoped_lock lock(mutex_);
+    const auto existing = repository_.categoryById(category_id);
+    if (!existing) throw ApplicationError(404, "CATEGORY_NOT_FOUND", "分类不存在或已删除");
+    const std::string name = validateCategoryName(input.name);
+    if (repository_.categoryNameExists(name, category_id)) {
+        throw ApplicationError(409, "CATEGORY_NAME_EXISTS", "分类名称已存在");
+    }
+    Transaction transaction(repository_);
+    Category category = repository_.updateCategory(category_id, name);
+    transaction.commit();
+    return category;
+}
+
+Category FinanceService::deleteCategory(std::int64_t category_id) {
+    std::scoped_lock lock(mutex_);
+    if (!repository_.categoryById(category_id)) {
+        throw ApplicationError(404, "CATEGORY_NOT_FOUND", "分类不存在或已删除");
+    }
+    Transaction transaction(repository_);
+    Category category = repository_.deactivateCategory(category_id);
     transaction.commit();
     return category;
 }

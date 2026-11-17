@@ -18,10 +18,15 @@ public:
     virtual void rollbackTransaction() noexcept = 0;
 
     virtual std::vector<Category> categories() = 0;
+    virtual std::vector<Category> searchCategories(const std::string& query) = 0;
     virtual std::optional<Category> categoryById(std::int64_t id) = 0;
-    virtual bool categoryNameExists(const std::string& name) = 0;
+    virtual std::optional<Category> categoryByIdIncludingInactive(std::int64_t id) = 0;
+    virtual bool categoryNameExists(const std::string& name,
+                                    std::optional<std::int64_t> excluding_id = std::nullopt) = 0;
     virtual int maxCategorySortOrder() = 0;
     virtual Category insertCategory(const Category& category) = 0;
+    virtual Category updateCategory(std::int64_t id, const std::string& name) = 0;
+    virtual Category deactivateCategory(std::int64_t id) = 0;
 
     virtual std::optional<MoneyCents> budgetForDate(const std::string& date) = 0;
     virtual void saveBudget(const std::string& date, MoneyCents amount_cents) = 0;
