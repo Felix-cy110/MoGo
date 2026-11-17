@@ -3,7 +3,7 @@ import { formatMoney, resolveCategoryMessageKey } from '@mogo/personal-finance-c
 
 export function CategorySummary({ t, language, categoryTotals = [] }) {
   return (
-    <section className="pt-7">
+    <section className="pt-3">
       <h2 className="section-title">{t('categorySummary')}</h2>
       {categoryTotals.length ? (
         <div className="mt-3 overflow-x-auto">
