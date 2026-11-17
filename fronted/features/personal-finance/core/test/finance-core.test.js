@@ -7,6 +7,7 @@ import {
   createExpenseDraft,
   formatLocalDate,
   NOTE_POLICY,
+  sortCategoriesOtherLast,
   validateExpenseDraft,
   yuanToCents
 } from '../src/index.js';
@@ -120,6 +121,49 @@ test('validates and normalizes custom category drafts', async () => {
   assert.equal(validateCategoryDraft({ name: '  ' }), 'categoryNameRequired');
   assert.equal(validateCategoryDraft({ name: '日用品' }), null);
   assert.deepEqual(buildCategoryPayload({ name: '  日用品  ' }), { name: '日用品' });
+});
+
+test('places Other last while preserving custom category order and source data', () => {
+  const meal = Object.freeze({ id: 1, code: 'MEAL' });
+  const other = Object.freeze({ id: 4, code: 'OTHER', name: 'Renamed' });
+  const custom = Object.freeze({ id: 5, code: 'CUSTOM_5', name: '其他' });
+  const custom2 = Object.freeze({ id: 6, code: 'CUSTOM_6', name: 'Other' });
+  for (const items of [[other, meal, custom, custom2], [meal, other, custom, custom2], [meal, custom, custom2, other]]) {
+    const source = Object.freeze(items);
+    const original = [...source];
+    const result = sortCategoriesOtherLast(source);
+    assert.deepEqual(result, [meal, custom, custom2, other]);
+    assert.deepEqual(source, original);
+    assert.notEqual(result, source);
+    assert.equal(result.at(-1), other);
+  }
+  assert.deepEqual(sortCategoriesOtherLast([]), []);
+  assert.deepEqual(sortCategoriesOtherLast([custom2, meal, custom]), [custom2, meal, custom]);
+});
+
+test('identifies Other by stable translation keys and summary category codes', () => {
+  const other = { i18nKey: 'category.other' };
+  const meal = { i18nKey: 'category.meal' };
+  assert.deepEqual(sortCategoriesOtherLast([other, meal]), [meal, other]);
+  const totals = [
+    { categoryCode: 'OTHER', amountCents: 5000 },
+    { categoryCode: 'CUSTOM_5', amountCents: 2000 },
+    { categoryCode: 'MEAL', amountCents: 1000 }
+  ];
+  assert.deepEqual(sortCategoriesOtherLast(totals), [totals[1], totals[2], totals[0]]);
+});
+
+test('places Other last in weekly and monthly analytics summaries', async () => {
+  const { ANALYTICS_PERIOD, buildAnalyticsView } = await import('../src/index.js');
+  const categoryTotals = [
+    { categoryCode: 'OTHER', amountCents: 5000 },
+    { categoryCode: 'MEAL', amountCents: 1000 }
+  ];
+  for (const period of Object.values(ANALYTICS_PERIOD)) {
+    const view = buildAnalyticsView({ categoryTotals }, period);
+    assert.deepEqual(view.categoryTotals, [categoryTotals[1], categoryTotals[0]]);
+    assert.equal(categoryTotals[0].categoryCode, 'OTHER');
+  }
 });
 
 

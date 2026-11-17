@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   buildCategoryPayload,
   resolveApiErrorMessageKey,
+  sortCategoriesOtherLast,
   validateCategoryDraft
 } from '@mogo/personal-finance-core';
 
@@ -23,7 +24,7 @@ export const useCategoryManagement = ({ api }) => {
     setLoading(true);
     try {
       const items = await api.searchCategories(query);
-      if (requestId === requestSequence.current) setCategories(items);
+      if (requestId === requestSequence.current) setCategories(sortCategoriesOtherLast(items));
       return true;
     } catch (error) {
       if (requestId === requestSequence.current) {
@@ -42,7 +43,7 @@ export const useCategoryManagement = ({ api }) => {
     const timer = setTimeout(() => {
       api.searchCategories(query)
         .then((items) => {
-          if (requestId === requestSequence.current) setCategories(items);
+          if (requestId === requestSequence.current) setCategories(sortCategoriesOtherLast(items));
         })
         .catch((error) => {
           if (requestId === requestSequence.current) {
