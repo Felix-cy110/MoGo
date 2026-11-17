@@ -1,0 +1,9 @@
+{
+  "name": "@mogo/user-profile-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.js",
+  "dependencies": { "@mogo/core-shared": "0.1.0" },
+  "scripts": { "test": "node --test" }
+}

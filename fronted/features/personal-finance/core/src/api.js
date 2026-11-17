@@ -1,28 +1,8 @@
-export class FinanceApiError extends Error {
-  constructor(code, message, status) {
-    super(message);
-    this.name = 'FinanceApiError';
-    this.code = code;
-    this.status = status;
-  }
-}
-
-const joinUrl = (baseUrl, path) => `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+import { createJsonRequest } from '@mogo/core-shared';
+export { ApiError as FinanceApiError } from '@mogo/core-shared';
 
 export const createFinanceApi = ({ baseUrl = '', fetchImpl = globalThis.fetch } = {}) => {
-  if (!fetchImpl) throw new Error('fetchImpl is required');
-
-  const request = async (path, options = {}) => {
-    const response = await fetchImpl(joinUrl(baseUrl, path), {
-      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-      ...options
-    });
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
-      throw new FinanceApiError(body.code || 'REQUEST_FAILED', body.message || '请求失败', response.status);
-    }
-    return response.json();
-  };
+  const request = createJsonRequest({ baseUrl, fetchImpl });
 
   return Object.freeze({
     getCategories: () => request('/categories'),

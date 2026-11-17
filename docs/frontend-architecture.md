@@ -6,8 +6,12 @@ MoGo 的 Web 与未来 React Native 客户端遵循“共享业务逻辑，平�
 
 | 目录 | 职责 | 可否被 RN 复用 |
 | --- | --- | --- |
+| `fronted/core-shared/core` | 无领域依赖的 JSON 请求和结构化 API 错误 | 可以，通过参数注入请求实现 |
 | `fronted/features/personal-finance/core` | 金额、日期、业务校验、请求模型、API 客户端、业务文案 | 可以，不能依赖 React 或浏览器 DOM |
 | `fronted/features/personal-finance/react` | 基于 React Hook 的页面状态、异步流程和业务动作 | 可以，Web 与 RN 使用同一套 Hook |
+| `fronted/features/user-profile/core` | 用户资料草稿、选填校验、接口模型、错误映射和中英文文案 | 可以，不依赖个人财务模块 |
+| `fronted/features/user-profile/react` | 用户资料加载、重试、保存和反馈状态 | 可以，未来 RN 注入同契约的 Native Adapter |
+| `fronted/apps/web/src/components` | Web 公共控件与左标题右输入的表单行 | 仅 Web 组件复用 |
 | `fronted/apps/web/src/features` | Web 页面和 Web 组件 | 不直接复用，包含 HTML 与 Tailwind 类名 |
 | 未来 `fronted/apps/mobile/` | React Native Screen 与原生组件 | 使用共享核心和 Hook，独立实现原生 UI |
 
@@ -45,8 +49,8 @@ Web 的 `<input>`、`<table>` 和 Tailwind 样式无法直接在 React Native �
 
 ## 新功能开发规则
 
-- 新增业务规则时，优先放入 `fronted/features/personal-finance/core` 并补单元测试。
-- 新增页面状态或异步流程时，优先放入 `fronted/features/personal-finance/react`。
+- 新增业务规则时，优先放入对应 `fronted/features/<feature>/core` 并补单元测试。
+- 新增页面状态或异步流程时，优先放入对应 `fronted/features/<feature>/react`。
 - Web 组件不得直接拼装接口载荷或复制后端错误码判断。
 - 共享代码不得使用 `window`、`document`、`localStorage` 或浏览器专属 API；平台能力通过参数注入。
 - Web 的 API 地址和 `fetch` 实现通过 `createFinanceApi` 注入。
@@ -54,7 +58,7 @@ Web 的 `<input>`、`<table>` 和 Tailwind 样式无法直接在 React Native �
 
 ## 国际化
 
-- 中英文资源、分类翻译键和接口错误码映射统一存放在 `fronted/features/personal-finance/core`。
+- 中英文业务资源和接口错误映射存放在对应 feature 的 `core` 中，Web 平台层组合各模块资源；分类翻译键继续属于个人财务模块。
 - Web 和 React Native 使用同一套翻译 key，不复制业务文案。
 - 平台层可分别实现语言选择持久化；Web 当前使用 `localStorage`，共享层不依赖该实现。
 - 金额、日期和时间统一通过共享的 `Intl` 格式化工具展示。
@@ -92,3 +96,12 @@ Web 的 `<input>`、`<table>` 和 Tailwind 样式无法直接在 React Native �
 - Web 首页按“一行一个功能”展示百宝箱模块，保持移动端优先的简单列表结构。
 - 第一个功能为个人财务管理，后续功能以独立 feature 目录接入，首页只负责导航，不承载领域逻辑。
 - 百宝箱功能名称和说明统一接入 i18n；具体业务状态仍优先放入对应共享模块。
+
+## 用户资料
+
+- 首页主题按钮旁提供用户图标入口，打开独立 `/profile` 页面；不作为百宝箱业务功能列表项，也不引入登录。
+- 姓名、性别、年龄、国家、职业全部选填，国家和职业为自由文本；性别可以保持“未填写”，已填写字段可清空后保存。
+- `useUserProfile` 负责加载、重试、校验、保存、防重复提交及反馈。加载失败不展示可保存的空表单，保存失败保留草稿。
+- 持久化仅由 C++ JSON Adapter 完成，不使用 SQLite 或浏览器本地存储保存资料。
+- Web 与财务表单复用公共 `FormFieldRow`；页面支持中英文和明暗主题，未来 RN 独立渲染界面并复用 core 与 Hook。
+- 调试时可以通过 `MOGO_API_TARGET=http://127.0.0.1:8081` 为 Web 指定另一个本机后端；未设置时仍代理到 `http://localhost:8080`。

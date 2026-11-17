@@ -1,0 +1,9 @@
+{
+  "name": "@mogo/user-profile-react",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.js",
+  "peerDependencies": { "react": ">=18" },
+  "dependencies": { "@mogo/user-profile-core": "0.1.0" }
+}

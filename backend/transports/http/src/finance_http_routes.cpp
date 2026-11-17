@@ -182,12 +182,6 @@ int respond(const HttpContextPtr& context, const std::function<hv::Json()>& acti
 }  // namespace
 
 void FinanceHttpRoutes::registerRoutes(hv::HttpService& router) {
-    router.AllowCORS();
-
-    router.GET("/api/health", [](const HttpContextPtr& context) {
-        return context->sendJson(hv::Json{{"status", "ok"}, {"runtime", "cpp20-libhv"}});
-    });
-
     router.GET("/api/categories", [this](const HttpContextPtr& context) {
         return respond(context, [this] {
             hv::Json response = hv::Json::array();

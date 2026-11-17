@@ -1,6 +1,6 @@
 import React from 'react';
 import { clampPercent, formatMoney } from '@mogo/personal-finance-core';
-import { FormFieldRow } from './FormFieldRow';
+import { FormFieldRow } from '../../../components/FormFieldRow';
 
 export function BudgetOverview({ t, language, dashboard, budgetInput, onBudgetChange, onSaveBudget, onOpenAnalytics }) {
   const progress = clampPercent(dashboard?.usagePercent);

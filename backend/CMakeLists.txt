@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(MOGO_FEATURE_PERSONAL_FINANCE "Build the personal finance feature" ON)
+option(MOGO_FEATURE_USER_PROFILE "Build the local user profile feature" ON)
 option(MOGO_ENABLE_HTTP "Build the libhv HTTP adapter" ON)
 option(MOGO_BUILD_TESTS "Build backend tests" ON)
 
@@ -20,10 +21,11 @@ if(MOGO_FEATURE_PERSONAL_FINANCE)
   add_subdirectory(features/personal_finance)
 endif()
 
+if(MOGO_FEATURE_USER_PROFILE)
+  add_subdirectory(features/user_profile)
+endif()
+
 if(MOGO_ENABLE_HTTP)
-  if(NOT MOGO_FEATURE_PERSONAL_FINANCE)
-    message(FATAL_ERROR "The HTTP application currently requires personal finance")
-  endif()
   add_subdirectory(transports/http)
   add_subdirectory(platforms/desktop)
 endif()

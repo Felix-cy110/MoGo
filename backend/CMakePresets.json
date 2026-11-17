@@ -9,6 +9,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "MOGO_FEATURE_PERSONAL_FINANCE": "ON",
+        "MOGO_FEATURE_USER_PROFILE": "ON",
         "MOGO_ENABLE_HTTP": "ON",
         "MOGO_BUILD_TESTS": "ON"
       }
@@ -21,6 +22,7 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "MOGO_FEATURE_PERSONAL_FINANCE": "ON",
+        "MOGO_FEATURE_USER_PROFILE": "ON",
         "MOGO_ENABLE_HTTP": "OFF",
         "MOGO_BUILD_TESTS": "OFF"
       }
