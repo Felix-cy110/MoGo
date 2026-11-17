@@ -5,7 +5,7 @@ import { useCategoryManagement } from '@mogo/personal-finance-react';
 import { AppControls } from '../../components/AppControls';
 import { api } from '../../services/api';
 import { FormFieldRow } from './components/FormFieldRow';
-import { CategoryProtectionDialog } from './components/CategoryProtectionDialog';
+import { CategoryNoticeDialog } from './components/CategoryNoticeDialog';
 
 function BackButton({ label, onClick }) {
   return (
@@ -22,7 +22,7 @@ export function CategoryManagementScreen({ onBack }) {
   const language = i18n.resolvedLanguage || i18n.language;
   const management = useCategoryManagement({ api });
   const feedbackText = management.feedback ? t(management.feedback.key) : '';
-  const categoryProtected = management.feedback?.key === 'categoryProtected';
+  const dialogFeedback = management.feedback?.presentation === 'dialog';
 
   useEffect(() => {
     document.title = `${t('manageCategories')} · ${t('appName')}`;
@@ -40,7 +40,7 @@ export function CategoryManagementScreen({ onBack }) {
   };
 
   const handleDelete = async (category, displayName) => {
-    if (!management.checkCategoryMutable(category)) return;
+    if (!management.checkCategoryMutable(category, 'delete')) return;
     if (globalThis.confirm?.(t('confirmDeleteCategory', { name: displayName }))) {
       await management.deleteCategory(category.id);
     }
@@ -60,7 +60,7 @@ export function CategoryManagementScreen({ onBack }) {
 
       <div className="mx-auto max-w-3xl px-5 py-7 sm:px-8">
         <p className="section-label">{t('categoryManagementDescription')}</p>
-        {management.feedback?.type === 'error' && !categoryProtected && <div className="notice notice-error mt-5">{feedbackText}</div>}
+        {management.feedback?.type === 'error' && !dialogFeedback && <div className="notice notice-error mt-5">{feedbackText}</div>}
         {management.feedback?.type === 'success' && <div className="notice notice-success mt-5">{feedbackText}</div>}
 
         <form className="mt-6" onSubmit={handleAdd}>
@@ -131,7 +131,11 @@ export function CategoryManagementScreen({ onBack }) {
         </section>
       </div>
 
-      <CategoryProtectionDialog t={t} open={categoryProtected} onDismiss={management.dismissFeedback} />
+      <CategoryNoticeDialog
+        t={t}
+        messageKey={dialogFeedback ? management.feedback.key : null}
+        onDismiss={management.dismissFeedback}
+      />
 
       {management.editingCategory && (
         <div className="fixed inset-0 z-10 grid place-items-center bg-black/40 p-5" role="dialog" aria-modal="true" aria-labelledby="edit-category-title">
