@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatDisplayDate } from '@mogo/personal-finance-core';
 import { useDailyFinance } from '@mogo/personal-finance-react';
 import { api } from '../../services/api';
 import { AppControls } from '../../components/AppControls';
@@ -43,7 +42,7 @@ export function FinanceScreen({ onBack }) {
   return (
     <main className="min-h-screen bg-white text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
       <header className="border-b border-slate-200 dark:border-slate-800">
-        <div className="mx-auto flex max-w-5xl items-end justify-between gap-5 px-5 py-5 sm:px-8">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-5 px-5 py-2 sm:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button className="back-button" type="button" onClick={onBack} aria-label={t('backToToolbox')}>
               <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none">
@@ -52,7 +51,6 @@ export function FinanceScreen({ onBack }) {
             </button>
             <div className="min-w-0">
               <h1 className="truncate text-xl font-semibold">{t('financeFeatureName')}</h1>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{formatDisplayDate(finance.date, language)}</p>
             </div>
           </div>
           <AppControls />
