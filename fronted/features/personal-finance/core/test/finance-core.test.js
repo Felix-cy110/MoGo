@@ -6,6 +6,7 @@ import {
   centsToYuan,
   createExpenseDraft,
   formatLocalDate,
+  isOtherCategory,
   NOTE_POLICY,
   sortCategoriesOtherLast,
   validateExpenseDraft,
@@ -151,6 +152,26 @@ test('identifies Other by stable translation keys and summary category codes', (
     { categoryCode: 'MEAL', amountCents: 1000 }
   ];
   assert.deepEqual(sortCategoriesOtherLast(totals), [totals[1], totals[2], totals[0]]);
+});
+
+test('protects only the built-in Other category independently of name and language', () => {
+  assert.equal(isOtherCategory({ code: 'OTHER', name: 'Renamed' }), true);
+  assert.equal(isOtherCategory({ i18nKey: 'category.other' }), true);
+  assert.equal(isOtherCategory({ categoryCode: 'OTHER' }), true);
+  assert.equal(isOtherCategory({ code: 'MEAL', system: true }), false);
+  assert.equal(isOtherCategory({ code: 'CUSTOM_5', name: '其他' }), false);
+  assert.equal(isOtherCategory({ code: 'CUSTOM_6', name: 'Other' }), false);
+  assert.equal(isOtherCategory(null), false);
+  assert.equal(isOtherCategory(undefined), false);
+});
+
+test('localizes the protected category error and dialog in both languages', async () => {
+  const { financeMessages, resolveApiErrorMessageKey, supportedLanguages } = await import('../src/index.js');
+  assert.equal(resolveApiErrorMessageKey('CATEGORY_PROTECTED'), 'categoryProtected');
+  for (const language of supportedLanguages) {
+    assert.ok(financeMessages[language].categoryProtectedTitle);
+    assert.ok(financeMessages[language].categoryProtected);
+  }
 });
 
 test('places Other last in weekly and monthly analytics summaries', async () => {

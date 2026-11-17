@@ -92,6 +92,12 @@ std::string randomCategoryCode() {
     return code;
 }
 
+void requireMutableCategory(const Category& category) {
+    if (category.code == "OTHER") {
+        throw ApplicationError(403, "CATEGORY_PROTECTED", "其他是内置分类，不能修改或删除");
+    }
+}
+
 }  // namespace
 
 int usagePercent(MoneyCents total_cents, MoneyCents budget_cents) {
@@ -161,6 +167,7 @@ Category FinanceService::updateCategory(std::int64_t category_id, const Category
     std::scoped_lock lock(mutex_);
     const auto existing = repository_.categoryById(category_id);
     if (!existing) throw ApplicationError(404, "CATEGORY_NOT_FOUND", "分类不存在或已删除");
+    requireMutableCategory(*existing);
     const std::string name = validateCategoryName(input.name);
     if (repository_.categoryNameExists(name, category_id)) {
         throw ApplicationError(409, "CATEGORY_NAME_EXISTS", "分类名称已存在");
@@ -173,9 +180,11 @@ Category FinanceService::updateCategory(std::int64_t category_id, const Category
 
 Category FinanceService::deleteCategory(std::int64_t category_id) {
     std::scoped_lock lock(mutex_);
-    if (!repository_.categoryById(category_id)) {
+    const auto existing = repository_.categoryById(category_id);
+    if (!existing) {
         throw ApplicationError(404, "CATEGORY_NOT_FOUND", "分类不存在或已删除");
     }
+    requireMutableCategory(*existing);
     Transaction transaction(repository_);
     Category category = repository_.deactivateCategory(category_id);
     transaction.commit();
