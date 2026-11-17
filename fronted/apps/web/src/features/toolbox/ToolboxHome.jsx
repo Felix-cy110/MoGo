@@ -22,7 +22,7 @@ export function ToolboxHome({ onOpenFinance }) {
         </div>
       </header>
 
-      <section className="mx-auto max-w-xl px-5 py-6" aria-label={t('toolboxFeatures')}>
+      <section className="mx-auto max-w-xl px-5 pb-6" aria-label={t('toolboxFeatures')}>
         <button className="tool-row" type="button" onClick={onOpenFinance}>
           <span className="tool-row-icon" aria-hidden="true">¥</span>
           <span className="min-w-0 flex-1 text-left">
