@@ -82,8 +82,7 @@ export function CategoryManagementScreen({ onBack }) {
         </form>
 
         <section className="mt-8">
-          <div className="flex items-end justify-between gap-4">
-            <h2 className="section-title">{t('categoryList')}</h2>
+          <div className="flex justify-end">
             <label className="block w-full max-w-xs">
               <span className="sr-only">{t('categorySearch')}</span>
               <input
