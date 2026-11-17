@@ -176,6 +176,23 @@ test('builds weekly and monthly analytics ranges', async () => {
     startDate: '2026-11-01',
     endDate: '2026-11-18'
   });
+  const analyticsView = buildAnalyticsView({
+    startDate: '2026-11-16',
+    endDate: '2026-11-18',
+    totalAmountCents: 3000,
+    expenseCount: 2,
+    days: [
+      { date: '2026-11-16', amountCents: 1000 },
+      { date: '2026-11-18', amountCents: 2000 }
+    ],
+    categoryTotals: []
+  }, ANALYTICS_PERIOD.WEEK);
+  assert.deepEqual(analyticsView.days, [
+    { date: '2026-11-16', amountCents: 1000 },
+    { date: '2026-11-17', amountCents: 0, expenseCount: 0 },
+    { date: '2026-11-18', amountCents: 2000 }
+  ]);
+
   assert.deepEqual(buildAnalyticsView({
     startDate: '2026-11-16',
     endDate: '2026-11-17',

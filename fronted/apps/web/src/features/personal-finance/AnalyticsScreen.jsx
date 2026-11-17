@@ -4,6 +4,7 @@ import {
   ANALYTICS_PERIOD,
   formatDisplayDate,
   formatMoney,
+  getLocale,
   resolveCategoryMessageKey
 } from '@mogo/personal-finance-core';
 import { useFinanceAnalytics } from '@mogo/personal-finance-react';
@@ -29,11 +30,50 @@ function Metric({ label, value }) {
   );
 }
 
+function LineChart({ days, language, label }) {
+  const width = 760;
+  const height = 300;
+  const padding = { top: 24, right: 22, bottom: 48, left: 12 };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  const maxAmount = Math.max(1, ...days.map((day) => Number(day.amountCents || 0)));
+  const points = days.map((day, index) => {
+    const ratio = days.length <= 1 ? 0.5 : index / (days.length - 1);
+    const x = padding.left + chartWidth * ratio;
+    const y = padding.top + chartHeight - (Number(day.amountCents || 0) / maxAmount) * chartHeight;
+    return { ...day, x, y };
+  });
+  const linePoints = points.map(({ x, y }) => `${x},${y}`).join(' ');
+  const areaPoints = `${padding.left},${padding.top + chartHeight} ${linePoints} ${padding.left + chartWidth},${padding.top + chartHeight}`;
+  const dateFormatter = new Intl.DateTimeFormat(getLocale(language), { month: 'numeric', day: 'numeric' });
+  const labelStep = days.length > 12 ? Math.ceil(days.length / 7) : 1;
+
+  return (
+    <svg className="analytics-line-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
+      {[0, 0.5, 1].map((ratio) => {
+        const y = padding.top + chartHeight * ratio;
+        return <line className="analytics-grid-line" key={ratio} x1={padding.left} x2={padding.left + chartWidth} y1={y} y2={y} />;
+      })}
+      <polygon className="analytics-area" points={areaPoints} />
+      <polyline className="analytics-line" points={linePoints} />
+      {points.map((point, index) => (
+        <g key={point.date}>
+          <circle className="analytics-point" cx={point.x} cy={point.y} r="4" />
+          {(index % labelStep === 0 || index === points.length - 1) && (
+            <text className="analytics-axis-label" x={point.x} y={height - 16} textAnchor="middle">
+              {dateFormatter.format(new Date(`${point.date}T00:00:00`))}
+            </text>
+          )}
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export function AnalyticsScreen({ onBack }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
   const analytics = useFinanceAnalytics({ api });
-  const maxAmount = analytics.view.maxAmountCents || 1;
   const feedbackText = analytics.feedback ? t(analytics.feedback.key) : '';
 
   useEffect(() => {
@@ -103,21 +143,8 @@ export function AnalyticsScreen({ onBack }) {
               <div className="mt-8 grid gap-8 lg:grid-cols-[1.35fr_1fr]">
                 <section>
                   <h2 className="section-title">{t('spendingTrend')}</h2>
-                  <div className="analytics-chart mt-4">
-                    {analytics.view.days.map((day) => (
-                      <div className="analytics-bar-row" key={day.date}>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                          {formatDisplayDate(day.date, language)}
-                        </span>
-                        <div className="analytics-bar-track">
-                          <div
-                            className="analytics-bar-fill"
-                            style={{ width: `${Math.max(3, (day.amountCents / maxAmount) * 100)}%` }}
-                          />
-                        </div>
-                        <span className="text-right text-sm font-medium">{formatMoney(day.amountCents, language)}</span>
-                      </div>
-                    ))}
+                  <div className="analytics-line-chart mt-4">
+                    <LineChart days={analytics.view.days} language={language} label={t('spendingTrend')} />
                   </div>
                 </section>
 
