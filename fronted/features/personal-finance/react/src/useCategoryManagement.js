@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   buildCategoryPayload,
+  buildCategoryErrorFeedback,
   findCategory,
   isOtherCategory,
   resolveApiErrorMessageKey,
@@ -21,9 +22,9 @@ export const useCategoryManagement = ({ api }) => {
 
   const requestSequence = useRef(0);
 
-  const checkCategoryMutable = useCallback((category) => {
+  const checkCategoryMutable = useCallback((category, operation) => {
     if (!isOtherCategory(category)) return true;
-    setFeedback({ type: 'error', key: 'categoryProtected' });
+    setFeedback(buildCategoryErrorFeedback('CATEGORY_PROTECTED', operation));
     return false;
   }, []);
 
@@ -79,13 +80,13 @@ export const useCategoryManagement = ({ api }) => {
       setFeedback({ type: 'success', key: 'categoryAdded' });
       return true;
     } catch (error) {
-      setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
+      setFeedback(buildCategoryErrorFeedback(error.code, 'add'));
       return false;
     }
   }, [api, form, refresh]);
 
   const startEditing = useCallback((category) => {
-    if (!checkCategoryMutable(category)) return;
+    if (!checkCategoryMutable(category, 'edit')) return;
     setFeedback(null);
     setEditingCategory(category);
     setEditForm({ name: category.name });
@@ -98,7 +99,7 @@ export const useCategoryManagement = ({ api }) => {
 
   const updateCategory = useCallback(async () => {
     if (!editingCategory) return false;
-    if (!checkCategoryMutable(editingCategory)) return false;
+    if (!checkCategoryMutable(editingCategory, 'edit')) return false;
     setFeedback(null);
     const validationKey = validateCategoryDraft(editForm);
     if (validationKey) {
@@ -112,13 +113,13 @@ export const useCategoryManagement = ({ api }) => {
       setFeedback({ type: 'success', key: 'categoryUpdated' });
       return true;
     } catch (error) {
-      setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
+      setFeedback(buildCategoryErrorFeedback(error.code, 'edit'));
       return false;
     }
   }, [api, cancelEditing, checkCategoryMutable, editForm, editingCategory, refresh]);
 
   const deleteCategory = useCallback(async (categoryId) => {
-    if (!checkCategoryMutable(findCategory(categories, categoryId))) return false;
+    if (!checkCategoryMutable(findCategory(categories, categoryId), 'delete')) return false;
     setFeedback(null);
     try {
       await api.deleteCategory(categoryId);
@@ -127,7 +128,7 @@ export const useCategoryManagement = ({ api }) => {
       setFeedback({ type: 'success', key: 'categoryDeleted' });
       return true;
     } catch (error) {
-      setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
+      setFeedback(buildCategoryErrorFeedback(error.code, 'delete'));
       return false;
     }
   }, [api, cancelEditing, categories, checkCategoryMutable, editingCategory?.id, refresh]);

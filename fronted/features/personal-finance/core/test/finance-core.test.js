@@ -165,13 +165,36 @@ test('protects only the built-in Other category independently of name and langua
   assert.equal(isOtherCategory(undefined), false);
 });
 
-test('localizes the protected category error and dialog in both languages', async () => {
-  const { financeMessages, resolveApiErrorMessageKey, supportedLanguages } = await import('../src/index.js');
+test('localizes concise category notices in both languages', async () => {
+  const { financeMessages, resolveApiErrorMessageKey } = await import('../src/index.js');
   assert.equal(resolveApiErrorMessageKey('CATEGORY_PROTECTED'), 'categoryProtected');
-  for (const language of supportedLanguages) {
-    assert.ok(financeMessages[language].categoryProtectedTitle);
-    assert.ok(financeMessages[language].categoryProtected);
+  assert.equal(financeMessages.zh.categoryNameExists, '分类已存在');
+  assert.equal(financeMessages.zh.categoryEditForbidden, '禁止编辑');
+  assert.equal(financeMessages.zh.categoryDeleteForbidden, '禁止删除');
+  assert.equal(financeMessages.en.categoryNameExists, 'Category already exists');
+  assert.equal(financeMessages.en.categoryEditForbidden, 'Editing not allowed');
+  assert.equal(financeMessages.en.categoryDeleteForbidden, 'Deletion not allowed');
+});
+
+test('uses dialogs for duplicate categories and operation-specific protection errors', async () => {
+  const { buildCategoryErrorFeedback } = await import('../src/index.js');
+  for (const operation of ['add', 'edit']) {
+    assert.deepEqual(buildCategoryErrorFeedback('CATEGORY_NAME_EXISTS', operation), {
+      type: 'error', key: 'categoryNameExists', presentation: 'dialog'
+    });
   }
+  assert.deepEqual(buildCategoryErrorFeedback('CATEGORY_PROTECTED', 'edit'), {
+    type: 'error', key: 'categoryEditForbidden', presentation: 'dialog'
+  });
+  assert.deepEqual(buildCategoryErrorFeedback('CATEGORY_PROTECTED', 'delete'), {
+    type: 'error', key: 'categoryDeleteForbidden', presentation: 'dialog'
+  });
+  assert.deepEqual(buildCategoryErrorFeedback('UNKNOWN', 'add'), {
+    type: 'error', key: 'requestFailed', presentation: 'inline'
+  });
+  assert.deepEqual(buildCategoryErrorFeedback('VALIDATION_ERROR', 'edit'), {
+    type: 'error', key: 'validationError', presentation: 'inline'
+  });
 });
 
 test('places Other last in weekly and monthly analytics summaries', async () => {
