@@ -1,0 +1,40 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "dev",
+      "displayName": "MoGo development",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/dev",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "MOGO_FEATURE_PERSONAL_FINANCE": "ON",
+        "MOGO_ENABLE_HTTP": "ON",
+        "MOGO_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "mobile-core",
+      "displayName": "MoGo mobile core",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/mobile-core",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "MOGO_FEATURE_PERSONAL_FINANCE": "ON",
+        "MOGO_ENABLE_HTTP": "OFF",
+        "MOGO_BUILD_TESTS": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "dev", "configurePreset": "dev" },
+    { "name": "mobile-core", "configurePreset": "mobile-core" }
+  ],
+  "testPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}
