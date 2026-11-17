@@ -20,7 +20,13 @@ fronted/features/personal-finance/react
         ↓
 fronted/features/personal-finance/core
         ↓
-Spring Boot API
+平台服务适配器
+   ├── Web：libhv HTTP API
+   └── React Native：C++ Turbo Native Module（未来）
+                    ↓
+          C++ Personal Finance Core
+                    ↓
+                  SQLite
 ```
 
 共享模块不得反向依赖 Web 或 React Native。平台组件只负责渲染和处理平台事件，不重复业务校验、金额转换或接口协议。
@@ -43,7 +49,8 @@ Web 的 `<input>`、`<table>` 和 Tailwind 样式无法直接在 React Native �
 - 新增页面状态或异步流程时，优先放入 `fronted/features/personal-finance/react`。
 - Web 组件不得直接拼装接口载荷或复制后端错误码判断。
 - 共享代码不得使用 `window`、`document`、`localStorage` 或浏览器专属 API；平台能力通过参数注入。
-- API 地址和 `fetch` 实现通过 `createFinanceApi` 注入，RN 可传入自己的服务地址和网络实现。
+- Web 的 API 地址和 `fetch` 实现通过 `createFinanceApi` 注入。
+- 未来 RN 应提供与 HTTP 客户端相同业务方法的 Native Adapter，让共享 Hook 依赖稳定服务接口，而不是依赖 localhost 或 HTTP 细节。
 
 ## 国际化
 

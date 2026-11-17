@@ -1,0 +1,8 @@
+add_executable(mogo_personal_finance_tests
+  personal_finance_tests.cpp
+)
+target_link_libraries(mogo_personal_finance_tests
+  PRIVATE mogo_personal_finance_sqlite
+)
+
+add_test(NAME personal_finance COMMAND mogo_personal_finance_tests)

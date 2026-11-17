@@ -55,7 +55,7 @@ trap cleanup EXIT
 trap handle_signal INT TERM
 
 require_command npm
-require_command mvn
+require_command cmake
 require_command pgrep
 require_command lsof
 
@@ -101,6 +101,10 @@ if [[ ! -d node_modules ]]; then
   npm install
 fi
 
+printf '正在编译 C++ 后端...\n'
+cmake --preset dev -S "$ROOT_DIR/backend"
+cmake --build "$ROOT_DIR/backend/build/dev" --target mogo_backend --parallel
+
 printf '正在启动 MoGo...\n'
 printf '  Web：  http://localhost:3000\n'
 printf '  API：  http://localhost:8080\n'
@@ -108,7 +112,7 @@ printf '按 Ctrl+C 可同时停止前端和后端。\n\n'
 
 (
   cd "$ROOT_DIR/backend"
-  exec mvn spring-boot:run
+  exec ./build/dev/bin/mogo_backend --database data/mogo.db
 ) &
 BACKEND_PID=$!
 

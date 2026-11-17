@@ -4,7 +4,7 @@
 
 - **Web 前端**：React + Tailwind CSS（Tailcss）+ i18n + Rsbuild（RustBuild）
 - **手机端**：RNN（按当前约定用于 React Native 手机端）
-- **后端**：JDK 17 + Spring Boot + Maven
+- **后端**：C++20 + CMake + libhv
 - **数据持久化**：SQLite
 
 除非有明确的技术或业务理由，不引入与上述基线冲突的框架、运行时或持久化方案。
@@ -44,10 +44,15 @@
 
 ## 后端模块规范
 
-- 后端采用按业务功能拆分的模块化单体结构，应用入口位于 `com.mogo` 根包。
-- 跨功能共享的配置和基础设施放入 `com.mogo.coreshared`，不得将个人财务领域逻辑放入共享包。
-- 个人财务的 Controller、Entity、Repository、Service、配置和工具统一放入 `com.mogo.personalfinance`。
-- 后续百宝箱功能在 `com.mogo` 下建立与 `personalfinance` 平级的业务包，禁止跨模块直接访问 Entity、Repository 或 ServiceImpl。
+- 后端采用按业务功能拆分的 C++20 模块化单体结构，每个功能使用独立 CMake Target 和 Feature Option。
+- 跨功能共享能力放入 `backend/core_shared`，不得将个人财务领域逻辑放入共享模块。
+- 个人财务按 `domain`、`application`、`infrastructure` 分层放入 `backend/features/personal_finance`；后续功能建立同级 feature 目录。
+- `domain` 与 `application` 不得依赖 libhv、React Native、SQLite 头文件或平台 API；具体能力通过接口和适配器注入。
+- SQLite 实现放入 feature 的 `infrastructure/sqlite`，HTTP JSON 映射放入 `backend/transports/http`，禁止在 HTTP Handler 中直接编写 SQL。
+- Web 调试端通过 libhv HTTP Adapter 调用业务核心；未来 React Native 手机端通过 C++ Turbo Native Adapter 直接调用同一核心，不在手机内依赖 localhost HTTP Server。
+- 平台入口只负责组装启用的功能与适配器，不承载领域规则。功能之间不得直接访问对方的内部模型或基础设施实现。
+- 数据库迁移必须兼容已有 SQLite 数据，并同步维护 `backend/database/migrations` 中的审计 SQL。
+- 默认只监听本机回环地址；移动端构建应关闭 HTTP Target，只链接实际启用的功能模块。
 
 ## 前端跨平台复用规范
 
