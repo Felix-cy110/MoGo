@@ -33,6 +33,8 @@ public:
 
     virtual std::vector<Expense> expensesForDate(const std::string& date) = 0;
     virtual MoneyCents sumExpensesForDate(const std::string& date) = 0;
+    virtual AnalyticsDashboard analyticsForRange(const std::string& start_date,
+                                                 const std::string& end_date) = 0;
     virtual std::optional<Expense> expenseById(std::int64_t id) = 0;
     virtual std::optional<Expense> expenseByClientRequestId(const std::string& request_id) = 0;
     virtual Expense insertExpense(const std::string& date, MoneyCents amount_cents,

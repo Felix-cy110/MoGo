@@ -223,6 +223,17 @@ Dashboard FinanceService::getDashboard(const std::string& date) {
     };
 }
 
+AnalyticsDashboard FinanceService::getAnalytics(
+    const std::string& start_date, const std::string& end_date) {
+    std::scoped_lock lock(mutex_);
+    validateDate(start_date);
+    validateDate(end_date);
+    if (start_date > end_date) {
+        throw ApplicationError(400, "VALIDATION_ERROR", "统计开始日期不能晚于结束日期");
+    }
+    return repository_.analyticsForRange(start_date, end_date);
+}
+
 BudgetInput FinanceService::saveBudget(const BudgetInput& input) {
     std::scoped_lock lock(mutex_);
     validateDate(input.date);

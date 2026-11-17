@@ -42,6 +42,7 @@ public:
     Category updateCategory(std::int64_t category_id, const CategoryInput& input);
     Category deleteCategory(std::int64_t category_id);
     Dashboard getDashboard(const std::string& date);
+    AnalyticsDashboard getAnalytics(const std::string& start_date, const std::string& end_date);
     BudgetInput saveBudget(const BudgetInput& input);
     ExpenseMutationResult addExpense(const ExpenseInput& input);
     ExpenseMutationResult updateExpense(std::int64_t expense_id, const ExpenseUpdateInput& input);

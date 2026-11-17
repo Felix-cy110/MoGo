@@ -1,3 +1,4 @@
+export * from './analytics.js';
 export * from './api.js';
 export * from './category.js';
 export * from './date.js';

@@ -153,6 +153,34 @@ void testDeletedCategoryKeepsHistoricalName() {
     });
 }
 
+void testAnalyticsDashboard() {
+    TemporaryDatabase database;
+    SqliteFinanceRepository repository(database.path());
+    FinanceService service(repository);
+    const auto categories = service.getCategories();
+    const auto& meal = categoryByCode(categories, "MEAL");
+    const auto& commute = categoryByCode(categories, "COMMUTE");
+
+    service.addExpense(ExpenseInput{.date = "2026-11-16", .amount_cents = 1800, .category_id = meal.id});
+    service.addExpense(ExpenseInput{.date = "2026-11-17", .amount_cents = 1200, .category_id = commute.id});
+    service.addExpense(ExpenseInput{.date = "2026-11-17", .amount_cents = 800, .category_id = meal.id});
+    service.addExpense(ExpenseInput{.date = "2026-11-18", .amount_cents = 9999, .category_id = meal.id});
+
+    const AnalyticsDashboard dashboard = service.getAnalytics("2026-11-16", "2026-11-17");
+    require(dashboard.total_amount_cents == 3800, "analytics total must cover the requested range");
+    require(dashboard.expense_count == 3, "analytics expense count must cover the requested range");
+    require(dashboard.days.size() == 2, "analytics must group totals by day");
+    require(dashboard.days.front().date == "2026-11-16", "analytics days must sort ascending");
+    require(dashboard.category_totals.size() == 2, "analytics must group totals by category");
+    require(dashboard.category_totals.front().category_code == "MEAL",
+            "analytics categories must sort by amount descending");
+    require(dashboard.category_totals.front().amount_cents == 2600,
+            "analytics category total must sum all days");
+    requireApplicationError("VALIDATION_ERROR", [&] {
+        service.getAnalytics("2026-11-18", "2026-11-17");
+    });
+}
+
 void testExpenseWorkflow() {
     TemporaryDatabase database;
     SqliteFinanceRepository repository(database.path());
@@ -308,6 +336,7 @@ int main() {
     const std::vector<std::pair<std::string, std::function<void()>>> tests = {
         {"seed and categories", testSeedAndCategories},
         {"deleted category history", testDeletedCategoryKeepsHistoricalName},
+        {"analytics dashboard", testAnalyticsDashboard},
         {"expense workflow", testExpenseWorkflow},
         {"legacy schema compatibility", testLegacySchemaCompatibility},
     };

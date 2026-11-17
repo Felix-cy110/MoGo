@@ -2,7 +2,7 @@ import React from 'react';
 import { clampPercent, formatMoney } from '@mogo/personal-finance-core';
 import { FormFieldRow } from './FormFieldRow';
 
-export function BudgetOverview({ t, language, dashboard, budgetInput, onBudgetChange, onSaveBudget }) {
+export function BudgetOverview({ t, language, dashboard, budgetInput, onBudgetChange, onSaveBudget, onOpenAnalytics }) {
   const progress = clampPercent(dashboard?.usagePercent);
   const progressClass = progress >= 100 ? 'bg-red-600' : progress >= 80 ? 'bg-amber-500' : 'bg-slate-700 dark:bg-slate-300';
 
@@ -10,7 +10,15 @@ export function BudgetOverview({ t, language, dashboard, budgetInput, onBudgetCh
     <section className="border-b border-slate-200 pb-7 dark:border-slate-800">
       <div className="grid gap-6 md:grid-cols-[1fr_360px] md:items-end">
         <div>
-          <p className="section-label">{t('today')}</p>
+          <div className="flex items-center justify-between gap-4">
+            <p className="section-label">{t('today')}</p>
+            <button className="analytics-link" type="button" onClick={onOpenAnalytics}>
+              <span>{t('expenseAnalysis')}</span>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="15" height="15" fill="none">
+                <path d="m9 5 7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
           <div className="mt-2 flex flex-wrap items-baseline gap-x-6 gap-y-2">
             <p className="text-3xl font-semibold">{formatMoney(dashboard?.totalAmountCents, language)}</p>
             <p className="text-sm text-slate-500 dark:text-slate-400">
