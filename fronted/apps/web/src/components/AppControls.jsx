@@ -12,7 +12,7 @@ export function AppControls() {
   return (
     <div className="flex items-center gap-3">
       <ThemeSwitcher t={t} isDark={isDark} onToggle={toggleTheme} />
-      <LanguageSwitcher t={t} language={language} onChange={i18n.changeLanguage} />
+      <LanguageSwitcher t={t} language={language} onToggle={i18n.changeLanguage} />
     </div>
   );
 }

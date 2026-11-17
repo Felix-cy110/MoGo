@@ -76,6 +76,22 @@ button, input, select, textarea { font: inherit; }
 .dark .theme-switcher { border-color: #475569; background: #0f172a; color: #f8fafc; }
 .dark .theme-switcher:hover { background: #1e293b; }
 
+.language-switcher {
+  min-width: 3.75rem;
+  height: 2rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  background: #ffffff;
+  padding: 0 0.75rem;
+  color: #334155;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+.language-switcher:hover { background: #f8fafc; }
+.language-switcher:focus-visible { outline: 2px solid #64748b; outline-offset: 2px; }
+.dark .language-switcher { border-color: #475569; background: #0f172a; color: #f8fafc; }
+.dark .language-switcher:hover { background: #1e293b; }
+
 .notice {
   margin-bottom: 1rem;
   border: 1px solid;
