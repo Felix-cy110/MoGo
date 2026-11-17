@@ -45,8 +45,8 @@ Domain 和 Application 不依赖 libhv、React Native 或具体数据库。HTTP�
 
 `dev` preset 包含 HTTP 与测试；`mobile-core` preset 不包含 libhv HTTP 层，用于验证手机核心可独立构建。未来新增功能时，应新增同级 `features/<feature>/` Target 和独立 Option，平台入口只链接实际启用的功能。
 
-## 数据兼容
+## 数据格式
 
-数据库仍使用 `backend/data/mogo.db`，表名和字段名保持不变。V001 在事务中创建缺失表，并将 Spring/Hibernate 旧实现写入的 epoch milliseconds 日期和时间原地转换为本地 ISO 文本格式。迁移失败会回滚，不会保留半完成状态。
+数据库使用 `backend/data/mogo.db`。日期统一保存为 `YYYY-MM-DD` 文本，时间统一保存为 `YYYY-MM-DDTHH:MM:SS` 本地时间文本；C++ 后端不包含其他技术栈数据格式的运行时兼容逻辑。
 
-迁移 SQL 的审计版本位于 `backend/database/migrations/V001__personal_finance_initial.sql`；运行时迁移与该文件必须同步维护。
+V001 在事务中创建个人财务表、索引和默认数据。迁移 SQL 的审计版本位于 `backend/database/migrations/V001__personal_finance_initial.sql`；运行时迁移与该文件必须同步维护。

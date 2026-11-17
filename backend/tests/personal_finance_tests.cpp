@@ -2,10 +2,7 @@
 #include "mogo/personal_finance/application/finance_service.hpp"
 #include "mogo/personal_finance/sqlite/sqlite_finance_repository.hpp"
 
-#include <sqlite3.h>
-
 #include <chrono>
-#include <ctime>
 #include <filesystem>
 #include <functional>
 #include <iostream>
@@ -61,31 +58,6 @@ const Category& categoryByCode(const std::vector<Category>& categories, const st
         if (category.code == code) return category;
     }
     throw std::runtime_error("missing category " + code);
-}
-
-void executeSql(const std::string& path, const std::string& sql) {
-    sqlite3* database = nullptr;
-    if (sqlite3_open(path.c_str(), &database) != SQLITE_OK) {
-        const std::string message = database ? sqlite3_errmsg(database) : "unknown error";
-        if (database) sqlite3_close(database);
-        throw std::runtime_error("unable to create legacy database: " + message);
-    }
-    char* error = nullptr;
-    const int result = sqlite3_exec(database, sql.c_str(), nullptr, nullptr, &error);
-    const std::string message = error ? error : "";
-    sqlite3_free(error);
-    sqlite3_close(database);
-    if (result != SQLITE_OK) throw std::runtime_error("legacy database setup failed: " + message);
-}
-
-std::int64_t localEpochMillis(int year, int month, int day, int hour = 0) {
-    std::tm value{};
-    value.tm_year = year - 1900;
-    value.tm_mon = month - 1;
-    value.tm_mday = day;
-    value.tm_hour = hour;
-    value.tm_isdst = -1;
-    return static_cast<std::int64_t>(std::mktime(&value)) * 1000;
 }
 
 void testSeedAndCategories() {
@@ -273,62 +245,6 @@ void testExpenseWorkflow() {
     require(dashboard.category_totals.size() == 2, "dashboard must rebuild category totals");
 }
 
-void testLegacySchemaCompatibility() {
-    TemporaryDatabase database;
-    const auto created_at = localEpochMillis(2026, 1, 1);
-    const auto budget_date = localEpochMillis(2026, 1, 2);
-    const auto occurred_at = localEpochMillis(2026, 1, 2, 8);
-    executeSql(database.path(), R"SQL(
-CREATE TABLE expense_categories (
-    id INTEGER PRIMARY KEY, is_active BOOLEAN NOT NULL, code VARCHAR(40) NOT NULL UNIQUE,
-    created_at TIMESTAMP NOT NULL, i18n_key VARCHAR(120), name VARCHAR(80) NOT NULL,
-    note_policy VARCHAR(20) NOT NULL, sort_order INTEGER NOT NULL,
-    is_system BOOLEAN NOT NULL, updated_at TIMESTAMP NOT NULL
-);
-CREATE TABLE daily_budgets (
-    id INTEGER PRIMARY KEY, budget_date DATE NOT NULL UNIQUE, created_at TIMESTAMP NOT NULL,
-    currency_code VARCHAR(8) NOT NULL, max_amount_cents BIGINT NOT NULL, updated_at TIMESTAMP NOT NULL
-);
-CREATE TABLE expenses (
-    id INTEGER PRIMARY KEY, amount_cents BIGINT NOT NULL, client_request_id VARCHAR(80) UNIQUE,
-    created_at TIMESTAMP NOT NULL, expense_date DATE NOT NULL, note VARCHAR(500),
-    occurred_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL, category_id BIGINT NOT NULL
-);
-CREATE TABLE alert_rules (
-    id INTEGER PRIMARY KEY, is_active BOOLEAN NOT NULL, code VARCHAR(60) NOT NULL UNIQUE,
-    created_at TIMESTAMP NOT NULL, message_key VARCHAR(120) NOT NULL,
-    severity VARCHAR(20) NOT NULL, threshold_percent INTEGER NOT NULL, updated_at TIMESTAMP NOT NULL
-);
-CREATE TABLE alert_daily_states (
-    budget_date DATE NOT NULL, rule_id BIGINT NOT NULL, last_expense_id BIGINT,
-    last_total_cents BIGINT NOT NULL, is_triggered BOOLEAN NOT NULL,
-    triggered_at TIMESTAMP, updated_at TIMESTAMP NOT NULL, PRIMARY KEY (budget_date, rule_id)
-);
-CREATE TABLE alert_events (
-    id INTEGER PRIMARY KEY, budget_amount_cents BIGINT NOT NULL, budget_date DATE NOT NULL,
-    created_at TIMESTAMP NOT NULL, event_type VARCHAR(40) NOT NULL,
-    message_key VARCHAR(120) NOT NULL, threshold_percent INTEGER NOT NULL,
-    total_amount_cents BIGINT NOT NULL, expense_id BIGINT, rule_id BIGINT NOT NULL
-);
-)SQL" + std::string("INSERT INTO expense_categories VALUES ") +
-        "(7, 1, 'LEGACY', " + std::to_string(created_at) +
-        ", NULL, '旧分类', 'OPTIONAL', 5, 0, " + std::to_string(created_at) + ");" +
-        "INSERT INTO daily_budgets VALUES (3, " + std::to_string(budget_date) + ", " +
-        std::to_string(created_at) + ", 'CNY', 5000, " + std::to_string(created_at) + ");" +
-        "INSERT INTO expenses VALUES (9, 1200, 'legacy-request', " +
-        std::to_string(occurred_at) + ", " + std::to_string(budget_date) +
-        ", NULL, " + std::to_string(occurred_at) + ", " + std::to_string(occurred_at) + ", 7);");
-
-    SqliteFinanceRepository repository(database.path());
-    FinanceService service(repository);
-    const Dashboard dashboard = service.getDashboard("2026-01-02");
-    require(dashboard.budget_set, "legacy budget must remain readable");
-    require(dashboard.budget_amount_cents == 5000, "legacy budget amount must be preserved");
-    require(dashboard.expense_count == 1, "legacy expense must remain readable");
-    require(dashboard.expenses.front().category_code == "LEGACY", "legacy category must remain readable");
-    require(dashboard.expenses.front().expense_date == "2026-01-02",
-            "legacy date must be normalized to ISO format");
-}
 
 }  // namespace
 
@@ -338,7 +254,6 @@ int main() {
         {"deleted category history", testDeletedCategoryKeepsHistoricalName},
         {"analytics dashboard", testAnalyticsDashboard},
         {"expense workflow", testExpenseWorkflow},
-        {"legacy schema compatibility", testLegacySchemaCompatibility},
     };
 
     int failures = 0;

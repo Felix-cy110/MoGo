@@ -193,63 +193,6 @@ CREATE TABLE IF NOT EXISTS alert_events (
 );
 CREATE INDEX IF NOT EXISTS idx_alert_events_date ON alert_events (budget_date);
 
--- Hibernate stored Java date/time values as epoch milliseconds in the original database.
--- SQLite permits changing their storage type in place, so existing rows can be normalized
--- without rebuilding the tables or changing the public schema.
-UPDATE expense_categories SET
-    created_at = strftime('%Y-%m-%dT%H:%M:%S', created_at / 1000, 'unixepoch', 'localtime')
-WHERE typeof(created_at) IN ('integer', 'real');
-UPDATE expense_categories SET
-    updated_at = strftime('%Y-%m-%dT%H:%M:%S', updated_at / 1000, 'unixepoch', 'localtime')
-WHERE typeof(updated_at) IN ('integer', 'real');
-
-UPDATE daily_budgets SET
-    budget_date = date(budget_date / 1000, 'unixepoch', 'localtime')
-WHERE typeof(budget_date) IN ('integer', 'real');
-UPDATE daily_budgets SET
-    created_at = strftime('%Y-%m-%dT%H:%M:%S', created_at / 1000, 'unixepoch', 'localtime')
-WHERE typeof(created_at) IN ('integer', 'real');
-UPDATE daily_budgets SET
-    updated_at = strftime('%Y-%m-%dT%H:%M:%S', updated_at / 1000, 'unixepoch', 'localtime')
-WHERE typeof(updated_at) IN ('integer', 'real');
-
-UPDATE expenses SET
-    expense_date = date(expense_date / 1000, 'unixepoch', 'localtime')
-WHERE typeof(expense_date) IN ('integer', 'real');
-UPDATE expenses SET
-    created_at = strftime('%Y-%m-%dT%H:%M:%S', created_at / 1000, 'unixepoch', 'localtime')
-WHERE typeof(created_at) IN ('integer', 'real');
-UPDATE expenses SET
-    occurred_at = strftime('%Y-%m-%dT%H:%M:%S', occurred_at / 1000, 'unixepoch', 'localtime')
-WHERE typeof(occurred_at) IN ('integer', 'real');
-UPDATE expenses SET
-    updated_at = strftime('%Y-%m-%dT%H:%M:%S', updated_at / 1000, 'unixepoch', 'localtime')
-WHERE typeof(updated_at) IN ('integer', 'real');
-
-UPDATE alert_rules SET
-    created_at = strftime('%Y-%m-%dT%H:%M:%S', created_at / 1000, 'unixepoch', 'localtime')
-WHERE typeof(created_at) IN ('integer', 'real');
-UPDATE alert_rules SET
-    updated_at = strftime('%Y-%m-%dT%H:%M:%S', updated_at / 1000, 'unixepoch', 'localtime')
-WHERE typeof(updated_at) IN ('integer', 'real');
-
-UPDATE alert_daily_states SET
-    budget_date = date(budget_date / 1000, 'unixepoch', 'localtime')
-WHERE typeof(budget_date) IN ('integer', 'real');
-UPDATE alert_daily_states SET
-    triggered_at = strftime('%Y-%m-%dT%H:%M:%S', triggered_at / 1000, 'unixepoch', 'localtime')
-WHERE typeof(triggered_at) IN ('integer', 'real');
-UPDATE alert_daily_states SET
-    updated_at = strftime('%Y-%m-%dT%H:%M:%S', updated_at / 1000, 'unixepoch', 'localtime')
-WHERE typeof(updated_at) IN ('integer', 'real');
-
-UPDATE alert_events SET
-    budget_date = date(budget_date / 1000, 'unixepoch', 'localtime')
-WHERE typeof(budget_date) IN ('integer', 'real');
-UPDATE alert_events SET
-    created_at = strftime('%Y-%m-%dT%H:%M:%S', created_at / 1000, 'unixepoch', 'localtime')
-WHERE typeof(created_at) IN ('integer', 'real');
-
 PRAGMA user_version = 1;
 )SQL");
         const std::string timestamp = nowLocal();
