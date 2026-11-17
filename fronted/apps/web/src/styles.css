@@ -324,7 +324,6 @@ button, input, select, textarea { font: inherit; }
 .analytics-axis-label { fill: #64748b; font-size: 12px; }
 .analytics-interaction-layer { cursor: crosshair; fill: transparent; }
 .analytics-tooltip rect { fill: #0f172a; }
-.analytics-tooltip-date,
 .analytics-tooltip-amount { fill: #f8fafc; font-size: 12px; }
 .analytics-tooltip-amount { font-weight: 600; }
 .dark .analytics-line-chart { border-color: #1e293b; background: #020617; }

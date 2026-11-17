@@ -30,7 +30,7 @@ function Metric({ label, value }) {
   );
 }
 
-function LineChart({ days, language, label, amountLabel }) {
+function LineChart({ days, language, label }) {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const width = 760;
   const height = 300;
@@ -49,8 +49,8 @@ function LineChart({ days, language, label, amountLabel }) {
   const dateFormatter = new Intl.DateTimeFormat(getLocale(language), { month: 'numeric', day: 'numeric' });
   const labelStep = days.length > 12 ? Math.ceil(days.length / 7) : 1;
   const selectedPoint = selectedIndex === null ? null : points[selectedIndex];
-  const tooltipWidth = 164;
-  const tooltipHeight = 52;
+  const tooltipWidth = 96;
+  const tooltipHeight = 30;
   const tooltipX = selectedPoint
     ? Math.min(Math.max(selectedPoint.x - tooltipWidth / 2, padding.left), width - padding.right - tooltipWidth)
     : 0;
@@ -115,7 +115,7 @@ function LineChart({ days, language, label, amountLabel }) {
             cy={point.y}
             r={index === selectedIndex ? '6' : '4'}
           >
-            <title>{`${dateFormatter.format(new Date(`${point.date}T00:00:00`))}: ${formatMoney(point.amountCents, language)}`}</title>
+            <title>{formatMoney(point.amountCents, language)}</title>
           </circle>
           {(index % labelStep === 0 || index === points.length - 1) && (
             <text className="analytics-axis-label" x={point.x} y={height - 16} textAnchor="middle">
@@ -127,11 +127,8 @@ function LineChart({ days, language, label, amountLabel }) {
       {selectedPoint && (
         <g className="analytics-tooltip" pointerEvents="none">
           <rect x={tooltipX} y={tooltipY} width={tooltipWidth} height={tooltipHeight} rx="4" />
-          <text className="analytics-tooltip-date" x={tooltipX + 10} y={tooltipY + 19}>
-            {dateFormatter.format(new Date(`${selectedPoint.date}T00:00:00`))}
-          </text>
-          <text className="analytics-tooltip-amount" x={tooltipX + 10} y={tooltipY + 39}>
-            {amountLabel}: {formatMoney(selectedPoint.amountCents, language)}
+          <text className="analytics-tooltip-amount" x={tooltipX + tooltipWidth / 2} y={tooltipY + 20} textAnchor="middle">
+            {formatMoney(selectedPoint.amountCents, language)}
           </text>
         </g>
       )}
@@ -225,7 +222,6 @@ export function AnalyticsScreen({ onBack }) {
                       days={analytics.view.days}
                       language={language}
                       label={t('spendingTrend')}
-                      amountLabel={t('chartAmount')}
                     />
                   </div>
                 </section>
