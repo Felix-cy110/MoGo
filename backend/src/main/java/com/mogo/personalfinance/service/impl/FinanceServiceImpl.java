@@ -5,6 +5,7 @@ import com.mogo.personalfinance.entity.ApiModels.BudgetRequest;
 import com.mogo.personalfinance.entity.ApiModels.CategoryRequest;
 import com.mogo.personalfinance.entity.ApiModels.ExpenseRequest;
 import com.mogo.personalfinance.entity.ApiModels.ExpenseResponse;
+import com.mogo.personalfinance.entity.ApiModels.ExpenseUpdateRequest;
 import com.mogo.personalfinance.repository.*;
 import com.mogo.personalfinance.service.FinanceService;
 import com.mogo.personalfinance.utils.FinanceException;
@@ -114,14 +115,8 @@ public class FinanceServiceImpl implements FinanceService {
             if (existing.isPresent()) return responseFor(existing.get(), List.of());
         }
 
-        ExpenseCategoryEntity category = categoryRepository.findById(request.categoryId())
-                .filter(ExpenseCategoryEntity::isActive)
-                .orElseThrow(() -> new FinanceException(HttpStatus.BAD_REQUEST, "CATEGORY_NOT_FOUND", "所选分类不可用"));
-        String note = request.note() == null ? null : request.note().trim();
-        if ("REQUIRED".equals(category.getNotePolicy()) && (note == null || note.isBlank())) {
-            throw new FinanceException(HttpStatus.BAD_REQUEST, "NOTE_REQUIRED", "此分类需要填写备注");
-        }
-        if ("FORBIDDEN".equals(category.getNotePolicy())) note = null;
+        ExpenseCategoryEntity category = requireActiveCategory(request.categoryId());
+        String note = normalizeNote(category, request.note());
 
         ExpenseEntity expense = new ExpenseEntity();
         expense.setExpenseDate(request.date());
@@ -138,6 +133,43 @@ public class FinanceServiceImpl implements FinanceService {
         List<AlertView> alerts = budgetAmount > 0 ? evaluateAlerts(request.date(), expense, total, budgetAmount) : List.of();
         return new ExpenseResponse(toExpenseView(expense), total, budgetAmount,
                 Math.max(0, budgetAmount - total), MoneyUtils.usagePercent(total, budgetAmount), alerts);
+    }
+
+    @Override
+    @Transactional
+    public ExpenseResponse updateExpense(Long expenseId, ExpenseUpdateRequest request) {
+        ExpenseEntity expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new FinanceException(HttpStatus.NOT_FOUND, "EXPENSE_NOT_FOUND", "消费记录不存在"));
+        ExpenseCategoryEntity category = requireActiveCategory(request.categoryId());
+        String note = normalizeNote(category, request.note());
+        expense.setAmountCents(request.amountCents());
+        expense.setCategory(category);
+        expense.setNote(note);
+        expense = expenseRepository.saveAndFlush(expense);
+
+        long total = expenseRepository.sumAmountByDate(expense.getExpenseDate());
+        long budgetAmount = budgetRepository.findByBudgetDate(expense.getExpenseDate())
+                .map(DailyBudgetEntity::getMaxAmountCents).orElse(0L);
+        List<AlertView> alerts = budgetAmount > 0
+                ? evaluateAlerts(expense.getExpenseDate(), expense, total, budgetAmount)
+                : List.of();
+        return new ExpenseResponse(toExpenseView(expense), total, budgetAmount,
+                Math.max(0, budgetAmount - total), MoneyUtils.usagePercent(total, budgetAmount), alerts);
+    }
+
+    private ExpenseCategoryEntity requireActiveCategory(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .filter(ExpenseCategoryEntity::isActive)
+                .orElseThrow(() -> new FinanceException(HttpStatus.BAD_REQUEST, "CATEGORY_NOT_FOUND", "所选分类不可用"));
+    }
+
+    private String normalizeNote(ExpenseCategoryEntity category, String rawNote) {
+        String note = rawNote == null ? null : rawNote.trim();
+        if ("REQUIRED".equals(category.getNotePolicy()) && (note == null || note.isBlank())) {
+            throw new FinanceException(HttpStatus.BAD_REQUEST, "NOTE_REQUIRED", "此分类需要填写备注");
+        }
+        if ("FORBIDDEN".equals(category.getNotePolicy())) return null;
+        return note == null || note.isBlank() ? null : note;
     }
 
     private List<AlertView> evaluateAlerts(LocalDate date, ExpenseEntity expense, long total, long budget) {

@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   buildExpensePayload,
+  buildExpenseUpdatePayload,
   centsToYuan,
+  createExpenseDraft,
   formatLocalDate,
   NOTE_POLICY,
   validateExpenseDraft,
@@ -12,6 +14,27 @@ import {
 test('converts money without storing decimals', () => {
   assert.equal(yuanToCents('25.50'), 2550);
   assert.equal(centsToYuan(2550), '25.50');
+});
+
+test('creates editable drafts and normalized update payloads', () => {
+  assert.deepEqual(createExpenseDraft({
+    amountCents: 2550,
+    categoryId: 2,
+    note: '午饭'
+  }), {
+    amount: '25.50',
+    categoryId: '2',
+    note: '午饭'
+  });
+  assert.deepEqual(buildExpenseUpdatePayload({
+    amountCents: 3200,
+    categoryId: '3',
+    note: '  地铁  '
+  }), {
+    amountCents: 3200,
+    categoryId: 3,
+    note: '地铁'
+  });
 });
 
 test('formats local dates for API requests', () => {

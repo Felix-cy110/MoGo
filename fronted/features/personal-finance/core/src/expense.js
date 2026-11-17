@@ -1,3 +1,5 @@
+import { centsToYuan } from './money.js';
+
 export const NOTE_POLICY = Object.freeze({
   OPTIONAL: 'OPTIONAL',
   REQUIRED: 'REQUIRED'
@@ -25,3 +27,15 @@ export const createClientRequestId = () => {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
+
+export const createExpenseDraft = (expense) => ({
+  amount: centsToYuan(expense?.amountCents || 0),
+  categoryId: String(expense?.categoryId || ''),
+  note: expense?.note || ''
+});
+
+export const buildExpenseUpdatePayload = ({ amountCents, categoryId, note }) => ({
+  amountCents,
+  categoryId: Number(categoryId),
+  note: note?.trim() || null
+});

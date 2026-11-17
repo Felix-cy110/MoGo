@@ -8,6 +8,7 @@ import { BudgetOverview } from './components/BudgetOverview';
 import { CategoryDialog } from './components/CategoryDialog';
 import { CategorySummary } from './components/CategorySummary';
 import { ExpenseForm } from './components/ExpenseForm';
+import { ExpenseEditDialog } from './components/ExpenseEditDialog';
 import { ExpenseList } from './components/ExpenseList';
 
 export function FinanceScreen({ onBack }) {
@@ -37,6 +38,11 @@ export function FinanceScreen({ onBack }) {
   const handleAddCategory = async (event) => {
     event.preventDefault();
     if (await finance.addCategory()) setCategoryDialogOpen(false);
+  };
+
+  const handleUpdateExpense = async (event) => {
+    event.preventDefault();
+    await finance.updateExpense();
   };
 
   return (
@@ -80,7 +86,12 @@ export function FinanceScreen({ onBack }) {
             onManageCategories={() => setCategoryDialogOpen(true)}
             onSubmit={handleAddExpense}
           />
-          <ExpenseList t={t} language={language} expenses={finance.dashboard?.expenses} />
+          <ExpenseList
+            t={t}
+            language={language}
+            expenses={finance.dashboard?.expenses}
+            onEdit={finance.startEditingExpense}
+          />
         </section>
 
         <CategorySummary t={t} language={language} categoryTotals={finance.dashboard?.categoryTotals} />
@@ -95,6 +106,18 @@ export function FinanceScreen({ onBack }) {
         feedbackText={feedbackText}
         onClose={() => setCategoryDialogOpen(false)}
         onSubmit={handleAddCategory}
+      />
+      <ExpenseEditDialog
+        t={t}
+        open={finance.editingExpenseId !== null}
+        categories={finance.categories}
+        form={finance.editForm}
+        selectedCategory={finance.selectedEditCategory}
+        onFormChange={(patch) => finance.setEditForm((current) => ({ ...current, ...patch }))}
+        feedback={finance.feedback}
+        feedbackText={feedbackText}
+        onClose={finance.cancelEditingExpense}
+        onSubmit={handleUpdateExpense}
       />
       <AlertDialog t={t} alerts={finance.alerts} onDismiss={finance.dismissAlerts} />
     </main>

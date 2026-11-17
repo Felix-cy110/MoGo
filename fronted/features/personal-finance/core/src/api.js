@@ -38,6 +38,10 @@ export const createFinanceApi = ({ baseUrl = '', fetchImpl = globalThis.fetch } 
     addExpense: (payload) => request('/expenses', {
       method: 'POST',
       body: JSON.stringify(payload)
+    }),
+    updateExpense: (expenseId, payload) => request(`/expenses/${expenseId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
     })
   });
 };
