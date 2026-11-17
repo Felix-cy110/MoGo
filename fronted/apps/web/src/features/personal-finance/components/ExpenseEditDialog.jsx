@@ -37,6 +37,20 @@ export function ExpenseEditDialog({
             />
           </FormFieldRow>
 
+          <FormFieldRow
+            label={t(selectedCategory?.notePolicy === NOTE_POLICY.REQUIRED ? 'noteRequiredLabel' : 'noteOptional')}
+            htmlFor="edit-expense-note"
+            alignStart
+          >
+            <textarea
+              id="edit-expense-note"
+              className="field form-row-field min-h-20 resize-y"
+              value={form.note}
+              onChange={(event) => onFormChange({ note: event.target.value })}
+              placeholder={t('notePlaceholder')}
+            />
+          </FormFieldRow>
+
           <FormFieldRow label={t('category')} htmlFor="edit-expense-category">
             <select
               id="edit-expense-category"
@@ -50,20 +64,6 @@ export function ExpenseEditDialog({
                 return <option key={category.id} value={category.id}>{messageKey ? t(messageKey) : category.name}</option>;
               })}
             </select>
-          </FormFieldRow>
-
-          <FormFieldRow
-            label={t(selectedCategory?.notePolicy === NOTE_POLICY.REQUIRED ? 'noteRequiredLabel' : 'noteOptional')}
-            htmlFor="edit-expense-note"
-            alignStart
-          >
-            <textarea
-              id="edit-expense-note"
-              className="field form-row-field min-h-20 resize-y"
-              value={form.note}
-              onChange={(event) => onFormChange({ note: event.target.value })}
-              placeholder={t('notePlaceholder')}
-            />
           </FormFieldRow>
         </div>
 

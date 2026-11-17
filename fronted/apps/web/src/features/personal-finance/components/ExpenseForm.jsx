@@ -22,6 +22,20 @@ export function ExpenseForm({ t, categories, form, selectedCategory, onFormChang
           />
         </FormFieldRow>
 
+        <FormFieldRow
+          label={t(selectedCategory?.notePolicy === NOTE_POLICY.REQUIRED ? 'noteRequiredLabel' : 'noteOptional')}
+          htmlFor="note"
+          alignStart
+        >
+          <textarea
+            id="note"
+            className="field form-row-field min-h-20 resize-y"
+            value={form.note}
+            onChange={(event) => onFormChange({ note: event.target.value })}
+            placeholder={t('notePlaceholder')}
+          />
+        </FormFieldRow>
+
         <FormFieldRow label={t('category')} htmlFor="category">
           <div className="flex min-w-0 items-center gap-2">
             <select
@@ -40,20 +54,6 @@ export function ExpenseForm({ t, categories, form, selectedCategory, onFormChang
               {t('manageCategories')}
             </button>
           </div>
-        </FormFieldRow>
-
-        <FormFieldRow
-          label={t(selectedCategory?.notePolicy === NOTE_POLICY.REQUIRED ? 'noteRequiredLabel' : 'noteOptional')}
-          htmlFor="note"
-          alignStart
-        >
-          <textarea
-            id="note"
-            className="field form-row-field min-h-20 resize-y"
-            value={form.note}
-            onChange={(event) => onFormChange({ note: event.target.value })}
-            placeholder={t('notePlaceholder')}
-          />
         </FormFieldRow>
       </div>
 
