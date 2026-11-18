@@ -60,6 +60,30 @@ const Category& categoryByCode(const std::vector<Category>& categories, const st
     throw std::runtime_error("missing category " + code);
 }
 
+void testDomainPolicies() {
+    const BudgetUsage unused(0, 10'000);
+    require(unused.percentage() == 0, "empty budget usage must be zero");
+    require(unused.remainingCents() == 10'000, "unused budget must remain available");
+    require(!unused.reached(80), "unused budget must not reach warning threshold");
+
+    const BudgetUsage warning(8'000, 10'000);
+    require(warning.percentage() == 80, "budget usage must use integer percentage");
+    require(warning.reached(80), "80 percent must reach warning threshold");
+    require(!warning.reached(100), "80 percent must not reach exceeded threshold");
+
+    const BudgetUsage exceeded(12'000, 10'000);
+    require(exceeded.remainingCents() == 0, "remaining budget must not become negative");
+    require(exceeded.reached(100), "overspending must reach exceeded threshold");
+
+    const Category other{.code = "OTHER", .note_policy = "REQUIRED"};
+    require(other.isProtected(), "other category must be protected by domain policy");
+    require(other.requiresNote(), "other category must require a note");
+
+    const Category custom{.code = "CUSTOM_TEST", .note_policy = "OPTIONAL"};
+    require(!custom.isProtected(), "custom category must remain mutable");
+    require(!custom.requiresNote(), "custom category notes must be optional");
+}
+
 void testSeedAndCategories() {
     TemporaryDatabase database;
     SqliteFinanceRepository repository(database.path());
@@ -290,6 +314,7 @@ void testExpenseWorkflow() {
 
 int main() {
     const std::vector<std::pair<std::string, std::function<void()>>> tests = {
+        {"domain policies", testDomainPolicies},
         {"seed and categories", testSeedAndCategories},
         {"deleted category history", testDeletedCategoryKeepsHistoricalName},
         {"protected Other category", testOtherCategoryIsProtected},
