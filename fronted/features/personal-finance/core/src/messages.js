@@ -5,7 +5,7 @@ export const financeMessages = Object.freeze({
   zh: Object.freeze({
     appName: 'MoGo',
     appSubtitle: '个人财务管理',
-    toolboxName: '手机百宝箱',
+    toolboxName: '魔狗百宝箱',
     toolboxSubtitle: '选择一个功能',
     toolboxMetaDescription: 'MoGo 手机百宝箱功能调试入口',
     toolboxFeatures: '功能列表',
@@ -110,7 +110,7 @@ export const financeMessages = Object.freeze({
   en: Object.freeze({
     appName: 'MoGo',
     appSubtitle: 'Personal Finance',
-    toolboxName: 'Mobile Toolbox',
+    toolboxName: 'MoGo Toolbox',
     toolboxSubtitle: 'Choose a feature',
     toolboxMetaDescription: 'MoGo mobile toolbox development entry',
     toolboxFeatures: 'Features',
