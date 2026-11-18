@@ -25,6 +25,15 @@ std::optional<std::string> readText(const Json& body, const char* field) {
     return body.at(field).get<std::string>();
 }
 
+std::optional<std::int64_t> readMonthlyIncome(const Json& body) {
+    if (!body.contains("monthlyIncomeCents") || body.at("monthlyIncomeCents").is_null()) return std::nullopt;
+    const auto& value = body.at("monthlyIncomeCents");
+    if (!value.is_number_integer() || value < 0 || value > 99'999'999'999LL) {
+        throw std::runtime_error("Invalid monthly income in profile");
+    }
+    return value.get<std::int64_t>();
+}
+
 Profile readProfile(const std::filesystem::path& path) {
     if (!std::filesystem::exists(path)) return {};
     std::ifstream input(path, std::ios::binary);
@@ -50,6 +59,7 @@ Profile readProfile(const std::filesystem::path& path) {
     return Profile{
         .name = readText(body, "name"), .gender = gender, .age = age,
         .country = readText(body, "country"), .occupation = readText(body, "occupation"),
+        .monthlyIncomeCents = readMonthlyIncome(body),
     };
 }
 
@@ -79,6 +89,7 @@ void JsonProfileRepository::save(const Profile& profile) {
             {"schemaVersion", 1}, {"name", nullable(profile.name)}, {"gender", nullable(profile.gender)},
             {"age", nullable(profile.age)}, {"country", nullable(profile.country)},
             {"occupation", nullable(profile.occupation)},
+            {"monthlyIncomeCents", nullable(profile.monthlyIncomeCents)},
         };
         {
             std::ofstream output(temporary, std::ios::binary | std::ios::trunc);

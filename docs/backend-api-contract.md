@@ -82,6 +82,7 @@ HTTP API 仅服务于 Web 调试端，默认监听 `127.0.0.1:8080`。未来 Rea
 | `age` | integer / null | 否 | 0 至 150；不接受小数、数字字符串或布尔值 |
 | `country` | string / null | 否 | 国家，自由文本，去除首尾空白，最多 100 个 Unicode 字符 |
 | `occupation` | string / null | 否 | 职业，自由文本，去除首尾空白，最多 100 个 Unicode 字符 |
+| `monthlyIncomeCents` | integer / null | 否 | 月收入，单位为人民币分；0 至 99,999,999,999，避免浮点金额误差 |
 
 `PUT` 为完整替换：未传字段、`null` 或空文本均清空对应值，因此 `{}` 也是合法请求。请求/响应不暴露文件路径或 `schemaVersion`；文件格式版本由 JSON 适配器管理。
 
@@ -90,6 +91,7 @@ HTTP API 仅服务于 Web 调试端，默认监听 `127.0.0.1:8080`。未来 Rea
 | `400` | `VALIDATION_ERROR` | JSON 对象或文本字段类型不合法 |
 | `400` | `PROFILE_AGE_INVALID` | 年龄不是 0 至 150 的整数 |
 | `400` | `PROFILE_GENDER_INVALID` | 性别 code 不合法 |
+| `400` | `PROFILE_MONTHLY_INCOME_INVALID` | 月收入不是支持范围内的整数分 |
 | `400` | `PROFILE_TEXT_TOO_LONG` | 文本字段超过长度限制 |
 | `500` | `PROFILE_READ_FAILED` | 原资料无法读取或格式损坏 |
 | `500` | `PROFILE_WRITE_FAILED` | 文件写入失败，或已有文件损坏导致拒绝覆盖 |

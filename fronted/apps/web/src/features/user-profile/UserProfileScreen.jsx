@@ -78,6 +78,9 @@ export function UserProfileScreen({ onBack, onOpenSettings }) {
                 </FormFieldRow>
                 {textField('country', 'profileCountry', 'country-name')}
                 {textField('occupation', 'profileOccupation', 'organization-title')}
+                <FormFieldRow label={t('profileMonthlyIncome')} htmlFor="profile-monthly-income">
+                  <input id="profile-monthly-income" className="field form-row-field" type="number" inputMode="decimal" min="0" max="999999999.99" step="0.01" value={profile.draft.monthlyIncome} onChange={event => profile.updateField('monthlyIncome', event.target.value)} placeholder={t('profileOptional')} />
+                </FormFieldRow>
               </div>
               <div className="mt-5 flex justify-end">
                 <button className="button-primary inline-flex min-w-24 items-center justify-center gap-2" type="submit" disabled={profile.saving}>
