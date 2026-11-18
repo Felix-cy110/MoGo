@@ -1,0 +1,13 @@
+add_library(mogo_user_profile_domain INTERFACE)
+target_include_directories(mogo_user_profile_domain INTERFACE domain/include)
+
+add_library(mogo_user_profile_application application/src/profile_service.cpp)
+target_include_directories(mogo_user_profile_application PUBLIC application/include)
+target_link_libraries(mogo_user_profile_application PUBLIC mogo_user_profile_domain mogo_core_shared)
+
+add_library(mogo_user_profile_json infrastructure/json/src/json_profile_repository.cpp)
+target_include_directories(mogo_user_profile_json PUBLIC infrastructure/json/include)
+target_link_libraries(mogo_user_profile_json
+  PUBLIC mogo_user_profile_application
+  PRIVATE nlohmann_json::nlohmann_json
+)

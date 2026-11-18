@@ -3,13 +3,16 @@ import { FinanceScreen } from './features/personal-finance/FinanceScreen';
 import { CategoryManagementScreen } from './features/personal-finance/CategoryManagementScreen';
 import { AnalyticsScreen } from './features/personal-finance/AnalyticsScreen';
 import { ToolboxHome } from './features/toolbox/ToolboxHome';
+import { UserProfileScreen } from './features/user-profile/UserProfileScreen';
 
 const HOME_PATH = '/';
 const FINANCE_PATH = '/finance';
 const CATEGORY_MANAGEMENT_PATH = '/finance/categories';
 const ANALYTICS_PATH = '/finance/analytics';
+const PROFILE_PATH = '/profile';
 
 const resolveScreen = () => {
+  if (globalThis.location?.pathname === PROFILE_PATH) return 'profile';
   if (globalThis.location?.pathname === CATEGORY_MANAGEMENT_PATH) return 'categories';
   if (globalThis.location?.pathname === ANALYTICS_PATH) return 'analytics';
   if (globalThis.location?.pathname === FINANCE_PATH) return 'finance';
@@ -27,12 +30,16 @@ function App() {
 
   const navigate = (path) => {
     globalThis.history?.pushState({}, '', path);
-    if (path === CATEGORY_MANAGEMENT_PATH) setScreen('categories');
+    if (path === PROFILE_PATH) setScreen('profile');
+    else if (path === CATEGORY_MANAGEMENT_PATH) setScreen('categories');
     else if (path === ANALYTICS_PATH) setScreen('analytics');
     else if (path === FINANCE_PATH) setScreen('finance');
     else setScreen('home');
   };
 
+  if (screen === 'profile') {
+    return <UserProfileScreen onBack={() => navigate(HOME_PATH)} />;
+  }
   if (screen === 'analytics') {
     return <AnalyticsScreen onBack={() => navigate(FINANCE_PATH)} />;
   }
@@ -48,7 +55,7 @@ function App() {
       />
     );
   }
-  return <ToolboxHome onOpenFinance={() => navigate(FINANCE_PATH)} />;
+  return <ToolboxHome onOpenFinance={() => navigate(FINANCE_PATH)} onOpenProfile={() => navigate(PROFILE_PATH)} />;
 }
 
 export default App;

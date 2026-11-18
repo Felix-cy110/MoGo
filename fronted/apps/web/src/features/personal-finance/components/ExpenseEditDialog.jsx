@@ -1,6 +1,6 @@
 import React from 'react';
 import { NOTE_POLICY, resolveCategoryMessageKey } from '@mogo/personal-finance-core';
-import { FormFieldRow } from './FormFieldRow';
+import { FormFieldRow } from '../../../components/FormFieldRow';
 
 export function ExpenseEditDialog({
   t,

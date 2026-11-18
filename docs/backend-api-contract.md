@@ -1,4 +1,4 @@
-# 个人财务 HTTP API
+# MoGo HTTP API
 
 HTTP API 仅服务于 Web 调试端，默认监听 `127.0.0.1:8080`。未来 React Native 手机端直接调用 C++ Native Adapter，但应复用本契约中的请求、响应模型和错误 code。
 
@@ -7,6 +7,8 @@ HTTP API 仅服务于 Web 调试端，默认监听 `127.0.0.1:8080`。未来 Rea
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
 | `GET` | `/api/health` | 后端健康检查 |
+| `GET` | `/api/profile` | 读取本机单用户资料，文件不存在时所有字段返回 `null` |
+| `PUT` | `/api/profile` | 完整替换用户资料并写入本地 JSON 文件，所有字段选填 |
 | `GET` | `/api/categories` | 获取启用的消费分类 |
 | `GET` | `/api/categories/manage?query=关键字` | 查询全部分类，包含已删除分类并支持名称或 code 模糊搜索 |
 | `POST` | `/api/categories` | 新增自定义分类，备注规则固定为 `OPTIONAL` |
@@ -68,3 +70,27 @@ HTTP API 仅服务于 Web 调试端，默认监听 `127.0.0.1:8080`。未来 Rea
 | `500` | `INTERNAL_ERROR` | 未映射的服务端错误 |
 
 客户端应使用 `code` 映射 i18n 文案，不应依赖后端中文 `message`。
+
+## 用户资料契约
+
+用户资料与个人财务独立，无需用户 ID、登录或 SQLite。`GET /api/profile` 与 `PUT /api/profile` 成功响应均为以下资料对象，响应设置 `Cache-Control: no-store`。
+
+| 字段 | 类型 | 是否必填 | 规则 |
+| --- | --- | --- | --- |
+| `name` | string / null | 否 | 姓名，去除首尾空白，最多 100 个 Unicode 字符 |
+| `gender` | string / null | 否 | `MALE`、`FEMALE`、`OTHER`；`null` 为未填写 |
+| `age` | integer / null | 否 | 0 至 150；不接受小数、数字字符串或布尔值 |
+| `country` | string / null | 否 | 国家，自由文本，去除首尾空白，最多 100 个 Unicode 字符 |
+| `occupation` | string / null | 否 | 职业，自由文本，去除首尾空白，最多 100 个 Unicode 字符 |
+
+`PUT` 为完整替换：未传字段、`null` 或空文本均清空对应值，因此 `{}` 也是合法请求。请求/响应不暴露文件路径或 `schemaVersion`；文件格式版本由 JSON 适配器管理。
+
+| HTTP 状态 | code | 说明 |
+| --- | --- | --- |
+| `400` | `VALIDATION_ERROR` | JSON 对象或文本字段类型不合法 |
+| `400` | `PROFILE_AGE_INVALID` | 年龄不是 0 至 150 的整数 |
+| `400` | `PROFILE_GENDER_INVALID` | 性别 code 不合法 |
+| `400` | `PROFILE_TEXT_TOO_LONG` | 文本字段超过长度限制 |
+| `500` | `PROFILE_READ_FAILED` | 原资料无法读取或格式损坏 |
+| `500` | `PROFILE_WRITE_FAILED` | 文件写入失败，或已有文件损坏导致拒绝覆盖 |
+| `500` | `PROFILE_VERSION_UNSUPPORTED` | 文件版本不受支持，拒绝读取或覆盖 |

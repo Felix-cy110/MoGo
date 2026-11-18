@@ -1,7 +1,18 @@
-add_library(mogo_http_transport
-  src/finance_http_routes.cpp
-)
-target_include_directories(mogo_http_transport PUBLIC include)
-target_link_libraries(mogo_http_transport
-  PUBLIC mogo_personal_finance_application hv_static
-)
+add_library(mogo_http_transport INTERFACE)
+target_link_libraries(mogo_http_transport INTERFACE hv_static)
+
+if(MOGO_FEATURE_PERSONAL_FINANCE)
+  add_library(mogo_finance_http src/finance_http_routes.cpp)
+  target_include_directories(mogo_finance_http PUBLIC include)
+  target_link_libraries(mogo_finance_http PUBLIC mogo_personal_finance_application hv_static)
+  target_link_libraries(mogo_http_transport INTERFACE mogo_finance_http)
+  target_compile_definitions(mogo_http_transport INTERFACE MOGO_FEATURE_PERSONAL_FINANCE=1)
+endif()
+
+if(MOGO_FEATURE_USER_PROFILE)
+  add_library(mogo_user_profile_http src/user_profile_http_routes.cpp)
+  target_include_directories(mogo_user_profile_http PUBLIC include)
+  target_link_libraries(mogo_user_profile_http PUBLIC mogo_user_profile_application hv_static)
+  target_link_libraries(mogo_http_transport INTERFACE mogo_user_profile_http)
+  target_compile_definitions(mogo_http_transport INTERFACE MOGO_FEATURE_USER_PROFILE=1)
+endif()

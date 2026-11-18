@@ -1,8 +1,11 @@
-add_executable(mogo_personal_finance_tests
-  personal_finance_tests.cpp
-)
-target_link_libraries(mogo_personal_finance_tests
-  PRIVATE mogo_personal_finance_sqlite
-)
+if(MOGO_FEATURE_PERSONAL_FINANCE)
+  add_executable(mogo_personal_finance_tests personal_finance_tests.cpp)
+  target_link_libraries(mogo_personal_finance_tests PRIVATE mogo_personal_finance_sqlite)
+  add_test(NAME personal_finance COMMAND mogo_personal_finance_tests)
+endif()
 
-add_test(NAME personal_finance COMMAND mogo_personal_finance_tests)
+if(MOGO_FEATURE_USER_PROFILE)
+  add_executable(mogo_user_profile_tests user_profile_tests.cpp)
+  target_link_libraries(mogo_user_profile_tests PRIVATE mogo_user_profile_json)
+  add_test(NAME user_profile COMMAND mogo_user_profile_tests)
+endif()

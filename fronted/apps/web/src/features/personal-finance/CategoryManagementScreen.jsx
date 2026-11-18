@@ -4,7 +4,7 @@ import { resolveCategoryMessageKey } from '@mogo/personal-finance-core';
 import { useCategoryManagement } from '@mogo/personal-finance-react';
 import { AppControls } from '../../components/AppControls';
 import { api } from '../../services/api';
-import { FormFieldRow } from './components/FormFieldRow';
+import { FormFieldRow } from '../../components/FormFieldRow';
 import { CategoryNoticeDialog } from './components/CategoryNoticeDialog';
 
 function BackButton({ label, onClick }) {

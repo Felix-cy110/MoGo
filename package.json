@@ -4,12 +4,13 @@
   "version": "0.1.0",
   "workspaces": [
     "fronted/apps/*",
+    "fronted/core-shared/*",
     "fronted/features/*/*"
   ],
   "scripts": {
     "dev:web": "npm run dev --workspace mogo-fronted",
     "build:web": "npm run build --workspace mogo-fronted",
-    "test:shared": "npm test --workspace @mogo/personal-finance-core",
+    "test:shared": "npm test --workspace @mogo/core-shared --workspace @mogo/personal-finance-core --workspace @mogo/user-profile-core",
     "check": "npm run test:shared && npm run build:web"
   },
   "devDependencies": {

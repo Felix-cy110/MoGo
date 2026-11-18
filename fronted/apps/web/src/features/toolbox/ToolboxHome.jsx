@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppControls } from '../../components/AppControls';
 
-export function ToolboxHome({ onOpenFinance }) {
+export function ToolboxHome({ onOpenFinance, onOpenProfile }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
 
@@ -18,7 +18,7 @@ export function ToolboxHome({ onOpenFinance }) {
           <div>
             <h1 className="text-xl font-semibold">{t('toolboxName')}</h1>
           </div>
-          <AppControls />
+          <AppControls onOpenProfile={onOpenProfile} />
         </div>
       </header>
 
