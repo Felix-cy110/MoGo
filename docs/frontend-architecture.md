@@ -104,4 +104,5 @@ Web 的 `<input>`、`<table>` 和 Tailwind 样式无法直接在 React Native �
 - `useUserProfile` 负责加载、重试、校验、保存、防重复提交及反馈。加载失败不展示可保存的空表单，保存失败保留草稿。
 - 持久化仅由 C++ JSON Adapter 完成，不使用 SQLite 或浏览器本地存储保存资料。
 - Web 与财务表单复用公共 `FormFieldRow`；页面支持中英文和明暗主题，未来 RN 独立渲染界面并复用 core 与 Hook。
+- 保存成功、保存失败和提交校验结果使用公共模态弹窗反馈；加载失败保留页面内重试入口，避免用户误用空表单覆盖资料。
 - 调试时可以通过 `MOGO_API_TARGET=http://127.0.0.1:8081` 为 Web 指定另一个本机后端；未设置时仍代理到 `http://localhost:8080`。

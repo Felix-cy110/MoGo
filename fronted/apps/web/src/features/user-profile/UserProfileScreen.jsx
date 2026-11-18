@@ -5,12 +5,14 @@ import { createProfileApi, genderOptions } from '@mogo/user-profile-core';
 import { useUserProfile } from '@mogo/user-profile-react';
 import { AppControls } from '../../components/AppControls';
 import { FormFieldRow } from '../../components/FormFieldRow';
+import { NoticeDialog } from '../../components/NoticeDialog';
 
 const api = createProfileApi({ baseUrl: '/api' });
 
 export function UserProfileScreen({ onBack }) {
   const { t } = useTranslation();
   const profile = useUserProfile({ api });
+  const dialogFeedback = profile.feedback?.presentation === 'dialog';
 
   useEffect(() => {
     document.title = `${t('userProfile')} · MoGo`;
@@ -52,7 +54,7 @@ export function UserProfileScreen({ onBack }) {
 
       <div className="mx-auto max-w-xl px-5 py-6">
         {profile.loading && <p className="section-label" role="status">{t('profileLoading')}</p>}
-        {profile.feedback && (
+        {profile.feedback && !dialogFeedback && (
           <div className={`notice notice-${profile.feedback.type}`} role={profile.feedback.type === 'error' ? 'alert' : 'status'}>
             {t(profile.feedback.key)}
           </div>
@@ -61,7 +63,7 @@ export function UserProfileScreen({ onBack }) {
           <button className="button-secondary" type="button" onClick={profile.reload}>{t('profileRetry')}</button>
         )}
         {profile.loaded && (
-          <form onSubmit={submit}>
+          <form noValidate onSubmit={submit}>
             <fieldset disabled={profile.saving} className="min-w-0 border-0 p-0 disabled:opacity-60">
               <div className="form-sheet">
                 {textField('name', 'profileName', 'name')}
@@ -87,6 +89,12 @@ export function UserProfileScreen({ onBack }) {
           </form>
         )}
       </div>
+      <NoticeDialog
+        title={dialogFeedback ? t(profile.feedback.key) : null}
+        confirmLabel={t('confirm')}
+        titleId="profile-notice-title"
+        onDismiss={profile.clearFeedback}
+      />
     </main>
   );
 }
