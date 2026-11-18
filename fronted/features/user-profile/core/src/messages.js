@@ -6,6 +6,7 @@ export const profileMessages = Object.freeze({
     profileAge: '年龄',
     profileCountry: '国家',
     profileOccupation: '职业',
+    profileMonthlyIncome: '月收入（元）',
     profileOptional: '选填',
     profileGenderUnset: '未填写',
     profileGenderMALE: '男',
@@ -23,6 +24,7 @@ export const profileMessages = Object.freeze({
     profileVersionUnsupported: '个人资料文件版本不受支持，请更新应用后重试',
     profileTextTooLong: '姓名、国家和职业不能超过 100 个字符',
     profileAgeInvalid: '年龄请输入 0 至 150 的整数',
+    profileMonthlyIncomeInvalid: '月收入请输入不小于 0、最多两位小数的金额',
     profileGenderInvalid: '请选择有效的性别选项',
     profileValidationError: '请检查填写的个人资料'
   }),
@@ -33,6 +35,7 @@ export const profileMessages = Object.freeze({
     profileAge: 'Age',
     profileCountry: 'Country',
     profileOccupation: 'Occupation',
+    profileMonthlyIncome: 'Monthly income (CNY)',
     profileOptional: 'Optional',
     profileGenderUnset: 'Not specified',
     profileGenderMALE: 'Male',
@@ -50,6 +53,7 @@ export const profileMessages = Object.freeze({
     profileVersionUnsupported: 'This profile file version is not supported. Update the app and try again.',
     profileTextTooLong: 'Name, country, and occupation must not exceed 100 characters.',
     profileAgeInvalid: 'Enter a whole number between 0 and 150 for age.',
+    profileMonthlyIncomeInvalid: 'Enter a non-negative monthly income with up to two decimal places.',
     profileGenderInvalid: 'Select a valid gender option.',
     profileValidationError: 'Please check your profile details.'
   })

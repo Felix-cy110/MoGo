@@ -8,10 +8,12 @@ import {
 test('all profile fields are optional and blank fields clear persisted values', () => {
   const empty = createProfileDraft();
   assert.equal(validateProfileDraft(empty), null);
-  assert.deepEqual(buildProfilePayload(empty), { name: null, gender: null, age: null, country: null, occupation: null });
+  assert.deepEqual(buildProfilePayload(empty), { name: null, gender: null, age: null, country: null, occupation: null, monthlyIncomeCents: null });
   assert.equal(createProfileDraft({ age: 0 }).age, '0');
-  assert.deepEqual(buildProfilePayload({ name: ' 小明 ', gender: 'OTHER', age: '0', country: ' 中国 ', occupation: ' ' }), {
-    name: '小明', gender: 'OTHER', age: 0, country: '中国', occupation: null
+  assert.equal(createProfileDraft({ monthlyIncomeCents: 0 }).monthlyIncome, '0.00');
+  assert.equal(createProfileDraft({ monthlyIncomeCents: 123456 }).monthlyIncome, '1234.56');
+  assert.deepEqual(buildProfilePayload({ name: ' 小明 ', gender: 'OTHER', age: '0', country: ' 中国 ', occupation: ' ', monthlyIncome: ' 1234.5 ' }), {
+    name: '小明', gender: 'OTHER', age: 0, country: '中国', occupation: null, monthlyIncomeCents: 123450
   });
 });
 
@@ -19,6 +21,10 @@ test('validates optional age, gender and Unicode text consistently', () => {
   const empty = createProfileDraft();
   for (const age of ['0', '150', ' 25 ', '']) assert.equal(validateProfileDraft({ ...empty, age }), null);
   for (const age of ['-1', '151', '1.5', 'abc', 'Infinity', '1e2']) assert.equal(validateProfileDraft({ ...empty, age }), 'profileAgeInvalid');
+  for (const monthlyIncome of ['', '0', '0.00', '1234.5', '999999999.99']) assert.equal(validateProfileDraft({ ...empty, monthlyIncome }), null);
+  for (const monthlyIncome of ['-1', '1.234', 'abc', 'Infinity', '1e2', '1000000000']) {
+    assert.equal(validateProfileDraft({ ...empty, monthlyIncome }), 'profileMonthlyIncomeInvalid');
+  }
   for (const gender of genderOptions) assert.equal(validateProfileDraft({ ...empty, gender }), null);
   assert.equal(validateProfileDraft({ ...empty, gender: 'invalid' }), 'profileGenderInvalid');
   for (const field of ['name', 'country', 'occupation']) {
@@ -46,7 +52,7 @@ test('profile messages cover both languages, all fields and storage failures', (
   assert.deepEqual(Object.keys(profileMessages.zh).sort(), Object.keys(profileMessages.en).sort());
   for (const messages of Object.values(profileMessages)) {
     assert.ok(Object.values(messages).every(message => typeof message === 'string' && message.length > 0));
-    for (const code of ['PROFILE_READ_FAILED', 'PROFILE_WRITE_FAILED', 'PROFILE_VERSION_UNSUPPORTED', 'PROFILE_AGE_INVALID', 'PROFILE_TEXT_TOO_LONG']) {
+    for (const code of ['PROFILE_READ_FAILED', 'PROFILE_WRITE_FAILED', 'PROFILE_VERSION_UNSUPPORTED', 'PROFILE_AGE_INVALID', 'PROFILE_MONTHLY_INCOME_INVALID', 'PROFILE_TEXT_TOO_LONG']) {
       assert.ok(messages[resolveProfileErrorKey(code)]);
     }
   }

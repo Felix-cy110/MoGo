@@ -20,6 +20,7 @@ hv::Json profileJson(const Profile& profile) {
         {"name", nullable(profile.name)}, {"gender", nullable(profile.gender)},
         {"age", nullable(profile.age)}, {"country", nullable(profile.country)},
         {"occupation", nullable(profile.occupation)},
+        {"monthlyIncomeCents", nullable(profile.monthlyIncomeCents)},
     };
 }
 
@@ -40,9 +41,18 @@ Profile parseProfile(const std::string& text) {
         }
         age = value.get<int>();
     }
+    std::optional<std::int64_t> monthlyIncomeCents;
+    if (body.contains("monthlyIncomeCents") && !body.at("monthlyIncomeCents").is_null()) {
+        const auto& value = body.at("monthlyIncomeCents");
+        if (!value.is_number_integer() || value < 0 || value > 99'999'999'999LL) {
+            throw ApplicationError(400, "PROFILE_MONTHLY_INCOME_INVALID", "Monthly income is outside the supported range");
+        }
+        monthlyIncomeCents = value.get<std::int64_t>();
+    }
     return Profile{
         .name = optionalText(body, "name"), .gender = optionalText(body, "gender"), .age = age,
         .country = optionalText(body, "country"), .occupation = optionalText(body, "occupation"),
+        .monthlyIncomeCents = monthlyIncomeCents,
     };
 }
 

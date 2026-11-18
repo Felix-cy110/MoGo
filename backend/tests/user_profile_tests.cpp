@@ -63,27 +63,32 @@ void testOptionalAndPersistence() {
     JsonProfileRepository repository(file.path());
     ProfileService service(repository);
     const auto empty = service.getProfile();
-    require(!empty.name && !empty.gender && !empty.age && !empty.country && !empty.occupation, "missing file must yield empty profile");
+    require(!empty.name && !empty.gender && !empty.age && !empty.country && !empty.occupation && !empty.monthlyIncomeCents,
+        "missing file must yield empty profile");
     require(!std::filesystem::exists(file.path()), "loading must not create a file");
     service.saveProfile(Profile{});
     const auto full = service.saveProfile(Profile{
         .name = "  小明  ", .gender = "OTHER", .age = 0, .country = " 中国 ", .occupation = " 工程师 ",
+        .monthlyIncomeCents = 1'234'567,
     });
     require(full.name == "小明" && full.country == "中国" && full.occupation == "工程师", "trim text");
-    require(full.age == 0, "zero age must not become null");
+    require(full.age == 0 && full.monthlyIncomeCents == 1'234'567, "zero age and monthly income must persist");
     {
         JsonProfileRepository reopened(file.path());
         const auto restored = reopened.load();
-        require(restored.name == full.name && restored.age == 0 && restored.gender == "OTHER", "persist across repository instances");
+        require(restored.name == full.name && restored.age == 0 && restored.gender == "OTHER" &&
+            restored.monthlyIncomeCents == 1'234'567, "persist across repository instances");
     }
     const auto text = readFile(file.path());
     require(text.find("\"schemaVersion\": 1") != std::string::npos, "file needs schema version");
     require(text.find("小明") != std::string::npos, "preserve readable unicode");
+    require(text.find("\"monthlyIncomeCents\": 1234567") != std::string::npos, "persist monthly income as integer cents");
     require(!std::filesystem::exists(file.path().string() + ".tmp"), "temporary file must be renamed");
     const auto permissions = std::filesystem::status(file.path()).permissions();
     require((permissions & std::filesystem::perms::group_read) == std::filesystem::perms::none, "private profile must not be group-readable");
     const auto cleared = service.saveProfile(Profile{.name = " \t\n", .country = "", .occupation = " "});
-    require(!cleared.name && !cleared.gender && !cleared.age && !cleared.country && !cleared.occupation, "all fields can be cleared");
+    require(!cleared.name && !cleared.gender && !cleared.age && !cleared.country && !cleared.occupation && !cleared.monthlyIncomeCents,
+        "all fields can be cleared");
     require(!service.getProfile().name, "clearing must persist");
 }
 
@@ -98,6 +103,9 @@ void testValidation() {
     }
     requireError("PROFILE_GENDER_INVALID", [&] { service.saveProfile(Profile{.gender = "invalid"}); });
     requireError("PROFILE_TEXT_TOO_LONG", [&] { service.saveProfile(Profile{.name = std::string(101, 'a')}); });
+    for (std::int64_t income : {-1LL, 100'000'000'000LL}) {
+        requireError("PROFILE_MONTHLY_INCOME_INVALID", [&] { service.saveProfile(Profile{.monthlyIncomeCents = income}); });
+    }
     require(readFile(file.path()) == original, "invalid input must leave file unchanged");
     service.saveProfile(Profile{.age = 150});
 }
@@ -106,6 +114,8 @@ void testCorruptAndFutureFiles() {
     TemporaryProfile file;
     for (const auto& text : {std::string("{broken"), std::string("[]"),
                             std::string("{\"schemaVersion\":1,\"age\":1.5}"),
+                            std::string("{\"schemaVersion\":1,\"monthlyIncomeCents\":1.5}"),
+                            std::string("{\"schemaVersion\":1,\"monthlyIncomeCents\":-1}"),
                             std::string("{\"schemaVersion\":1,\"name\":123}")}) {
         writeFixture(file.path(), text);
         JsonProfileRepository repository(file.path());
@@ -120,7 +130,9 @@ void testCorruptAndFutureFiles() {
     requireError("PROFILE_VERSION_UNSUPPORTED", [&] { repository.save(Profile{}); });
     require(readFile(file.path()) == future, "unsupported version must not be replaced");
     writeFixture(file.path(), "{\"schemaVersion\":1,\"name\":\"Partial\",\"futureField\":true}");
-    require(repository.load().name == "Partial", "optional missing fields and unknown fields must load");
+    const auto partial = repository.load();
+    require(partial.name == "Partial" && !partial.monthlyIncomeCents,
+        "old files with optional missing fields and unknown fields must load");
 }
 
 void testFailedWritesAndConcurrentReads() {

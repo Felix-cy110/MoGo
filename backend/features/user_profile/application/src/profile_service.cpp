@@ -7,6 +7,8 @@
 namespace mogo::user_profile {
 namespace {
 
+constexpr std::int64_t kMaximumMonthlyIncomeCents = 99'999'999'999;
+
 std::optional<std::string> normalizeText(const std::optional<std::string>& value) {
     if (!value) return std::nullopt;
     const auto first = value->find_first_not_of(" \t\r\n\f\v");
@@ -38,6 +40,9 @@ Profile ProfileService::saveProfile(Profile profile) {
     }
     if (profile.age && (*profile.age < 0 || *profile.age > 150)) {
         throw core_shared::ApplicationError(400, "PROFILE_AGE_INVALID", "Age must be an integer between 0 and 150");
+    }
+    if (profile.monthlyIncomeCents && (*profile.monthlyIncomeCents < 0 || *profile.monthlyIncomeCents > kMaximumMonthlyIncomeCents)) {
+        throw core_shared::ApplicationError(400, "PROFILE_MONTHLY_INCOME_INVALID", "Monthly income is outside the supported range");
     }
     repository_.save(profile);
     return profile;
