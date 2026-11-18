@@ -7,6 +7,21 @@ export class ApiError extends Error {
   }
 }
 
+export const settingsMessages = Object.freeze({
+  zh: Object.freeze({
+    settings: '设置',
+    settingsDescription: '调整语言和界面外观',
+    appearance: '界面外观',
+    settingsBack: '返回上一页'
+  }),
+  en: Object.freeze({
+    settings: 'Settings',
+    settingsDescription: 'Choose the language and appearance',
+    appearance: 'Appearance',
+    settingsBack: 'Back'
+  })
+});
+
 export const createJsonRequest = ({ baseUrl = '', fetchImpl = globalThis.fetch } = {}) => {
   if (!fetchImpl) throw new Error('fetchImpl is required');
   return async (path, options = {}) => {

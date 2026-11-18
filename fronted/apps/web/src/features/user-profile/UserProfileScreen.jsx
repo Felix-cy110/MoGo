@@ -9,7 +9,7 @@ import { NoticeDialog } from '../../components/NoticeDialog';
 
 const api = createProfileApi({ baseUrl: '/api' });
 
-export function UserProfileScreen({ onBack }) {
+export function UserProfileScreen({ onBack, onOpenSettings }) {
   const { t } = useTranslation();
   const profile = useUserProfile({ api });
   const dialogFeedback = profile.feedback?.presentation === 'dialog';
@@ -48,7 +48,7 @@ export function UserProfileScreen({ onBack }) {
             </button>
             <h1 className="text-lg font-semibold">{t('userProfile')}</h1>
           </div>
-          <AppControls />
+          <AppControls onOpenSettings={onOpenSettings} />
         </div>
       </header>
 

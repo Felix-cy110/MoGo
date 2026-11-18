@@ -144,7 +144,7 @@ function LineChart({ days, language, label }) {
   );
 }
 
-export function AnalyticsScreen({ onBack }) {
+export function AnalyticsScreen({ onBack, onOpenSettings }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
   const analytics = useFinanceAnalytics({ api });
@@ -168,7 +168,7 @@ export function AnalyticsScreen({ onBack }) {
             <BackButton label={t('backToFinance')} onClick={onBack} />
             <h1 className="truncate text-xl font-semibold">{t('expenseAnalysis')}</h1>
           </div>
-          <AppControls />
+          <AppControls onOpenSettings={onOpenSettings} />
         </div>
       </header>
 
