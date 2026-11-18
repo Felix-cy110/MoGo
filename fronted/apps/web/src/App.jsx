@@ -4,14 +4,17 @@ import { CategoryManagementScreen } from './features/personal-finance/CategoryMa
 import { AnalyticsScreen } from './features/personal-finance/AnalyticsScreen';
 import { ToolboxHome } from './features/toolbox/ToolboxHome';
 import { UserProfileScreen } from './features/user-profile/UserProfileScreen';
+import { SettingsScreen } from './features/settings/SettingsScreen';
 
 const HOME_PATH = '/';
 const FINANCE_PATH = '/finance';
 const CATEGORY_MANAGEMENT_PATH = '/finance/categories';
 const ANALYTICS_PATH = '/finance/analytics';
 const PROFILE_PATH = '/profile';
+const SETTINGS_PATH = '/settings';
 
 const resolveScreen = () => {
+  if (globalThis.location?.pathname === SETTINGS_PATH) return 'settings';
   if (globalThis.location?.pathname === PROFILE_PATH) return 'profile';
   if (globalThis.location?.pathname === CATEGORY_MANAGEMENT_PATH) return 'categories';
   if (globalThis.location?.pathname === ANALYTICS_PATH) return 'analytics';
@@ -21,6 +24,7 @@ const resolveScreen = () => {
 
 function App() {
   const [screen, setScreen] = useState(resolveScreen);
+  const [settingsReturnPath, setSettingsReturnPath] = useState(HOME_PATH);
 
   useEffect(() => {
     const handlePopState = () => setScreen(resolveScreen());
@@ -30,21 +34,31 @@ function App() {
 
   const navigate = (path) => {
     globalThis.history?.pushState({}, '', path);
-    if (path === PROFILE_PATH) setScreen('profile');
+    if (path === SETTINGS_PATH) setScreen('settings');
+    else if (path === PROFILE_PATH) setScreen('profile');
     else if (path === CATEGORY_MANAGEMENT_PATH) setScreen('categories');
     else if (path === ANALYTICS_PATH) setScreen('analytics');
     else if (path === FINANCE_PATH) setScreen('finance');
     else setScreen('home');
   };
 
+  const openSettings = () => {
+    setSettingsReturnPath(globalThis.location?.pathname || HOME_PATH);
+    navigate(SETTINGS_PATH);
+  };
+
+  if (screen === 'settings') {
+    return <SettingsScreen onBack={() => navigate(settingsReturnPath === SETTINGS_PATH ? HOME_PATH : settingsReturnPath)} />;
+  }
+
   if (screen === 'profile') {
-    return <UserProfileScreen onBack={() => navigate(HOME_PATH)} />;
+    return <UserProfileScreen onBack={() => navigate(HOME_PATH)} onOpenSettings={openSettings} />;
   }
   if (screen === 'analytics') {
-    return <AnalyticsScreen onBack={() => navigate(FINANCE_PATH)} />;
+    return <AnalyticsScreen onBack={() => navigate(FINANCE_PATH)} onOpenSettings={openSettings} />;
   }
   if (screen === 'categories') {
-    return <CategoryManagementScreen onBack={() => navigate(FINANCE_PATH)} />;
+    return <CategoryManagementScreen onBack={() => navigate(FINANCE_PATH)} onOpenSettings={openSettings} />;
   }
   if (screen === 'finance') {
     return (
@@ -52,10 +66,11 @@ function App() {
         onBack={() => navigate(HOME_PATH)}
         onManageCategories={() => navigate(CATEGORY_MANAGEMENT_PATH)}
         onOpenAnalytics={() => navigate(ANALYTICS_PATH)}
+        onOpenSettings={openSettings}
       />
     );
   }
-  return <ToolboxHome onOpenFinance={() => navigate(FINANCE_PATH)} onOpenProfile={() => navigate(PROFILE_PATH)} />;
+  return <ToolboxHome onOpenFinance={() => navigate(FINANCE_PATH)} onOpenProfile={() => navigate(PROFILE_PATH)} onOpenSettings={openSettings} />;
 }
 
 export default App;
