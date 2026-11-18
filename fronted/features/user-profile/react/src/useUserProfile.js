@@ -24,7 +24,7 @@ export const useUserProfile = ({ api }) => {
       setLoaded(true);
     } catch (error) {
       if (sequence === loadSequence.current) {
-        setFeedback({ type: 'error', key: resolveProfileErrorKey(error.code, 'profileLoadFailed') });
+        setFeedback({ type: 'error', key: resolveProfileErrorKey(error.code, 'profileLoadFailed'), presentation: 'inline' });
       }
     } finally {
       if (sequence === loadSequence.current) setLoading(false);
@@ -41,12 +41,14 @@ export const useUserProfile = ({ api }) => {
     setFeedback(null);
   }, []);
 
+  const clearFeedback = useCallback(() => setFeedback(null), []);
+
   const save = useCallback(async () => {
     if (!loaded || savingRef.current) return false;
     setFeedback(null);
     const key = validateProfileDraft(draft);
     if (key) {
-      setFeedback({ type: 'error', key });
+      setFeedback({ type: 'error', key, presentation: 'dialog' });
       return false;
     }
     savingRef.current = true;
@@ -54,10 +56,10 @@ export const useUserProfile = ({ api }) => {
     try {
       const profile = await api.saveProfile(buildProfilePayload(draft));
       setDraft(createProfileDraft(profile));
-      setFeedback({ type: 'success', key: 'profileSaved' });
+      setFeedback({ type: 'success', key: 'profileSaved', presentation: 'dialog' });
       return true;
     } catch (error) {
-      setFeedback({ type: 'error', key: resolveProfileErrorKey(error.code) });
+      setFeedback({ type: 'error', key: resolveProfileErrorKey(error.code), presentation: 'dialog' });
       return false;
     } finally {
       savingRef.current = false;
@@ -65,5 +67,5 @@ export const useUserProfile = ({ api }) => {
     }
   }, [api, draft, loaded]);
 
-  return { draft, loading, loaded, saving, feedback, updateField, save, reload: load };
+  return { draft, loading, loaded, saving, feedback, updateField, clearFeedback, save, reload: load };
 };

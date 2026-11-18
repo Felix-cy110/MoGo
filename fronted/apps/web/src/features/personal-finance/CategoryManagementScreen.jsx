@@ -5,7 +5,7 @@ import { useCategoryManagement } from '@mogo/personal-finance-react';
 import { AppControls } from '../../components/AppControls';
 import { api } from '../../services/api';
 import { FormFieldRow } from '../../components/FormFieldRow';
-import { CategoryNoticeDialog } from './components/CategoryNoticeDialog';
+import { NoticeDialog } from '../../components/NoticeDialog';
 
 function BackButton({ label, onClick }) {
   return (
@@ -131,9 +131,10 @@ export function CategoryManagementScreen({ onBack }) {
         </section>
       </div>
 
-      <CategoryNoticeDialog
-        t={t}
-        messageKey={dialogFeedback ? management.feedback.key : null}
+      <NoticeDialog
+        title={dialogFeedback ? feedbackText : null}
+        confirmLabel={t('confirm')}
+        titleId="category-notice-title"
         onDismiss={management.dismissFeedback}
       />
 
