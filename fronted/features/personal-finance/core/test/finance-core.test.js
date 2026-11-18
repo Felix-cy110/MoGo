@@ -213,9 +213,9 @@ test('places Other last in weekly and monthly analytics summaries', async () => 
 
 test('includes localized toolbox entry labels', async () => {
   const { financeMessages } = await import('../src/index.js');
-  assert.equal(financeMessages.zh.toolboxName, '手机百宝箱');
+  assert.equal(financeMessages.zh.toolboxName, '魔狗百宝箱');
   assert.equal(financeMessages.zh.financeFeatureName, '个人财务管理');
-  assert.equal(financeMessages.en.toolboxName, 'Mobile Toolbox');
+  assert.equal(financeMessages.en.toolboxName, 'MoGo Toolbox');
   assert.equal(financeMessages.en.financeFeatureName, 'Personal Finance');
 });
 

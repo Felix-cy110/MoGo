@@ -7,7 +7,7 @@ export function ToolboxHome({ onOpenFinance, onOpenProfile }) {
   const language = i18n.resolvedLanguage || i18n.language;
 
   useEffect(() => {
-    document.title = `${t('toolboxName')} · MoGo`;
+    document.title = t('toolboxName');
     document.querySelector('meta[name="description"]')?.setAttribute('content', t('toolboxMetaDescription'));
   }, [language, t]);
 
