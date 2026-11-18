@@ -36,6 +36,22 @@ Domain 和 Application 不依赖 libhv、React Native 或具体数据库。HTTP�
 | 未来 `backend/platforms/mobile/` | React Native C++ Turbo Native Module 适配器 |
 | `backend/database/migrations/` | 可审计的数据库结构和升级脚本 |
 
+## Personal Finance 内部边界
+
+Personal Finance 对外保留 `FinanceService` 门面，HTTP 与未来原生适配器不直接依赖内部用例类。门面只负责并发串行化和委派，具体职责按用例拆分：
+
+| 模块 | 职责 |
+| --- | --- |
+| `CategoryService` | 分类查询、搜索、新增、编辑、停用及内置分类保护 |
+| `BudgetService` | 每日预算校验与保存 |
+| `ExpenseService` | 消费新增、编辑、幂等请求、备注规则和结果组装 |
+| `AlertService` | 预算阈值状态计算、跨阈值事件和预警持久化 |
+| `FinanceQueryService` | 当日看板与区间统计查询 |
+
+领域模型按 `category`、`expense`、`alert`、`dashboard`、`analytics` 和 `money` 分文件维护。`BudgetUsage`、分类保护和备注策略属于领域行为，不放入 HTTP 或 SQLite 层。
+
+仓储接口按分类、预算、消费、预警、只读统计和事务能力拆分；`FinanceRepository` 仅作为当前组合接口。SQLite 适配器仍可使用一个对象共享连接和事务，但实现文件按同样职责拆分，迁移和通用 Statement/行映射独立维护。
+
 ## 按需编译
 
 每项百宝箱功能使用独立 CMake Target，并由 Feature Option 控制。当前选项如下：

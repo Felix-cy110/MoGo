@@ -2,7 +2,7 @@ add_library(mogo_http_transport INTERFACE)
 target_link_libraries(mogo_http_transport INTERFACE hv_static)
 
 if(MOGO_FEATURE_PERSONAL_FINANCE)
-  add_library(mogo_finance_http src/finance_http_routes.cpp)
+  add_library(mogo_finance_http src/finance_http_json.cpp src/finance_http_routes.cpp)
   target_include_directories(mogo_finance_http PUBLIC include)
   target_link_libraries(mogo_finance_http PUBLIC mogo_personal_finance_application hv_static)
   target_link_libraries(mogo_http_transport INTERFACE mogo_finance_http)

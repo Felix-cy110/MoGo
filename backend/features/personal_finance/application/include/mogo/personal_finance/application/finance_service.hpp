@@ -1,38 +1,17 @@
 #pragma once
 
-#include "mogo/personal_finance/application/finance_repository.hpp"
+#include "mogo/personal_finance/application/alert_service.hpp"
+#include "mogo/personal_finance/application/budget_service.hpp"
+#include "mogo/personal_finance/application/category_service.hpp"
+#include "mogo/personal_finance/application/expense_service.hpp"
+#include "mogo/personal_finance/application/finance_query_service.hpp"
 
-#include <cstdint>
 #include <mutex>
-#include <optional>
-#include <string>
 
 namespace mogo::personal_finance {
 
-struct BudgetInput {
-    std::string date;
-    MoneyCents amount_cents{};
-};
-
-struct CategoryInput {
-    std::string name;
-};
-
-struct ExpenseInput {
-    std::string date;
-    MoneyCents amount_cents{};
-    std::int64_t category_id{};
-    std::optional<std::string> note;
-    std::optional<std::string> client_request_id;
-};
-
-struct ExpenseUpdateInput {
-    MoneyCents amount_cents{};
-    std::int64_t category_id{};
-    std::optional<std::string> note;
-};
-
-class FinanceService {
+// Stable facade used by HTTP and future native adapters. Domain use cases live in focused services.
+class FinanceService final {
 public:
     explicit FinanceService(FinanceRepository& repository);
 
@@ -48,19 +27,13 @@ public:
     ExpenseMutationResult updateExpense(std::int64_t expense_id, const ExpenseUpdateInput& input);
 
 private:
-    std::string validateCategoryName(const std::string& raw_name);
-    Category requireActiveCategory(std::int64_t category_id);
-    std::optional<std::string> normalizeNote(const Category& category,
-                                             const std::optional<std::string>& note);
-    std::vector<Alert> evaluateAlerts(const std::string& date, const Expense& expense,
-                                      MoneyCents total_cents, MoneyCents budget_cents);
-    ExpenseMutationResult responseFor(const Expense& expense, std::vector<Alert> alerts);
-
     FinanceRepository& repository_;
+    CategoryService category_service_;
+    BudgetService budget_service_;
+    AlertService alert_service_;
+    FinanceQueryService query_service_;
+    ExpenseService expense_service_;
     std::mutex mutex_;
 };
-
-int usagePercent(MoneyCents total_cents, MoneyCents budget_cents);
-bool reachedThreshold(MoneyCents total_cents, MoneyCents budget_cents, int threshold_percent);
 
 }  // namespace mogo::personal_finance
