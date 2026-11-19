@@ -98,3 +98,10 @@
 - Web 首页采用移动端优先的功能列表，一行展示一个具体功能；第一项为个人财务管理。
 - 新增百宝箱功能时使用独立 feature 目录，首页只维护功能入口，不在导航层实现业务逻辑。
 - 跨端业务逻辑继续优先放入共享模块，Web 与 React Native 分别负责平台渲染。
+
+## RN 手机端规范
+
+- 原生页面放在 `fronted/apps/mobile/src`；TurboModule 平台胶水放在 `fronted/apps/mobile/native`，不得在桥接层重复实现领域规则。
+- Android/iOS 在后台串行队列调用 C++；JS/UI 线程不得同步执行 SQLite 或资料文件 IO。
+- 原生适配保持与共享 Hook 一致的服务契约；手机不得回退到 HTTP、WebView 或示例数据。
+- 涉及原生修改必须检查 Codegen、C++ 核心和 RN 测试；未安装 SDK 时明确区分 JS 打包通过与原生编译/真机验证未完成。

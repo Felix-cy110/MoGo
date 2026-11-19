@@ -24,19 +24,28 @@
         "MOGO_FEATURE_PERSONAL_FINANCE": "ON",
         "MOGO_FEATURE_USER_PROFILE": "ON",
         "MOGO_ENABLE_HTTP": "OFF",
-        "MOGO_BUILD_TESTS": "OFF"
+        "MOGO_BUILD_TESTS": "OFF",
+        "MOGO_ENABLE_NATIVE": "ON"
       }
     }
   ],
   "buildPresets": [
-    { "name": "dev", "configurePreset": "dev" },
-    { "name": "mobile-core", "configurePreset": "mobile-core" }
+    {
+      "name": "dev",
+      "configurePreset": "dev"
+    },
+    {
+      "name": "mobile-core",
+      "configurePreset": "mobile-core"
+    }
   ],
   "testPresets": [
     {
       "name": "dev",
       "configurePreset": "dev",
-      "output": { "outputOnFailure": true }
+      "output": {
+        "outputOnFailure": true
+      }
     }
   ]
 }

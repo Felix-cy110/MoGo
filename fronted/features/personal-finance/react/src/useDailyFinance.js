@@ -160,6 +160,8 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
     alerts,
     dismissAlerts: () => setAlerts([]),
     feedback,
+    dismissFeedback: () => setFeedback(null),
+    refresh,
     saveBudget,
     addExpense,
     startEditingExpense,

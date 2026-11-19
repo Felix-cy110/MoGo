@@ -1,0 +1,23 @@
+{
+  "name": "@mogo/native-core",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "codegenConfig": {
+    "name": "MoGoNativeSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.mogo.nativecore"
+    },
+    "ios": {
+      "modulesProvider": {
+        "NativeMoGo": "MoGoNativeModule"
+      }
+    }
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  }
+}
