@@ -5,6 +5,7 @@ import { AnalyticsScreen } from './features/personal-finance/AnalyticsScreen';
 import { ToolboxHome } from './features/toolbox/ToolboxHome';
 import { UserProfileScreen } from './features/user-profile/UserProfileScreen';
 import { SettingsScreen } from './features/settings/SettingsScreen';
+import { LeetCodeInterviewScreen } from './features/leetcode-interview/LeetCodeInterviewScreen';
 
 const HOME_PATH = '/';
 const FINANCE_PATH = '/finance';
@@ -12,9 +13,11 @@ const CATEGORY_MANAGEMENT_PATH = '/finance/categories';
 const ANALYTICS_PATH = '/finance/analytics';
 const PROFILE_PATH = '/profile';
 const SETTINGS_PATH = '/settings';
+const LEETCODE_INTERVIEW_PATH = '/leetcode-interview';
 
 const resolveScreen = () => {
   if (globalThis.location?.pathname === SETTINGS_PATH) return 'settings';
+  if (globalThis.location?.pathname === LEETCODE_INTERVIEW_PATH) return 'leetcodeInterview';
   if (globalThis.location?.pathname === PROFILE_PATH) return 'profile';
   if (globalThis.location?.pathname === CATEGORY_MANAGEMENT_PATH) return 'categories';
   if (globalThis.location?.pathname === ANALYTICS_PATH) return 'analytics';
@@ -35,6 +38,7 @@ function App() {
   const navigate = (path) => {
     globalThis.history?.pushState({}, '', path);
     if (path === SETTINGS_PATH) setScreen('settings');
+    else if (path === LEETCODE_INTERVIEW_PATH) setScreen('leetcodeInterview');
     else if (path === PROFILE_PATH) setScreen('profile');
     else if (path === CATEGORY_MANAGEMENT_PATH) setScreen('categories');
     else if (path === ANALYTICS_PATH) setScreen('analytics');
@@ -54,6 +58,9 @@ function App() {
   if (screen === 'profile') {
     return <UserProfileScreen onBack={() => navigate(HOME_PATH)} onOpenSettings={openSettings} />;
   }
+  if (screen === 'leetcodeInterview') {
+    return <LeetCodeInterviewScreen onBack={() => navigate(HOME_PATH)} onOpenSettings={openSettings} />;
+  }
   if (screen === 'analytics') {
     return <AnalyticsScreen onBack={() => navigate(FINANCE_PATH)} onOpenSettings={openSettings} />;
   }
@@ -70,7 +77,7 @@ function App() {
       />
     );
   }
-  return <ToolboxHome onOpenFinance={() => navigate(FINANCE_PATH)} onOpenProfile={() => navigate(PROFILE_PATH)} onOpenSettings={openSettings} />;
+  return <ToolboxHome onOpenFinance={() => navigate(FINANCE_PATH)} onOpenLeetCodeInterview={() => navigate(LEETCODE_INTERVIEW_PATH)} onOpenProfile={() => navigate(PROFILE_PATH)} onOpenSettings={openSettings} />;
 }
 
 export default App;
