@@ -108,3 +108,11 @@ Web 的 `<input>`、`<table>` 和 Tailwind 样式无法直接在 React Native �
 - Web 与财务表单复用公共 `FormFieldRow`；页面支持中英文和明暗主题，未来 RN 独立渲染界面并复用 core 与 Hook。
 - 保存成功、保存失败和提交校验结果使用公共模态弹窗反馈；加载失败保留页面内重试入口，避免用户误用空表单覆盖资料。
 - 调试时可以通过 `MOGO_API_TARGET=http://127.0.0.1:8081` 为 Web 指定另一个本机后端；未设置时仍代理到 `http://localhost:8080`。
+
+## 已落地的 RN 手机端
+
+- `fronted/apps/mobile` 独立渲染原生页面；`native` 是本地 TurboModule workspace，Android/iOS 仅做路径、线程和 C++ 生命周期适配。
+- 共享 Hooks 继续注入稳定服务接口，手机提供 `createNativeApis`，Web 继续用 HTTP 客户端。
+- Metro/Jest 统一将共享 Hook 解析到 mobile 的 React 19；Web 保持 React 18，不混用 renderer。
+- 语言/主题在手机设置页管理；页面文案组合现有 feature 的资源。
+- 构建、环境和验证边界见 `docs/mobile-development.md`。

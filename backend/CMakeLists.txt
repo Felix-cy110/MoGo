@@ -10,6 +10,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(MOGO_FEATURE_PERSONAL_FINANCE "Build the personal finance feature" ON)
 option(MOGO_FEATURE_USER_PROFILE "Build the local user profile feature" ON)
 option(MOGO_ENABLE_HTTP "Build the libhv HTTP adapter" ON)
+option(MOGO_ENABLE_NATIVE "Build the offline native adapter" OFF)
+
 option(MOGO_BUILD_TESTS "Build backend tests" ON)
 
 include(cmake/Dependencies.cmake)
@@ -28,6 +30,10 @@ endif()
 if(MOGO_ENABLE_HTTP)
   add_subdirectory(transports/http)
   add_subdirectory(platforms/desktop)
+endif()
+
+if(MOGO_ENABLE_NATIVE)
+  add_subdirectory(transports/native)
 endif()
 
 if(MOGO_BUILD_TESTS)

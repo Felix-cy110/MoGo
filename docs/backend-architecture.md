@@ -84,3 +84,11 @@ V001 在事务中创建个人财务表、索引和默认数据。迁移 SQL 的�
 - 资料文件和临时文件不进入 Git。保存时使用同目录临时文件、检查写入和关闭结果后原子重命名；文件权限限制为当前用户读写，仓储内互斥保护并发请求。
 - 文件损坏或版本不受支持时返回明确错误，不自动清空或覆盖原文件；页面加载失败时禁止保存，提供重试入口。
 - JSON 是本机明文文件，不上传到远程服务，也不提供加密存储。原子替换防止进程中断留下半写入的目标文件，不等同于断电后的磁盘持久性保证。
+
+## RN 原生适配
+
+- `MOGO_ENABLE_NATIVE` 构建 `mogo_native_core`，不依赖 RN/libhv；`NativeCore` 负责组装启用的 repository/service，命令按 feature 拆分。
+- HTTP/Native 共用 `transports/contracts` 的 JSON 展示映射；业务规则仍在 application/domain 中。
+- `fronted/apps/mobile/native` 的 Kotlin/JNI、Objective-C++ 将应用私有目录注入核心，并在串行后台队列执行，避免 UI 阻塞。
+- Android 用 CMake 编译 SQLite amalgamation，iOS 通过 CocoaPods 编译同一份 C++ 文件并链接系统 SQLite。
+- iOS 按环境变量、Android 按 Gradle 参数裁剪 feature；关闭 feature 不链接其持久化实现，手机通过 capabilities 隐藏入口。

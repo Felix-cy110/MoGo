@@ -1,0 +1,107 @@
+# React Native 手机端
+
+## 目录与运行边界
+
+```text
+fronted/apps/mobile/
+  src/screens/            原生页面，按功能拆分
+  src/components/         行式表单、选择弹窗、按钮等纯 RN 组件
+  src/platform/           原生语言/主题偏好、日期与生命周期
+  src/services/           Native API 契约适配，不实现业务规则
+  native/src/             TurboModule Codegen 规格
+  native/android/         Kotlin 异步队列 + JNI + CMake
+  native/ios/             Objective-C++ 异步队列
+  android/、ios/          原生应用工程
+backend/transports/
+  native/                 无 RN/HTTP 依赖的离线入口与命令适配
+  contracts/              HTTP、Native 共用的 JSON 展示契约
+```
+
+调用方向：RN 页面 → 已有共享 React Hook → Native API → TurboModule → C++ Application → Repository。
+
+- 分类、金额、预算预警、统计、资料校验继续复用 `fronted/features/*/{core,react}` 与 `backend/features/*`；原生适配层不写 SQL 或领域规则。
+- Android/iOS 在单独串行队列执行 C++ 与磁盘操作，不阻塞 JS/UI 线程；Android 释放模块时关闭 C++ 句柄。
+- 手机内不启动 libhv、HTTP Server、WebView，也不访问开发机 API。首次构建需要下载开发依赖，**安装完成后的业务运行不需要网络**。
+- 财务：Android `filesDir/mogo/mogo.db`；iOS `Application Support/MoGo/mogo.db`。
+- 个人资料：同目录 `user-profile.json`，所有字段选填（包括月收入），不放 SQLite。
+- 语言/主题偏好才使用 AsyncStorage；财务和资料不能放入 AsyncStorage。
+- 手机与 Web 是两份独立本地数据，不自动同步；不得复制用户开发数据库到安装包。
+- 目前无登录、同步或加密功能；本地财务/资料为应用沙盒内的明文。卸载应用可能删除数据。
+
+## 安装与启动
+
+RN 0.88.1 使用 React 19.3；现有 Web 维持 React 18.3.1。Metro/Jest 将共享 Hook 的 React 解析固定到 mobile workspace，不能去修改 Web 的 React 版本“解决”重复 React。
+
+先在仓库根目录安装：
+
+```bash
+npm ci
+make mobile-doctor
+```
+
+Node 使用 22.13+（22.x）、24.3+（24.x）或 26+；建议沿用当前 Node 24。
+
+### Android
+
+安装 JDK 17、Android Studio/SDK、SDK API 37、Build Tools 37.0.0、NDK 27.1.12297006、CMake 3.22.1。设置 `ANDROID_HOME`，启动模拟器或连接已开启 USB 调试的手机：
+
+```bash
+make dev-mobile       # 第一个终端：Metro
+make mobile-android  # 第二个终端：编译、安装、启动
+```
+
+Android debug 允许网络连接 Metro；release Manifest 不申请 INTERNET 权限。模板 release 暂用公开 debug key，**仅供开发验收，正式分发前必须配置私有签名**。Android SQLite 使用校验哈希的官方 amalgamation，不能链接开发机 SQLite 或 Android 私有系统库。
+
+### iOS
+
+需要完整 Xcode（Command Line Tools 不够）、iOS SDK、Ruby Bundler 和 CocoaPods。先配置 Xcode 开发目录，再执行：
+
+```bash
+cd fronted/apps/mobile
+bundle install
+cd ios
+bundle exec pod install
+cd ../../../..
+make dev-mobile       # 第一个终端
+make mobile-ios       # 第二个终端；默认模拟器
+```
+
+真机需在 Xcode 中打开 `fronted/apps/mobile/ios/MoGo.xcworkspace`，选择自己的签名团队和设备。调试包需要 Metro；离线验收必须使用包含 JS bundle 的 Release 包。
+
+### 验证
+
+```bash
+make mobile-check       # ESLint、TS bridge contract、RN 页面/适配测试
+make mobile-core-test   # 不启动 HTTP，验证真实 SQLite 和 JSON 持久化
+make check              # 已有 Web/共享逻辑/C++ 回归
+```
+
+JS 页面沿用项目 JSX 风格；TypeScript 检查覆盖桥接规格，不宣称全部共享 JS 已严格类型化。页面测试覆盖中英文 × 明暗主题、月收入、分类保护、点击行编辑等。原生核心测试覆盖重开数据、软删除、重复分类、消费幂等、80%/100% 预警、统计与错误码。
+
+### 按需编译
+
+Android（在 mobile/android 下）：
+
+```bash
+./gradlew assembleDebug -PmogoFeaturePersonalFinance=OFF -PmogoFeatureUserProfile=ON
+```
+
+iOS（在 mobile/ios 下，改变开关后重新安装 Pods）：
+
+```bash
+MOGO_FEATURE_PERSONAL_FINANCE=OFF MOGO_FEATURE_USER_PROFILE=ON bundle exec pod install
+```
+
+手机首页读取原生 `capabilities`，不显示被裁剪的财务/用户入口。LeetCode 仍为规划占位页面。HTTP 始终关闭；新增功能需要独立 CMake Target、命令适配和 capability。
+
+## 当前验收状态（2026-11-19）
+
+已执行：RN ESLint、桥接 TS 检查、14 项页面/接口测试、Android/iOS Codegen、双平台 release JS bundle；原生核心 3 组 CTest、三种 feature 裁剪组合、JNI C++ 语法检查；现有 Web 构建、共享测试及桌面后端回归。
+
+**尚未执行：iOS/Android 原生完整编译、模拟器/真机运行与视觉验收。** 当前工作机只有 Command Line Tools，没有可用的完整 Xcode、CocoaPods 和 Android SDK。JS bundle/Codegen/宿主机 C++ 编译不能替代原生编译；补齐环境后需要继续验证：
+
+- 中文/英文和浅色/深色下表单不截断，屏幕阅读器与返回键、软键盘、选择弹窗正常。
+- 飞行模式下 Release 包记账、编辑、统计、保存资料；强制退出重开后记录/月收入保留。
+- “其他”置底、必填备注、禁止编辑/删除；重复分类弹窗。
+- 触达 80% 和超过 100% 时即时弹窗；滑动趋势图只显示金额。
+- 原生 feature 裁剪构建、热重载与卸载模块后没有句柄泄漏。
