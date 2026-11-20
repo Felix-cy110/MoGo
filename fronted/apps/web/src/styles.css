@@ -230,12 +230,9 @@ button, input, select, textarea { font: inherit; }
   cursor: pointer;
 }
 .expense-row:hover { background: #f8fafc; }
-.expense-row-static { cursor: default; }
-.expense-row-static:hover { background: transparent; }
 .expense-row:focus-visible { outline: 2px solid #64748b; outline-offset: 2px; }
 .dark .expense-row { border-color: #1e293b; }
 .dark .expense-row:hover { background: #0f172a; }
-.dark .expense-row-static:hover { background: transparent; }
 
 .category-list {
   overflow: hidden;

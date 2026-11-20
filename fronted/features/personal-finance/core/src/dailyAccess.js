@@ -4,7 +4,9 @@ export const createDailyFinanceAccess = ({ selectedDate, todayDate }) => {
     isToday,
     canAddExpense: true,
     canSaveBudget: isToday,
-    canEditExpense: isToday,
     canManageCategories: isToday
   });
 };
+
+export const canEditExpenseForDay = ({ expense, selectedDate, todayDate }) =>
+  selectedDate === todayDate || expense?.occurredAt?.slice(0, 10) === todayDate;
