@@ -4,10 +4,12 @@ import {
   buildExpenseUpdatePayload,
   centsToYuan,
   createClientRequestId,
+  createDailyFinanceAccess,
   createExpenseDraft,
   findCategory,
   formatLocalDate,
   resolveApiErrorMessageKey,
+  shiftLocalDate,
   sortCategoriesOtherLast,
   validateExpenseDraft,
   yuanToCents
@@ -16,7 +18,9 @@ import {
 const EMPTY_FORM = Object.freeze({ amount: '', categoryId: '', note: '' });
 
 export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
-  const [date] = useState(initialDate);
+  const todayDate = initialDate;
+  const yesterdayDate = useMemo(() => shiftLocalDate(todayDate, -1), [todayDate]);
+  const [date, setDate] = useState(todayDate);
   const [categories, setCategories] = useState([]);
   const [dashboard, setDashboard] = useState(null);
   const [budgetInput, setBudgetInput] = useState('');
@@ -25,6 +29,11 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
   const [editForm, setEditForm] = useState(EMPTY_FORM);
   const [alerts, setAlerts] = useState([]);
   const [feedback, setFeedback] = useState(null);
+
+  const access = useMemo(
+    () => createDailyFinanceAccess({ selectedDate: date, todayDate }),
+    [date, todayDate]
+  );
 
   const selectedCategory = useMemo(
     () => findCategory(categories, form.categoryId),
@@ -59,6 +68,10 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
 
   const saveBudget = useCallback(async () => {
     setFeedback(null);
+    if (!access.canSaveBudget) {
+      setFeedback({ type: 'error', key: 'yesterdayReadOnlyHint' });
+      return false;
+    }
     try {
       await api.saveBudget(date, yuanToCents(budgetInput));
       await refresh();
@@ -68,13 +81,14 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
       setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
       return false;
     }
-  }, [api, budgetInput, date, refresh]);
+  }, [access.canSaveBudget, api, budgetInput, date, refresh]);
 
   const addExpense = useCallback(async () => {
     setFeedback(null);
     const amountCents = yuanToCents(form.amount);
     const validationKey = validateExpenseDraft({
       budgetSet: dashboard?.budgetSet,
+      budgetRequired: access.isToday,
       amountCents,
       category: selectedCategory,
       note: form.note
@@ -100,13 +114,18 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
       setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
       return false;
     }
-  }, [api, dashboard?.budgetSet, date, form, refresh, selectedCategory]);
+  }, [access.isToday, api, dashboard?.budgetSet, date, form, refresh, selectedCategory]);
 
   const startEditingExpense = useCallback((expense) => {
     setFeedback(null);
+    if (!access.canEditExpense) {
+      setFeedback({ type: 'error', key: 'yesterdayReadOnlyHint' });
+      return false;
+    }
     setEditingExpenseId(expense.id);
     setEditForm(createExpenseDraft(expense));
-  }, []);
+    return true;
+  }, [access.canEditExpense]);
 
   const cancelEditingExpense = useCallback(() => {
     setEditingExpenseId(null);
@@ -115,6 +134,10 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
 
   const updateExpense = useCallback(async () => {
     setFeedback(null);
+    if (!access.canEditExpense) {
+      setFeedback({ type: 'error', key: 'yesterdayReadOnlyHint' });
+      return false;
+    }
     const amountCents = yuanToCents(editForm.amount);
     const validationKey = validateExpenseDraft({
       budgetSet: dashboard?.budgetSet,
@@ -142,10 +165,24 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
       setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
       return false;
     }
-  }, [api, cancelEditingExpense, dashboard?.budgetSet, editForm, editingExpenseId, refresh, selectedEditCategory]);
+  }, [access.canEditExpense, api, cancelEditingExpense, dashboard?.budgetSet, editForm, editingExpenseId, refresh, selectedEditCategory]);
+
+
+  const toggleDate = useCallback(() => {
+    setDate((current) => current === todayDate ? yesterdayDate : todayDate);
+    setDashboard(null);
+    setBudgetInput('');
+    setEditingExpenseId(null);
+    setEditForm(EMPTY_FORM);
+    setAlerts([]);
+    setFeedback(null);
+    setForm((current) => ({ ...current, amount: '', note: '' }));
+  }, [todayDate, yesterdayDate]);
 
   return {
     date,
+    access,
+    toggleDate,
     categories,
     dashboard,
     budgetInput,
