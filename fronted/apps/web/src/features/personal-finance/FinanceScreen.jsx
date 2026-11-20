@@ -68,6 +68,9 @@ export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onO
           onBudgetChange={finance.setBudgetInput}
           onSaveBudget={handleSaveBudget}
           onOpenAnalytics={onOpenAnalytics}
+          isToday={finance.access.isToday}
+          canEditBudget={finance.access.canSaveBudget}
+          onToggleDate={finance.toggleDate}
         />
 
         <section className="grid gap-8 py-7 lg:grid-cols-[320px_1fr]">
@@ -78,6 +81,7 @@ export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onO
             selectedCategory={finance.selectedCategory}
             onFormChange={updateForm}
             onManageCategories={onManageCategories}
+            canManageCategories={finance.access.canManageCategories}
             onSubmit={handleAddExpense}
           />
           <ExpenseList
@@ -85,6 +89,8 @@ export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onO
             language={language}
             expenses={finance.dashboard?.expenses}
             onEdit={finance.startEditingExpense}
+            editable={finance.access.canEditExpense}
+            isToday={finance.access.isToday}
           />
         </section>
 
@@ -93,7 +99,7 @@ export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onO
 
       <ExpenseEditDialog
         t={t}
-        open={finance.editingExpenseId !== null}
+        open={finance.access.canEditExpense && finance.editingExpenseId !== null}
         categories={finance.categories}
         form={finance.editForm}
         selectedCategory={finance.selectedEditCategory}
@@ -103,7 +109,7 @@ export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onO
         onClose={finance.cancelEditingExpense}
         onSubmit={handleUpdateExpense}
       />
-      <AlertDialog t={t} alerts={finance.alerts} onDismiss={finance.dismissAlerts} />
+      <AlertDialog t={t} alerts={finance.alerts} isToday={finance.access.isToday} onDismiss={finance.dismissAlerts} />
     </main>
   );
 }

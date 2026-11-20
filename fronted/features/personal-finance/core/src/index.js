@@ -2,6 +2,7 @@ export * from './analytics.js';
 export * from './api.js';
 export * from './category.js';
 export * from './date.js';
+export * from './dailyAccess.js';
 export * from './expense.js';
 export * from './money.js';
 export * from './messages.js';

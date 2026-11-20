@@ -2,7 +2,7 @@ import React from 'react';
 import { NOTE_POLICY, resolveCategoryMessageKey } from '@mogo/personal-finance-core';
 import { FormFieldRow } from '../../../components/FormFieldRow';
 
-export function ExpenseForm({ t, categories, form, selectedCategory, onFormChange, onManageCategories, onSubmit }) {
+export function ExpenseForm({ t, categories, form, selectedCategory, onFormChange, onManageCategories, canManageCategories, onSubmit }) {
   return (
     <form onSubmit={onSubmit}>
       <h2 className="section-title">{t('addExpense')}</h2>
@@ -36,9 +36,11 @@ export function ExpenseForm({ t, categories, form, selectedCategory, onFormChang
                 return <option key={category.id} value={category.id}>{messageKey ? t(messageKey) : category.name}</option>;
               })}
             </select>
-            <button className="form-row-action" type="button" onClick={onManageCategories}>
-              {t('manageCategories')}
-            </button>
+            {canManageCategories && (
+              <button className="form-row-action" type="button" onClick={onManageCategories}>
+                {t('manageCategories')}
+              </button>
+            )}
           </div>
         </FormFieldRow>
 

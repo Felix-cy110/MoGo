@@ -4,8 +4,10 @@ import {
   buildExpensePayload,
   buildExpenseUpdatePayload,
   centsToYuan,
+  createDailyFinanceAccess,
   createExpenseDraft,
   formatLocalDate,
+  shiftLocalDate,
   isOtherCategory,
   NOTE_POLICY,
   sortCategoriesOtherLast,
@@ -39,12 +41,38 @@ test('creates editable drafts and normalized update payloads', () => {
   });
 });
 
-test('formats local dates for API requests', () => {
+test('formats and shifts local dates for API requests', () => {
   assert.equal(formatLocalDate(new Date(2026, 10, 16)), '2026-11-16');
+  assert.equal(shiftLocalDate('2026-11-16', -1), '2026-11-15');
+  assert.equal(shiftLocalDate('2026-03-01', -1), '2026-02-28');
+});
+
+test('allows only expense creation for historical daily views', () => {
+  assert.deepEqual(createDailyFinanceAccess({
+    selectedDate: '2026-11-20',
+    todayDate: '2026-11-20'
+  }), {
+    isToday: true,
+    canAddExpense: true,
+    canSaveBudget: true,
+    canEditExpense: true,
+    canManageCategories: true
+  });
+  assert.deepEqual(createDailyFinanceAccess({
+    selectedDate: '2026-11-19',
+    todayDate: '2026-11-20'
+  }), {
+    isToday: false,
+    canAddExpense: true,
+    canSaveBudget: false,
+    canEditExpense: false,
+    canManageCategories: false
+  });
 });
 
 test('enforces budget and required-note rules', () => {
   assert.equal(validateExpenseDraft({ budgetSet: false }), 'budgetMissing');
+  assert.equal(validateExpenseDraft({ budgetSet: false, budgetRequired: false, amountCents: 100 }), null);
   assert.equal(validateExpenseDraft({ budgetSet: true, amountCents: 0 }), 'invalidAmount');
   assert.equal(validateExpenseDraft({
     budgetSet: true,

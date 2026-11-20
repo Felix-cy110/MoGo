@@ -1,7 +1,7 @@
 import React from 'react';
 import { resolveAlertMessageKey } from '@mogo/personal-finance-core';
 
-export function AlertDialog({ t, alerts, onDismiss }) {
+export function AlertDialog({ t, alerts, isToday, onDismiss }) {
   if (!alerts.length) return null;
 
   return (
@@ -9,7 +9,11 @@ export function AlertDialog({ t, alerts, onDismiss }) {
       <div className="w-full max-w-sm border border-slate-300 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-900">
         <h2 id="budget-alert-title" className="text-lg font-semibold">{t('warning')}</h2>
         <div className="mt-4 space-y-2 text-sm leading-6 text-slate-700 dark:text-slate-300">
-          {alerts.map((alert) => <p key={alert.code}>{t(resolveAlertMessageKey(alert))}</p>)}
+          {alerts.map((alert) => {
+            const key = resolveAlertMessageKey(alert);
+            const messageKey = isToday ? key : `${key}Yesterday`;
+            return <p key={alert.code}>{t(messageKey)}</p>;
+          })}
         </div>
         <button className="button-secondary mt-5 w-full" onClick={onDismiss} type="button">{t('confirm')}</button>
       </div>
