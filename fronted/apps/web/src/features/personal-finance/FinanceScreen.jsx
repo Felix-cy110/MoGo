@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useDailyFinance } from '@mogo/personal-finance-react';
 import { api } from '../../services/api';
 import { AppControls } from '../../components/AppControls';
+import { NoticeDialog } from '../../components/NoticeDialog';
 import { AlertDialog } from './components/AlertDialog';
 import { BudgetOverview } from './components/BudgetOverview';
 import { CategorySummary } from './components/CategorySummary';
@@ -15,6 +16,7 @@ export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onO
   const language = i18n.resolvedLanguage || i18n.language;
   const finance = useDailyFinance({ api });
   const feedbackText = finance.feedback ? t(finance.feedback.key) : '';
+  const dialogFeedback = finance.feedback?.presentation === 'dialog';
 
   useEffect(() => {
     document.title = `${t('appName')} ${t('appSubtitle')}`;
@@ -57,7 +59,7 @@ export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onO
       </header>
 
       <div className="mx-auto max-w-5xl px-5 py-7 sm:px-8">
-        {finance.feedback?.type === 'error' && <div className="notice notice-error">{feedbackText}</div>}
+        {finance.feedback?.type === 'error' && !dialogFeedback && <div className="notice notice-error">{feedbackText}</div>}
         {finance.feedback?.type === 'success' && <div className="notice notice-success">{feedbackText}</div>}
 
         <BudgetOverview
@@ -89,7 +91,6 @@ export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onO
             language={language}
             expenses={finance.dashboard?.expenses}
             onEdit={finance.startEditingExpense}
-            editable={finance.access.canEditExpense}
             isToday={finance.access.isToday}
           />
         </section>
@@ -99,7 +100,7 @@ export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onO
 
       <ExpenseEditDialog
         t={t}
-        open={finance.access.canEditExpense && finance.editingExpenseId !== null}
+        open={finance.editingExpenseId !== null}
         categories={finance.categories}
         form={finance.editForm}
         selectedCategory={finance.selectedEditCategory}
@@ -110,6 +111,12 @@ export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onO
         onSubmit={handleUpdateExpense}
       />
       <AlertDialog t={t} alerts={finance.alerts} isToday={finance.access.isToday} onDismiss={finance.dismissAlerts} />
+      <NoticeDialog
+        title={dialogFeedback ? feedbackText : null}
+        confirmLabel={t('confirm')}
+        titleId="finance-notice-title"
+        onDismiss={finance.dismissFeedback}
+      />
     </main>
   );
 }

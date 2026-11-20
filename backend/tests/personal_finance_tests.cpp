@@ -79,6 +79,11 @@ void testDomainPolicies() {
     require(other.isProtected(), "other category must be protected by domain policy");
     require(other.requiresNote(), "other category must require a note");
 
+    const Expense historical{.expense_date = "2026-11-19", .occurred_at = "2026-11-19T18:00:00"};
+    require(!historical.canEditOn("2026-11-20"), "historical expense must be locked");
+    const Expense backfilled{.expense_date = "2026-11-19", .occurred_at = "2026-11-20T09:00:00"};
+    require(backfilled.canEditOn("2026-11-20"), "today's backfill must remain editable");
+
     const Category custom{.code = "CUSTOM_TEST", .note_policy = "OPTIONAL"};
     require(!custom.isProtected(), "custom category must remain mutable");
     require(!custom.requiresNote(), "custom category notes must be optional");
@@ -294,6 +299,16 @@ void testExpenseWorkflow() {
     require(exceeded.alerts.size() == 1, "100 percent must trigger one new alert");
     require(exceeded.alerts.front().code == "BUDGET_EXCEEDED", "expected exceeded alert");
 
+    const auto locked = repository.insertExpense(
+        date, 500, meal, std::nullopt, std::nullopt, "2000-01-01T12:00:00");
+    requireApplicationError("EXPENSE_EDIT_FORBIDDEN", [&] {
+        service.updateExpense(locked.id, ExpenseUpdateInput{
+            .amount_cents = 600,
+            .category_id = commute.id,
+            .note = std::nullopt,
+        });
+    });
+
     const auto updated = service.updateExpense(first.expense.id, ExpenseUpdateInput{
         .amount_cents = 7000,
         .category_id = commute.id,
@@ -301,12 +316,12 @@ void testExpenseWorkflow() {
     });
     require(updated.expense.id == first.expense.id, "editing must preserve the expense id");
     require(updated.expense.category_code == "COMMUTE", "editing must update the category");
-    require(updated.total_amount_cents == 9300, "editing must recalculate the total");
+    require(updated.total_amount_cents == 9800, "editing must recalculate the total");
 
     const Dashboard dashboard = service.getDashboard(date);
-    require(dashboard.expense_count == 5, "editing must not insert a new expense");
-    require(dashboard.total_amount_cents == 9300, "dashboard total must reflect the edit");
-    require(dashboard.category_totals.size() == 2, "dashboard must rebuild category totals");
+    require(dashboard.expense_count == 6, "editing must not insert a new expense");
+    require(dashboard.total_amount_cents == 9800, "dashboard total must reflect the edit");
+    require(dashboard.category_totals.size() == 3, "dashboard must rebuild category totals");
 }
 
 

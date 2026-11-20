@@ -17,6 +17,10 @@ struct Expense {
     std::string category_name;
     std::optional<std::string> note;
     std::string occurred_at;
+
+    [[nodiscard]] bool canEditOn(const std::string& today) const {
+        return expense_date == today || occurred_at.starts_with(today);
+    }
 };
 
 }  // namespace mogo::personal_finance

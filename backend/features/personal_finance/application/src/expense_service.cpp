@@ -56,6 +56,9 @@ ExpenseMutationResult ExpenseService::updateExpense(std::int64_t expense_id,
     }
     const auto existing = expenses_.expenseById(expense_id);
     if (!existing) throw ApplicationError(404, "EXPENSE_NOT_FOUND", "消费记录不存在");
+    if (!existing->canEditOn(nowLocal().substr(0, 10))) {
+        throw ApplicationError(403, "EXPENSE_EDIT_FORBIDDEN", "禁止修改");
+    }
 
     const Category category = categories_.requireActiveCategory(input.category_id);
     const auto note = normalizeNote(category, input.note);

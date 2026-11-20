@@ -24,7 +24,7 @@ export const financeMessages = Object.freeze({
     yesterday: '昨天',
     toggleToYesterday: '查看昨天',
     toggleToToday: '返回今天',
-    yesterdayReadOnlyHint: '昨天仅支持补记消费，预算、已有记录和分类不可修改',
+    yesterdayReadOnlyHint: '昨天仅支持补记消费；今天补记的记录可修改，原有记录不可修改',
     expenseAnalysis: '消费分析',
     expenseAnalysisDescription: '查看本周和本月的消费趋势',
     weeklyAnalysis: '周度分析',
@@ -88,6 +88,7 @@ export const financeMessages = Object.freeze({
     editExpenseTitle: '编辑消费记录',
     updateExpense: '保存修改',
     expenseNotFound: '消费记录不存在',
+    expenseEditForbidden: '禁止修改',
     recentExpenses: '今日记录',
     yesterdayExpenses: '昨天记录',
     noExpenses: '今天还没有消费记录',
@@ -137,7 +138,7 @@ export const financeMessages = Object.freeze({
     yesterday: 'Yesterday',
     toggleToYesterday: 'View yesterday',
     toggleToToday: 'Back to today',
-    yesterdayReadOnlyHint: 'For yesterday, you can only add expenses; the budget, existing records, and categories cannot be changed',
+    yesterdayReadOnlyHint: 'For yesterday, you can add expenses and edit entries added today; earlier entries, the budget, and categories cannot be changed',
     expenseAnalysis: 'Spending analysis',
     expenseAnalysisDescription: 'Review spending trends for this week and month',
     weeklyAnalysis: 'Weekly',
@@ -201,6 +202,7 @@ export const financeMessages = Object.freeze({
     editExpenseTitle: 'Edit expense',
     updateExpense: 'Save changes',
     expenseNotFound: 'The expense record no longer exists',
+    expenseEditForbidden: 'Editing not allowed',
     recentExpenses: 'Today’s expenses',
     yesterdayExpenses: 'Yesterday’s expenses',
     noExpenses: 'No expenses recorded today',
@@ -247,7 +249,8 @@ export const apiErrorMessageKeys = Object.freeze({
   REQUEST_FAILED: 'requestFailed',
   CATEGORY_NAME_EXISTS: 'categoryNameExists',
   CATEGORY_PROTECTED: 'categoryProtected',
-  EXPENSE_NOT_FOUND: 'expenseNotFound'
+  EXPENSE_NOT_FOUND: 'expenseNotFound',
+  EXPENSE_EDIT_FORBIDDEN: 'expenseEditForbidden'
 });
 
 export const resolveCategoryMessageKey = (category) =>

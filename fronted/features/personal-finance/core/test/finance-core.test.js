@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   buildExpensePayload,
   buildExpenseUpdatePayload,
+  canEditExpenseForDay,
   centsToYuan,
   createDailyFinanceAccess,
   createExpenseDraft,
@@ -55,7 +56,6 @@ test('allows only expense creation for historical daily views', () => {
     isToday: true,
     canAddExpense: true,
     canSaveBudget: true,
-    canEditExpense: true,
     canManageCategories: true
   });
   assert.deepEqual(createDailyFinanceAccess({
@@ -65,9 +65,28 @@ test('allows only expense creation for historical daily views', () => {
     isToday: false,
     canAddExpense: true,
     canSaveBudget: false,
-    canEditExpense: false,
     canManageCategories: false
   });
+});
+
+test('edits only records created today when viewing yesterday', () => {
+  const todayDate = '2026-11-20';
+  const selectedDate = '2026-11-19';
+  assert.equal(canEditExpenseForDay({
+    selectedDate,
+    todayDate,
+    expense: { occurredAt: '2026-11-20T09:30:00' }
+  }), true);
+  assert.equal(canEditExpenseForDay({
+    selectedDate,
+    todayDate,
+    expense: { occurredAt: '2026-11-19T20:15:00' }
+  }), false);
+  assert.equal(canEditExpenseForDay({
+    selectedDate: todayDate,
+    todayDate,
+    expense: { occurredAt: '2026-11-19T20:15:00' }
+  }), true);
 });
 
 test('enforces budget and required-note rules', () => {
@@ -117,6 +136,7 @@ test('resolves category and API error translation keys', async () => {
   assert.equal(resolveCategoryMessageKey({ i18nKey: 'category.meal' }), 'categoryMeal');
   assert.equal(resolveCategoryMessageKey({ code: 'OTHER' }), 'categoryOther');
   assert.equal(resolveApiErrorMessageKey('NOTE_REQUIRED'), 'noteRequired');
+  assert.equal(resolveApiErrorMessageKey('EXPENSE_EDIT_FORBIDDEN'), 'expenseEditForbidden');
   assert.equal(resolveApiErrorMessageKey('UNKNOWN'), 'requestFailed');
 });
 

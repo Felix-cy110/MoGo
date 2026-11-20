@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   buildExpensePayload,
   buildExpenseUpdatePayload,
+  canEditExpenseForDay,
   centsToYuan,
   createClientRequestId,
   createDailyFinanceAccess,
@@ -118,14 +119,14 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
 
   const startEditingExpense = useCallback((expense) => {
     setFeedback(null);
-    if (!access.canEditExpense) {
-      setFeedback({ type: 'error', key: 'yesterdayReadOnlyHint' });
+    if (!canEditExpenseForDay({ expense, selectedDate: date, todayDate })) {
+      setFeedback({ type: 'error', key: 'expenseEditForbidden', presentation: 'dialog' });
       return false;
     }
     setEditingExpenseId(expense.id);
     setEditForm(createExpenseDraft(expense));
     return true;
-  }, [access.canEditExpense]);
+  }, [date, todayDate]);
 
   const cancelEditingExpense = useCallback(() => {
     setEditingExpenseId(null);
@@ -134,8 +135,9 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
 
   const updateExpense = useCallback(async () => {
     setFeedback(null);
-    if (!access.canEditExpense) {
-      setFeedback({ type: 'error', key: 'yesterdayReadOnlyHint' });
+    const expense = dashboard?.expenses?.find((item) => item.id === editingExpenseId);
+    if (!canEditExpenseForDay({ expense, selectedDate: date, todayDate })) {
+      setFeedback({ type: 'error', key: 'expenseEditForbidden', presentation: 'dialog' });
       return false;
     }
     const amountCents = yuanToCents(editForm.amount);
@@ -162,10 +164,16 @@ export const useDailyFinance = ({ api, initialDate = formatLocalDate() }) => {
       setFeedback({ type: 'success', key: 'saved' });
       return true;
     } catch (error) {
-      setFeedback({ type: 'error', key: resolveApiErrorMessageKey(error.code) });
+      const forbidden = error.code === 'EXPENSE_EDIT_FORBIDDEN';
+      if (forbidden) cancelEditingExpense();
+      setFeedback({
+        type: 'error',
+        key: resolveApiErrorMessageKey(error.code),
+        ...(forbidden ? { presentation: 'dialog' } : {})
+      });
       return false;
     }
-  }, [access.canEditExpense, api, cancelEditingExpense, dashboard?.budgetSet, editForm, editingExpenseId, refresh, selectedEditCategory]);
+  }, [api, cancelEditingExpense, dashboard?.budgetSet, dashboard?.expenses, date, editForm, editingExpenseId, refresh, selectedEditCategory, todayDate]);
 
 
   const toggleDate = useCallback(() => {
