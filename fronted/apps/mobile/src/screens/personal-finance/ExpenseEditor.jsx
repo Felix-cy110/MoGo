@@ -1,52 +1,45 @@
 import React from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { usePreferences } from '../../platform/PreferencesProvider';
-import IconButton from '../../components/IconButton';
-import { Action, Label, Page, Section } from '../../components/Primitives';
+import FormDialog from '../../components/FormDialog';
+import { Action } from '../../components/Primitives';
 import ExpenseFields from './ExpenseFields';
 
-export default function ExpenseEditor({ model }) {
+export default function ExpenseEditor({ model, returnFocusRef }) {
   const { t } = useTranslation();
-  const { colors } = usePreferences();
   return (
-    <Modal
+    <FormDialog
       visible={model.editingExpenseId != null}
-      animationType="slide"
-      onRequestClose={model.cancelEditingExpense}
+      returnFocusRef={returnFocusRef}
+      title={t('editExpenseTitle')}
+      onClose={model.cancelEditingExpense}
     >
-      <SafeAreaView
-        accessibilityViewIsModal
-        style={[styles.screen, { backgroundColor: colors.background }]}
-      >
-        <View style={styles.header}>
-          <IconButton
-            icon="back"
-            label={t('back')}
-            onPress={model.cancelEditingExpense}
-          />
-          <Label accessibilityRole="header" style={styles.title}>
-            {t('editExpenseTitle')}
-          </Label>
-        </View>
-        <Page>
-          <Section>
-            <ExpenseFields
-              form={model.editForm}
-              setForm={model.setEditForm}
-              categories={model.categories}
-            />
-            <Action title={t('updateExpense')} onPress={model.updateExpense} />
-            <Action title={t('cancel')} onPress={model.cancelEditingExpense} />
-          </Section>
-        </Page>
-      </SafeAreaView>
-    </Modal>
+      <ExpenseFields
+        form={model.editForm}
+        setForm={model.setEditForm}
+        categories={model.categories}
+      />
+      <View style={styles.actions}>
+        <Action
+          variant="secondary"
+          title={t('cancel')}
+          onPress={model.cancelEditingExpense}
+        />
+        <Action
+          variant="primary"
+          title={t('updateExpense')}
+          onPress={model.updateExpense}
+        />
+      </View>
+    </FormDialog>
   );
 }
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 },
-  title: { fontSize: 17, fontWeight: '600', flex: 1 },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 20,
+  },
 });

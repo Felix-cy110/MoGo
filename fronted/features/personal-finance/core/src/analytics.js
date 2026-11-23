@@ -63,6 +63,9 @@ export const buildAnalyticsView = (dashboard, period) => {
     averageAmountCents: Math.round(totalAmountCents / dayCount),
     maxAmountCents: Math.max(0, ...days.map((day) => Number(day.amountCents || 0))),
     days,
-    categoryTotals: sortCategoriesOtherLast(dashboard?.categoryTotals || [])
+    categoryTotals: sortCategoriesOtherLast(dashboard?.categoryTotals || []).map((category) => ({
+      ...category,
+      sharePercent: totalAmountCents > 0 ? Math.round((category.amountCents / totalAmountCents) * 100) : 0
+    }))
   };
 };
