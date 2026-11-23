@@ -56,7 +56,7 @@ export function PreferencesProvider({ children }) {
     };
   }, []);
   useEffect(() => {
-    if (ready) Appearance.setColorScheme(theme === 'system' ? null : theme);
+    if (ready) Appearance.setColorScheme(theme === 'system' ? 'auto' : theme);
   }, [ready, theme]);
   const update = async (key, value) => {
     try {

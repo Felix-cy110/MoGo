@@ -1,6 +1,6 @@
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
-import { Alert, TextInput } from 'react-native';
+import { Alert, Appearance, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n, { resources } from '../src/platform/i18n';
 import { PreferencesProvider } from '../src/platform/PreferencesProvider';
@@ -212,6 +212,12 @@ test('every mobile translation exists in both languages', () => {
   expect(Object.keys(resources.zh.translation).sort()).toEqual(
     Object.keys(resources.en.translation).sort(),
   );
+});
+
+test('system theme resets the native appearance override', async () => {
+  const setColorScheme = jest.spyOn(Appearance, 'setColorScheme');
+  await render(<SettingsScreen />, 'zh', 'system');
+  expect(setColorScheme).toHaveBeenLastCalledWith('auto');
 });
 
 test('finance requires Other notes and shows budget alerts after insertion', async () => {
