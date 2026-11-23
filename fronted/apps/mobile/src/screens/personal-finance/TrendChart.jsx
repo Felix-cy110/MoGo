@@ -1,45 +1,65 @@
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Svg, { Circle, Polyline } from 'react-native-svg';
+import Svg, {
+  Circle,
+  Line,
+  Polygon,
+  Polyline,
+  Rect,
+  Text as SvgText,
+} from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
-import { formatMoney, formatDisplayDate } from '@mogo/personal-finance-core';
+import {
+  buildTrendChart,
+  findNearestTrendPoint,
+  formatMoney,
+  formatDisplayDate,
+  getLocale,
+} from '@mogo/personal-finance-core';
 import { usePreferences } from '../../platform/PreferencesProvider';
-import { Label } from '../../components/Primitives';
 
 export default function TrendChart({ days }) {
-  const [width, setWidth] = useState(280);
+  const [width, setWidth] = useState(300);
   const [selected, setSelected] = useState(null);
   const { colors } = usePreferences();
   const { t, i18n } = useTranslation();
-  const height = 150,
-    inset = 16;
-  const maximum = Math.max(1, ...days.map(day => day.amountCents));
-  const points = days.map((day, index) => ({
-    x:
-      days.length === 1
-        ? width / 2
-        : inset + (index * (width - inset * 2)) / (days.length - 1),
-    y: height - inset - (day.amountCents / maximum) * (height - inset * 2),
-  }));
-  const active = selected == null ? null : Math.min(selected, days.length - 1);
+  const chart = buildTrendChart(days, {
+    width,
+    height: 220,
+    padding: { top: 36, right: 24, bottom: 36, left: 24 },
+    maxLabels: width < 360 ? 5 : 7,
+  });
+  const { points, padding, chartWidth, chartHeight, height } = chart;
+  const active =
+    selected == null || !days.length
+      ? null
+      : Math.min(selected, days.length - 1);
+  const point = active == null ? null : points[active];
+  const amount = point ? formatMoney(point.amountCents, i18n.language) : '';
+  const tooltipWidth = Math.min(
+    width - 16,
+    Math.max(96, amount.length * 8 + 20),
+  );
+  const tooltipX = point
+    ? Math.max(
+        8,
+        Math.min(width - tooltipWidth - 8, point.x - tooltipWidth / 2),
+      )
+    : 0;
+  const tooltipY = point ? Math.max(2, point.y - 42) : 0;
+  const dateFormatter = new Intl.DateTimeFormat(getLocale(i18n.language), {
+    month: 'numeric',
+    day: 'numeric',
+  });
   const select = event => {
-    // RN uses a finger drag here; Web's equivalent is mouse hover on the trend line.
-    const relative =
-      (event.nativeEvent.locationX - inset) / Math.max(1, width - inset * 2);
-    setSelected(
-      Math.max(
-        0,
-        Math.min(days.length - 1, Math.round(relative * (days.length - 1))),
-      ),
-    );
+    // 手机用手指滑动选择节点；Web 对应鼠标 hover，坐标和最近节点算法共用。
+    setSelected(findNearestTrendPoint(points, event.nativeEvent.locationX));
   };
   return (
-    <View onLayout={event => setWidth(event.nativeEvent.layout.width)}>
-      <Label style={styles.value}>
-        {active != null && days[active]
-          ? formatMoney(days[active].amountCents, i18n.language)
-          : ' '}
-      </Label>
+    <View
+      onLayout={event => setWidth(Math.max(1, event.nativeEvent.layout.width))}
+      style={[styles.chart, { borderColor: colors.line }]}
+    >
       <View
         accessible
         accessibilityRole="adjustable"
@@ -69,50 +89,97 @@ export default function TrendChart({ days }) {
             ),
           )
         }
-        onStartShouldSetResponder={() => true}
-        onMoveShouldSetResponder={() => true}
+        onStartShouldSetResponder={() => days.length > 0}
+        onMoveShouldSetResponder={() => days.length > 0}
         onResponderGrant={select}
         onResponderMove={select}
         onResponderTerminationRequest={() => false}
       >
-        <Svg width={width} height={height}>
-          <Polyline
-            points={points.map(point => `${point.x},${point.y}`).join(' ')}
-            fill="none"
-            stroke={colors.accent}
-            strokeWidth={2}
+        <Svg pointerEvents="none" width={width} height={height}>
+          {[0, 0.5, 1].map(ratio => (
+            <Line
+              key={ratio}
+              x1={padding.left}
+              x2={padding.left + chartWidth}
+              y1={padding.top + chartHeight * ratio}
+              y2={padding.top + chartHeight * ratio}
+              stroke={colors.line}
+            />
+          ))}
+          <Polygon
+            points={chart.areaPoints}
+            fill={colors.text}
+            opacity={0.09}
           />
-          {points.length === 1 && (
-            <Circle
-              cx={points[0].x}
-              cy={points[0].y}
-              r={3}
-              fill={colors.accent}
+          {point && (
+            <Line
+              x1={point.x}
+              x2={point.x}
+              y1={padding.top}
+              y2={padding.top + chartHeight}
+              stroke={colors.muted}
+              strokeDasharray="4 4"
             />
           )}
-          {active != null && points[active] && (
-            <Circle
-              cx={points[active].x}
-              cy={points[active].y}
-              r={5}
-              fill={colors.accent}
-            />
+          <Polyline
+            points={chart.linePoints}
+            fill="none"
+            stroke={colors.text}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {points.map((item, index) => (
+            <React.Fragment key={item.date}>
+              <Circle
+                cx={item.x}
+                cy={item.y}
+                r={active === index ? 5 : 3}
+                fill={active === index ? colors.text : colors.surface}
+                stroke={colors.text}
+                strokeWidth={2}
+              />
+              {(index % chart.labelStep === 0 ||
+                index === points.length - 1) && (
+                <SvgText
+                  x={item.x}
+                  y={height - 12}
+                  textAnchor="middle"
+                  fontSize={11}
+                  fill={colors.muted}
+                >
+                  {dateFormatter.format(new Date(`${item.date}T00:00:00`))}
+                </SvgText>
+              )}
+            </React.Fragment>
+          ))}
+          {point && (
+            <>
+              <Rect
+                x={tooltipX}
+                y={tooltipY}
+                width={tooltipWidth}
+                height={30}
+                rx={4}
+                fill={colors.text}
+              />
+              <SvgText
+                x={tooltipX + tooltipWidth / 2}
+                y={tooltipY + 20}
+                textAnchor="middle"
+                fontSize={12}
+                fontWeight="600"
+                fill={colors.surface}
+              >
+                {amount}
+              </SvgText>
+            </>
           )}
         </Svg>
-      </View>
-      <View style={styles.axis}>
-        <Label muted>
-          {days[0] && formatDisplayDate(days[0].date, i18n.language)}
-        </Label>
-        <Label muted>
-          {days.length > 1 &&
-            formatDisplayDate(days[days.length - 1].date, i18n.language)}
-        </Label>
       </View>
     </View>
   );
 }
 const styles = StyleSheet.create({
-  value: { textAlign: 'center', minHeight: 28 },
-  axis: { flexDirection: 'row', justifyContent: 'space-between', padding: 8 },
+  chart: { borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
 });

@@ -18,6 +18,7 @@ export default function ChoiceField({
   options,
   onChange,
   disabled = false,
+  action,
 }) {
   const trigger = useRef(null);
   const heading = useRef(null);
@@ -30,7 +31,7 @@ export default function ChoiceField({
   const { t } = useTranslation();
   return (
     <>
-      <Row label={label}>
+      <Row label={label} action={action}>
         <Pressable
           ref={trigger}
           disabled={disabled}
@@ -43,6 +44,7 @@ export default function ChoiceField({
           <Label>
             {options.find(option => option.value === value)?.label ||
               t('selection')}
+            {' ▾'}
           </Label>
         </Pressable>
       </Row>

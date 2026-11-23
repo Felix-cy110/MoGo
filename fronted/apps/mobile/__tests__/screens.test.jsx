@@ -103,6 +103,7 @@ test.each([
             startDate: '2026-11-19',
             endDate: '2026-11-19',
             totalAmountCents: 5000,
+            expenseCount: 1,
             days: [{ date: '2026-11-19', amountCents: 5000 }],
             categoryTotals: [],
           }),

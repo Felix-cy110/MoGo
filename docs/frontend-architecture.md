@@ -116,3 +116,13 @@ Web 的 `<input>`、`<table>` 和 Tailwind 样式无法直接在 React Native �
 - Metro/Jest 统一将共享 Hook 解析到 mobile 的 React 19；Web 保持 React 18，不混用 renderer。
 - 语言/主题在手机设置页管理；页面文案组合现有 feature 的资源。
 - 构建、环境和验证边界见 `docs/mobile-development.md`。
+
+## Web 与 RN 的个人财务界面一致性
+
+Web 已确认的功能、信息层级和入口位置是 RN 个人财务页面的设计基准。平台独立渲染允许使用原生选择器、触摸滑动、键盘避让和无障碍焦点，不应导致预算进度、日期切换或统计指标遗漏。
+
+- 日概览包含今天／昨天切换、统计入口、消费总额、预算／剩余、使用率和进度条；权限始终读取 `useDailyFinance.access`。
+- 表单保持左标签右输入，预算保存与分类管理位于对应行；记录整行点击编辑，分类汇总包含笔数。
+- 统计共用 `buildAnalyticsView` 的分类占比和 `buildTrendChart` / `findNearestTrendPoint` 的几何、节点选择算法；平台只处理事件与绘制。
+- RN 的预算概览、记录列表、分类汇总与编辑弹窗分别拆分组件；公共表单行、按钮与 `FormDialog` 放在移动平台公共组件中。
+- 新增或修改 Web 功能时检查 RN 是否接入同一共享状态和流程；使用中英文、明暗主题及窄屏场景验收两个平台。

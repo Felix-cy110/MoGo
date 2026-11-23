@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { createContext, useContext, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -28,10 +28,13 @@ export function Label({ children, muted = false, style, ...props }) {
     </Text>
   );
 }
-export function Page({ children }) {
+const FormSheetContext = createContext(false);
+
+export function Page({ children, plain = false }) {
+  const { colors } = usePreferences();
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      style={[styles.flex, plain && { backgroundColor: colors.surface }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
@@ -43,23 +46,60 @@ export function Page({ children }) {
     </KeyboardAvoidingView>
   );
 }
-export function Section({ title, children }) {
+export function Section({ title, children, plain = false }) {
   const { colors } = usePreferences();
   return (
     <View style={styles.section}>
-      {title && <Label style={styles.heading}>{title}</Label>}
-      <View style={[styles.card, { backgroundColor: colors.surface }]}>
+      {title && (
+        <Label
+          accessibilityRole="header"
+          style={[styles.heading, plain && styles.plainHeading]}
+        >
+          {title}
+        </Label>
+      )}
+      <View
+        style={!plain && [styles.card, { backgroundColor: colors.surface }]}
+      >
         {children}
       </View>
     </View>
   );
 }
-export function Row({ label, children }) {
+export function FormSheet({ children }) {
   const { colors } = usePreferences();
   return (
-    <View style={[styles.row, { borderColor: colors.line }]}>
-      <Label style={styles.rowLabel}>{label}</Label>
-      <View style={styles.rowValue}>{children}</View>
+    <FormSheetContext.Provider value>
+      <View
+        style={[
+          styles.sheet,
+          { borderColor: colors.line, backgroundColor: colors.background },
+        ]}
+      >
+        {children}
+      </View>
+    </FormSheetContext.Provider>
+  );
+}
+export function Row({ label, children, action, alignStart = false }) {
+  const sheet = useContext(FormSheetContext);
+  const { colors } = usePreferences();
+  return (
+    <View
+      style={[
+        styles.row,
+        sheet && styles.sheetRow,
+        alignStart && styles.rowStart,
+        { borderColor: colors.line },
+      ]}
+    >
+      <Label style={[styles.rowLabel, sheet && styles.sheetLabel]}>
+        {label}
+      </Label>
+      <View style={styles.rowControls}>
+        <View style={styles.rowValue}>{children}</View>
+        {action && <View style={styles.rowAction}>{action}</View>}
+      </View>
     </View>
   );
 }
@@ -68,18 +108,25 @@ export function Field({
   value,
   onChangeText,
   numeric = false,
+  action,
   ...props
 }) {
   const { colors } = usePreferences();
+  const sheet = useContext(FormSheetContext);
   return (
-    <Row label={label}>
+    <Row label={label} action={action} alignStart={props.multiline}>
       <TextInput
         accessibilityLabel={label}
         value={value}
         onChangeText={onChangeText}
         keyboardType={numeric ? 'decimal-pad' : 'default'}
         placeholderTextColor={colors.muted}
-        style={[styles.input, { color: colors.text, borderColor: colors.line }]}
+        style={[
+          styles.input,
+          sheet && styles.sheetInput,
+          props.multiline && styles.multiline,
+          { color: colors.text, borderColor: colors.line },
+        ]}
         {...props}
       />
     </Row>
@@ -90,6 +137,9 @@ export function Action({
   onPress,
   disabled = false,
   danger = false,
+  variant = 'text',
+  compact = false,
+  style,
   ...props
 }) {
   const { colors } = usePreferences();
@@ -115,13 +165,29 @@ export function Action({
       onPress={press}
       style={({ pressed }) => [
         styles.action,
+        compact && styles.compactAction,
+        variant !== 'text' && [
+          styles.actionBorder,
+          { borderColor: colors.text },
+        ],
+        variant === 'primary' && { backgroundColor: colors.text },
+        style,
         { opacity: disabled || busy ? 0.45 : pressed ? 0.65 : 1 },
       ]}
     >
       <Text
         style={[
           styles.actionLabel,
-          { color: danger ? colors.danger : colors.accent },
+          compact && styles.compactLabel,
+          {
+            color: danger
+              ? colors.danger
+              : variant === 'primary'
+              ? colors.surface
+              : variant === 'text'
+              ? colors.accent
+              : colors.text,
+          },
         ]}
       >
         {title}
@@ -160,6 +226,7 @@ const styles = StyleSheet.create({
   page: { padding: 16, paddingBottom: 32, flexGrow: 1 },
   section: { marginBottom: 16 },
   heading: { fontWeight: '600', marginBottom: 8 },
+  plainHeading: { marginBottom: 12 },
   card: { borderRadius: 8, overflow: 'hidden' },
   row: {
     flexDirection: 'row',
@@ -170,7 +237,18 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   rowLabel: { width: '35%' },
-  rowValue: { flex: 1 },
+  sheetLabel: { width: '30%', fontSize: 14 },
+  rowControls: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  rowValue: { flex: 1, minWidth: 0 },
+  rowAction: { maxWidth: '48%' },
+  rowStart: { alignItems: 'flex-start', paddingVertical: 12 },
+  sheet: { borderWidth: 1, borderRadius: 12, overflow: 'hidden' },
+  sheetRow: { borderBottomWidth: StyleSheet.hairlineWidth, minHeight: 56 },
+  sheetInput: { borderBottomWidth: 0 },
+  multiline: { minHeight: 80, textAlignVertical: 'top' },
+  compactAction: { paddingHorizontal: 0, minWidth: 44, flexShrink: 1 },
+  compactLabel: { fontSize: 12, fontWeight: '500', textAlign: 'center' },
+  actionBorder: { borderWidth: 1, borderRadius: 6 },
   input: {
     minHeight: 40,
     borderBottomWidth: StyleSheet.hairlineWidth,

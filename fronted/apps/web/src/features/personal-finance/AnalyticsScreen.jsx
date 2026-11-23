@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ANALYTICS_PERIOD,
+  buildTrendChart,
+  findNearestTrendPoint,
   formatDisplayDate,
   formatMoney,
   getLocale,
@@ -32,22 +34,8 @@ function Metric({ label, value }) {
 
 function LineChart({ days, language, label }) {
   const [selectedIndex, setSelectedIndex] = useState(null);
-  const width = 760;
-  const height = 300;
-  const padding = { top: 24, right: 22, bottom: 48, left: 12 };
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
-  const maxAmount = Math.max(1, ...days.map((day) => Number(day.amountCents || 0)));
-  const points = days.map((day, index) => {
-    const ratio = days.length <= 1 ? 0.5 : index / (days.length - 1);
-    const x = padding.left + chartWidth * ratio;
-    const y = padding.top + chartHeight - (Number(day.amountCents || 0) / maxAmount) * chartHeight;
-    return { ...day, x, y };
-  });
-  const linePoints = points.map(({ x, y }) => `${x},${y}`).join(' ');
-  const areaPoints = `${padding.left},${padding.top + chartHeight} ${linePoints} ${padding.left + chartWidth},${padding.top + chartHeight}`;
+  const { width, height, padding, chartWidth, chartHeight, points, linePoints, areaPoints, labelStep } = buildTrendChart(days);
   const dateFormatter = new Intl.DateTimeFormat(getLocale(language), { month: 'numeric', day: 'numeric' });
-  const labelStep = days.length > 12 ? Math.ceil(days.length / 7) : 1;
   const selectedPoint = selectedIndex === null ? null : points[selectedIndex];
   const tooltipWidth = 96;
   const tooltipHeight = 30;
@@ -61,9 +49,7 @@ function LineChart({ days, language, label }) {
   const getNearestPointIndex = (clientX, element) => {
     const bounds = element.getBoundingClientRect();
     const viewBoxX = ((clientX - bounds.left) / bounds.width) * width;
-    return points.reduce((nearestIndex, point, index) => (
-      Math.abs(point.x - viewBoxX) < Math.abs(points[nearestIndex].x - viewBoxX) ? index : nearestIndex
-    ), 0);
+    return findNearestTrendPoint(points, viewBoxX);
   };
 
   // Web 端用鼠标/指针移动模拟手机端手指滑动，RN 端复用同一交互意图。
@@ -232,9 +218,7 @@ export function AnalyticsScreen({ onBack, onOpenSettings }) {
                     {analytics.view.categoryTotals.map((category) => {
                       const messageKey = resolveCategoryMessageKey(category);
                       const name = messageKey ? t(messageKey) : category.categoryName;
-                      const percent = analytics.view.totalAmountCents > 0
-                        ? Math.round((category.amountCents / analytics.view.totalAmountCents) * 100)
-                        : 0;
+                      const percent = category.sharePercent;
                       return (
                         <div className="analytics-category-row" key={category.categoryId}>
                           <div className="min-w-0">

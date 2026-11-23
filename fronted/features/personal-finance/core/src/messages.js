@@ -263,5 +263,7 @@ export const alertMessageKeys = Object.freeze({
   'alert.budget.exceeded': 'alertExceeded'
 });
 
-export const resolveAlertMessageKey = (alert) =>
-  alertMessageKeys[alert?.messageKey] || (alert?.thresholdPercent >= 100 ? 'alertExceeded' : 'alertWarning');
+export const resolveAlertMessageKey = (alert, { isToday = true } = {}) => {
+  const key = alertMessageKeys[alert?.messageKey] || (alert?.thresholdPercent >= 100 ? 'alertExceeded' : 'alertWarning');
+  return isToday ? key : `${key}Yesterday`;
+};

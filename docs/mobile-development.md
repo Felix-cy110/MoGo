@@ -94,7 +94,7 @@ MOGO_FEATURE_PERSONAL_FINANCE=OFF MOGO_FEATURE_USER_PROFILE=ON bundle exec pod i
 
 手机首页读取原生 `capabilities`，不显示被裁剪的财务/用户入口。LeetCode 仍为规划占位页面。HTTP 始终关闭；新增功能需要独立 CMake Target、命令适配和 capability。
 
-## 当前验收状态（2026-11-19）
+## 初版验收记录（2026-11-19）
 
 已执行：RN ESLint、桥接 TS 检查、14 项页面/接口测试、Android/iOS Codegen、双平台 release JS bundle；原生核心 3 组 CTest、三种 feature 裁剪组合、JNI C++ 语法检查；现有 Web 构建、共享测试及桌面后端回归。
 
@@ -105,3 +105,11 @@ MOGO_FEATURE_PERSONAL_FINANCE=OFF MOGO_FEATURE_USER_PROFILE=ON bundle exec pod i
 - “其他”置底、必填备注、禁止编辑/删除；重复分类弹窗。
 - 触达 80% 和超过 100% 时即时弹窗；滑动趋势图只显示金额。
 - 原生 feature 裁剪构建、热重载与卸载模块后没有句柄泄漏。
+
+## 个人财务界面对齐（2026-11-23）
+
+手机端按 Web 的信息层级实现日概览、今天／昨天切换、预算进度和使用率、同行预算保存／分类管理、可点击记录、含笔数的分类汇总。昨天的权限、补录和预警文案复用共享逻辑。分类页保留全宽搜索，新增在同一行提交，编辑通过公共原生弹窗完成；统计使用周／月页签、时间范围、四项指标、滑动节点金额提示及分类占比。
+
+本次验证包括 RN ESLint／类型检查／页面测试、共享前端测试、Web 构建、双平台 Codegen 和 release JS bundle、宿主机 C++ 原生核心测试。另用临时 RN Web 适配预览检查三个页面的 320/390 宽度 × 中英文 × 明暗主题共 24 组布局，以及英文窄屏编辑弹窗；预览工具与样例数据未进入项目。
+
+这些检查不替代本次修改的 Android/iOS 真机视觉、软键盘与屏幕阅读器焦点验收。安装正式原生环境后，重点验证昨天记录的编辑限制、嵌套分类选择、编辑弹窗返回与焦点恢复、滑动图表和大字体换行。

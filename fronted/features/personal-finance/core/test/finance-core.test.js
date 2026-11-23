@@ -253,7 +253,7 @@ test('places Other last in weekly and monthly analytics summaries', async () => 
   ];
   for (const period of Object.values(ANALYTICS_PERIOD)) {
     const view = buildAnalyticsView({ categoryTotals }, period);
-    assert.deepEqual(view.categoryTotals, [categoryTotals[1], categoryTotals[0]]);
+    assert.deepEqual(view.categoryTotals.map(({ sharePercent, ...category }) => category), [categoryTotals[1], categoryTotals[0]]);
     assert.equal(categoryTotals[0].categoryCode, 'OTHER');
   }
 });

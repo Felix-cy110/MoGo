@@ -10,8 +10,7 @@ export function AlertDialog({ t, alerts, isToday, onDismiss }) {
         <h2 id="budget-alert-title" className="text-lg font-semibold">{t('warning')}</h2>
         <div className="mt-4 space-y-2 text-sm leading-6 text-slate-700 dark:text-slate-300">
           {alerts.map((alert) => {
-            const key = resolveAlertMessageKey(alert);
-            const messageKey = isToday ? key : `${key}Yesterday`;
+            const messageKey = resolveAlertMessageKey(alert, { isToday });
             return <p key={alert.code}>{t(messageKey)}</p>;
           })}
         </div>

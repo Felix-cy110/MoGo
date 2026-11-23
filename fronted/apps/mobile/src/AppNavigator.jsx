@@ -40,6 +40,7 @@ export default function AppNavigator({ apis = nativeApis }) {
   const { t } = useTranslation();
   const date = useLocalDay();
   const screen = stack[stack.length - 1];
+  const financeScreen = ['finance', 'categories', 'analytics'].includes(screen);
   const initialize = useCallback(async () => {
     setFailed(false);
     try {
@@ -107,7 +108,12 @@ export default function AppNavigator({ apis = nativeApis }) {
         content = <HomeScreen features={features} navigate={navigate} />;
     }
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[
+        styles.root,
+        { backgroundColor: financeScreen ? colors.surface : colors.background },
+      ]}
+    >
       <StatusBar
         barStyle={mode === 'dark' ? 'light-content' : 'dark-content'}
       />
@@ -118,21 +124,19 @@ export default function AppNavigator({ apis = nativeApis }) {
         <Label accessibilityRole="header" style={styles.title}>
           {t(titles[screen])}
         </Label>
-        {screen === 'home' && (
-          <>
-            {features?.includes('user-profile') && (
-              <IconButton
-                icon="user"
-                label={t('userProfile')}
-                onPress={() => navigate('profile')}
-              />
-            )}
-            <IconButton
-              icon="settings"
-              label={t('settings')}
-              onPress={() => navigate('settings')}
-            />
-          </>
+        {screen === 'home' && features?.includes('user-profile') && (
+          <IconButton
+            icon="user"
+            label={t('userProfile')}
+            onPress={() => navigate('profile')}
+          />
+        )}
+        {(screen === 'home' || financeScreen) && (
+          <IconButton
+            icon="settings"
+            label={t('settings')}
+            onPress={() => navigate('settings')}
+          />
         )}
       </View>
       {content}
