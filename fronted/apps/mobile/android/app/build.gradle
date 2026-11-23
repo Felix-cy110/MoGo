@@ -6,6 +6,8 @@ react {
     reactNativeDir = file("../../node_modules/react-native")
     codegenDir = file("../../../../../node_modules/@react-native/codegen")
     cliFile = file("../../node_modules/react-native/cli.js")
+    def hermescBinary = System.getProperty("os.name").toLowerCase().contains("windows") ? "hermesc.exe" : "hermesc"
+    hermesCommand = rootProject.file("../../../../node_modules/hermes-compiler/hermesc/%OS-BIN%/${hermescBinary}").absolutePath
     autolinkLibrariesWithApp()
 }
 
