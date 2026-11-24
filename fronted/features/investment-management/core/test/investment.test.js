@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, parseLocalTime } from '../src/index.js';
+import { createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, parseLocalTime, canArchiveInvestmentTarget, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
 
 test('validates exact decimal strings without numeric conversion', () => {
   for (const value of ['0.000000000000000001', '999999999999999999.999999999999999999', '0001.200']) assert.ok(validInvestmentDecimal(value));
@@ -63,4 +63,20 @@ test('HTTP adapter preserves decimal strings and lifecycle operations', async ()
   assert.equal(JSON.parse(calls[0][1].body).unitPrice,'0.000000000000000001');
   assert.equal(calls[1][0],'/api/investment/targets/1/archive');
   assert.equal(calls[2][1].method,'DELETE'); assert.equal(calls[3][0],'/api/investment/targets?archived=true');
+});
+
+test('built-in removal policy uses persisted identity and translates backend protections', () => {
+  for (const builtinCode of ['BTC', 'ETH']) {
+    const target = { builtinCode, symbol: builtinCode, name: 'custom name' };
+    assert.equal(canArchiveInvestmentTarget(target), false);
+    assert.equal(investmentTargetHintKey(target), 'investmentBuiltinHint');
+  }
+  assert.equal(canArchiveInvestmentTarget({symbol: 'BTC', builtinCode: null}), true);
+  assert.equal(canArchiveInvestmentTarget({symbol: 'SOL'}), true);
+  assert.equal(investmentTargetHintKey({symbol: 'SOL'}), 'investmentSymbolHint');
+  assert.equal(investmentErrorKey('INVESTMENT_BUILTIN_PROTECTED'), 'investmentBuiltinProtected');
+  for (const language of ['zh', 'en']) {
+    assert.ok(investmentManagementMessages[language].investmentBuiltinHint);
+    assert.ok(investmentManagementMessages[language].investmentBuiltinProtected);
+  }
 });

@@ -9,6 +9,7 @@ struct Target {
     std::string name, symbol, quote_currency = "USDT", note;
     std::optional<std::string> archived_at;
     std::string created_at, updated_at;
+    std::optional<std::string> builtin_code;
 };
 struct Trade {
     std::int64_t id{}, target_id{};

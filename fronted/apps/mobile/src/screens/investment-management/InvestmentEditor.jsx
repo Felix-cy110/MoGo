@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   createTargetDraft,
   createTradeDraft,
+  investmentTargetHintKey,
 } from '@mogo/investment-management-core';
 import FormDialog from '../../components/FormDialog';
 import {
@@ -92,7 +93,7 @@ export default function InvestmentEditor({
         </Label>
       )}
       <Label muted style={styles.hint}>
-        {t(target ? 'investmentSymbolHint' : 'investmentCalculationNote')}
+        {t(target ? investmentTargetHintKey(value) : 'investmentCalculationNote')}
       </Label>
       <View style={styles.actions}>
         {onDelete && (

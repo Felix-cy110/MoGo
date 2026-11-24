@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { targetPayload, tradePayload, validateTargetDraft, validateTradeDraft } from '@mogo/investment-management-core';
+import { canArchiveInvestmentTarget, targetPayload, tradePayload, validateTargetDraft, validateTradeDraft } from '@mogo/investment-management-core';
 import { useInvestmentResource } from './useInvestmentResource.js';
 export const useInvestmentDetail = ({ api, targetId }) => {
   const load = useCallback(() => api.getTarget(targetId), [api, targetId]);
@@ -15,7 +15,14 @@ export const useInvestmentDetail = ({ api, targetId }) => {
     const payload = tradePayload(draft, targetId);
     return resource.mutate(() => id ? api.updateTrade(id, payload) : api.addTrade(payload));
   };
-  return { ...resource, saveTarget, saveTrade,
-    archive: archived => resource.mutate(() => api.archiveTarget(targetId, archived), archived ? 'investmentArchiveSaved' : 'investmentRestoreSaved'),
+  const canArchive = canArchiveInvestmentTarget(resource.data?.target);
+  const archive = archived => {
+    if (archived && !canArchive) {
+      resource.notify('investmentBuiltinProtected');
+      return Promise.resolve(false);
+    }
+    return resource.mutate(() => api.archiveTarget(targetId, archived), archived ? 'investmentArchiveSaved' : 'investmentRestoreSaved');
+  };
+  return { ...resource, saveTarget, saveTrade, canArchive, archive,
     deleteTrade: id => resource.mutate(() => api.deleteTrade(id), 'investmentDeleted') };
 };

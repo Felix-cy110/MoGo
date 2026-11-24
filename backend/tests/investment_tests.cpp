@@ -62,7 +62,7 @@ int main() {
             check(service.detail(id).summary.total_quote_amount == "600", "Delete excludes cost and quantity");
             rejects([&] { service.addTrade(buy(id,"66000","1320","request-2")); }, "INVESTMENT_REQUEST_CONFLICT");
             service.archiveTarget(id, true);
-            check(service.list().empty() && service.list(true).size() == 1, "Archived list");
+            check(service.list().size() == 2 && service.list(true).size() == 1, "Custom archive preserves both built-in targets");
             rejects([&] { service.addTrade(buy(id,"1","1","request-archive")); }, "INVESTMENT_TARGET_ARCHIVED");
             rejects([&] { service.deleteTrade(first_id); }, "INVESTMENT_TARGET_ARCHIVED");
             Target replacement; replacement.name = target.name; replacement.symbol = "BTC";

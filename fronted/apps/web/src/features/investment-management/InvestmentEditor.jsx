@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { createTargetDraft, createTradeDraft } from '@mogo/investment-management-core';
+import { createTargetDraft, createTradeDraft, investmentTargetHintKey } from '@mogo/investment-management-core';
 import { FormDialog } from '../../components/FormDialog';
 import { FormFieldRow } from '../../components/FormFieldRow';
 export function InvestmentEditor({ kind, value, symbolLocked = false, saving, onSave, onClose, onDelete }) {
@@ -28,7 +28,7 @@ export function InvestmentEditor({ kind, value, symbolLocked = false, saving, on
         </>}
         {field('note', 'investmentNote')}
       </div>
-      <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">{t(target ? 'investmentSymbolHint' : 'investmentCalculationNote')}</p>
+      <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">{t(target ? investmentTargetHintKey(value) : 'investmentCalculationNote')}</p>
       <div className="mt-5 flex flex-wrap justify-end gap-2">
         {onDelete && <button type="button" className="button-secondary mr-auto text-red-700 dark:text-red-300" disabled={saving} onClick={onDelete}>{t('investmentDeleteTrade')}</button>}
         <button type="button" className="button-secondary" disabled={saving} onClick={onClose}>{t('investmentCancel')}</button>
