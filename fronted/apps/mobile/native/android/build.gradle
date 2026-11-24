@@ -19,6 +19,7 @@ android {
             cmake {
                 arguments '-DANDROID_STL=c++_shared',
                     "-DMOGO_FEATURE_PERSONAL_FINANCE=${project.findProperty('mogoFeaturePersonalFinance') ?: 'ON'}",
+                    "-DMOGO_FEATURE_INVESTMENT_MANAGEMENT=${project.findProperty('mogoFeatureInvestmentManagement') ?: 'ON'}",
                     "-DMOGO_FEATURE_USER_PROFILE=${project.findProperty('mogoFeatureUserProfile') ?: 'ON'}"
             }
         }

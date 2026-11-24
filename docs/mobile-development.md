@@ -92,7 +92,7 @@ iOS（在 mobile/ios 下，改变开关后重新安装 Pods）：
 MOGO_FEATURE_PERSONAL_FINANCE=OFF MOGO_FEATURE_USER_PROFILE=ON bundle exec pod install
 ```
 
-手机首页读取原生 `capabilities`，不显示被裁剪的财务/用户入口。LeetCode 仍为规划占位页面。HTTP 始终关闭；新增功能需要独立 CMake Target、命令适配和 capability。
+手机首页读取原生 `capabilities`，不显示被裁剪的财务、投资管理或用户入口。LeetCode 仍为规划占位页面。HTTP 始终关闭；新增功能需要独立 CMake Target、命令适配和 capability。
 
 ## 初版验收记录（2026-11-19）
 
@@ -113,3 +113,11 @@ MOGO_FEATURE_PERSONAL_FINANCE=OFF MOGO_FEATURE_USER_PROFILE=ON bundle exec pod i
 本次验证包括 RN ESLint／类型检查／页面测试、共享前端测试、Web 构建、双平台 Codegen 和 release JS bundle、宿主机 C++ 原生核心测试。另用临时 RN Web 适配预览检查三个页面的 320/390 宽度 × 中英文 × 明暗主题共 24 组布局，以及英文窄屏编辑弹窗；预览工具与样例数据未进入项目。
 
 这些检查不替代本次修改的 Android/iOS 真机视觉、软键盘与屏幕阅读器焦点验收。安装正式原生环境后，重点验证昨天记录的编辑限制、嵌套分类选择、编辑弹窗返回与焦点恢复、滑动图表和大字体换行。
+
+## 投资管理
+
+投资管理已接入本地 C++ 核心和 SQLite，支持标的管理、归档恢复、买入记录、编辑删除与开仓均价。价格和实际投入 USDT 全程使用十进制字符串，精确计算由 C++ 负责。详见 [investment-management.md](investment-management.md)。
+
+Android 裁剪：`./gradlew assembleDebug -PmogoFeatureInvestmentManagement=OFF`。iOS 裁剪：`MOGO_FEATURE_INVESTMENT_MANAGEMENT=OFF bundle exec pod install`。关闭后 RN capabilities 不提供此入口。
+
+本次检查覆盖双平台 Codegen、双平台 release JS Bundle、宿主机 C++ 及 feature 开关组合、RN 测试，并用临时浏览器适配预览检查 320/390 宽度、中英文、明暗主题下的 RN 页面与表单。这些检查不替代 Android/iOS 真机验证；当前主机缺少完整 Xcode 和 Android SDK。后续需要检查原生 Intl/BigInt、软键盘、表单与系统弹窗焦点、飞行模式及强制重开后的持久化。

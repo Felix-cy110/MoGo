@@ -21,6 +21,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import LeetCodeScreen from './screens/LeetCodeScreen';
 import InvestmentManagementScreen from './screens/InvestmentManagementScreen';
+import InvestmentTargetScreen from './screens/investment-management/InvestmentTargetScreen';
 
 const titles = {
   home: 'toolboxName',
@@ -31,11 +32,13 @@ const titles = {
   settings: 'settings',
   leetcode: 'leetcodeInterviewTitle',
   investmentManagement: 'investmentManagementTitle',
+  investmentTarget: 'investmentTargetDetail',
 };
 // Missing native linkage is shown as a retryable error, never silently replaced with HTTP or demo data.
 const nativeApis = createNativeApis(TurboModuleRegistry.get('NativeMoGo'));
 export default function AppNavigator({ apis = nativeApis }) {
   const [stack, setStack] = useState(['home']);
+  const [investmentTargetId, setInvestmentTargetId] = useState(null);
   const [features, setFeatures] = useState(null);
   const [failed, setFailed] = useState(false);
   const { colors, mode, ready } = usePreferences();
@@ -61,7 +64,10 @@ export default function AppNavigator({ apis = nativeApis }) {
       ),
     [],
   );
-  const navigate = name => setStack(current => [...current, name]);
+  const navigate = (name, id) => {
+    if (name === 'investmentTarget') setInvestmentTargetId(id);
+    setStack(current => [...current, name]);
+  };
   useEffect(() => {
     const listener = BackHandler.addEventListener('hardwareBackPress', () => {
       if (stack.length === 1) return false;
@@ -104,7 +110,21 @@ export default function AppNavigator({ apis = nativeApis }) {
         content = <SettingsScreen />;
         break;
       case 'investmentManagement':
-        content = <InvestmentManagementScreen />;
+        content = (
+          <InvestmentManagementScreen
+            api={apis.investment}
+            navigate={navigate}
+          />
+        );
+        break;
+      case 'investmentTarget':
+        content = (
+          <InvestmentTargetScreen
+            key={investmentTargetId}
+            api={apis.investment}
+            targetId={investmentTargetId}
+          />
+        );
         break;
       case 'leetcode':
         content = <LeetCodeScreen />;
@@ -138,7 +158,8 @@ export default function AppNavigator({ apis = nativeApis }) {
         )}
         {(screen === 'home' ||
           financeScreen ||
-          screen === 'investmentManagement') && (
+          screen === 'investmentManagement' ||
+          screen === 'investmentTarget') && (
           <IconButton
             icon="settings"
             label={t('settings')}

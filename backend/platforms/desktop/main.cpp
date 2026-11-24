@@ -11,6 +11,10 @@
 #include "mogo/user_profile/json/json_profile_repository.hpp"
 #endif
 
+#ifdef MOGO_FEATURE_INVESTMENT_MANAGEMENT
+#include "mogo/http/investment_http_routes.hpp"
+#include "mogo/investment/sqlite/sqlite_repository.hpp"
+#endif
 #include <atomic>
 #include <chrono>
 #include <csignal>
@@ -73,6 +77,12 @@ int main(int argc, char** argv) {
         profile_routes.registerRoutes(router);
 #endif
 
+#ifdef MOGO_FEATURE_INVESTMENT_MANAGEMENT
+        mogo::investment::SqliteInvestmentRepository investment_repository(options.database);
+        mogo::investment::InvestmentService investment_service(investment_repository);
+        mogo::http::InvestmentHttpRoutes investment_routes(investment_service);
+        investment_routes.registerRoutes(router);
+#endif
         hlog_set_handler(stdout_logger);
         hv::HttpServer server(&router);
         server.setHost(options.host.c_str());

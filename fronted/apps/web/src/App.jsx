@@ -7,6 +7,7 @@ import { UserProfileScreen } from './features/user-profile/UserProfileScreen';
 import { SettingsScreen } from './features/settings/SettingsScreen';
 import { LeetCodeInterviewScreen } from './features/leetcode-interview/LeetCodeInterviewScreen';
 import { InvestmentManagementScreen } from './features/investment-management/InvestmentManagementScreen';
+import { InvestmentTargetScreen } from './features/investment-management/InvestmentTargetScreen';
 
 const HOME_PATH = '/';
 const FINANCE_PATH = '/finance';
@@ -17,37 +18,32 @@ const SETTINGS_PATH = '/settings';
 const LEETCODE_INTERVIEW_PATH = '/leetcode-interview';
 const INVESTMENT_MANAGEMENT_PATH = '/investment-management';
 
-const resolveScreen = () => {
-  if (globalThis.location?.pathname === INVESTMENT_MANAGEMENT_PATH) return 'investmentManagement';
-  if (globalThis.location?.pathname === SETTINGS_PATH) return 'settings';
-  if (globalThis.location?.pathname === LEETCODE_INTERVIEW_PATH) return 'leetcodeInterview';
-  if (globalThis.location?.pathname === PROFILE_PATH) return 'profile';
-  if (globalThis.location?.pathname === CATEGORY_MANAGEMENT_PATH) return 'categories';
-  if (globalThis.location?.pathname === ANALYTICS_PATH) return 'analytics';
-  if (globalThis.location?.pathname === FINANCE_PATH) return 'finance';
+const resolveScreen = path => {
+  if (/^\/investment-management\/targets\/[1-9]\d*$/.test(path)) return 'investmentTarget';
+  if (path === INVESTMENT_MANAGEMENT_PATH) return 'investmentManagement';
+  if (path === SETTINGS_PATH) return 'settings';
+  if (path === LEETCODE_INTERVIEW_PATH) return 'leetcodeInterview';
+  if (path === PROFILE_PATH) return 'profile';
+  if (path === CATEGORY_MANAGEMENT_PATH) return 'categories';
+  if (path === ANALYTICS_PATH) return 'analytics';
+  if (path === FINANCE_PATH) return 'finance';
   return 'home';
 };
 
 function App() {
-  const [screen, setScreen] = useState(resolveScreen);
+  const [path, setPath] = useState(() => globalThis.location?.pathname || HOME_PATH);
+  const screen = resolveScreen(path);
   const [settingsReturnPath, setSettingsReturnPath] = useState(HOME_PATH);
 
   useEffect(() => {
-    const handlePopState = () => setScreen(resolveScreen());
+    const handlePopState = () => setPath(globalThis.location?.pathname || HOME_PATH);
     globalThis.addEventListener?.('popstate', handlePopState);
     return () => globalThis.removeEventListener?.('popstate', handlePopState);
   }, []);
 
   const navigate = (path) => {
     globalThis.history?.pushState({}, '', path);
-    if (path === SETTINGS_PATH) setScreen('settings');
-    else if (path === INVESTMENT_MANAGEMENT_PATH) setScreen('investmentManagement');
-    else if (path === LEETCODE_INTERVIEW_PATH) setScreen('leetcodeInterview');
-    else if (path === PROFILE_PATH) setScreen('profile');
-    else if (path === CATEGORY_MANAGEMENT_PATH) setScreen('categories');
-    else if (path === ANALYTICS_PATH) setScreen('analytics');
-    else if (path === FINANCE_PATH) setScreen('finance');
-    else setScreen('home');
+    setPath(path);
   };
 
   const openSettings = () => {
@@ -62,8 +58,12 @@ function App() {
   if (screen === 'profile') {
     return <UserProfileScreen onBack={() => navigate(HOME_PATH)} onOpenSettings={openSettings} />;
   }
+  if (screen === 'investmentTarget') {
+    const targetId = Number(path.split('/').at(-1));
+    return <InvestmentTargetScreen key={targetId} targetId={targetId} onBack={() => navigate(INVESTMENT_MANAGEMENT_PATH)} onOpenSettings={openSettings} />;
+  }
   if (screen === 'investmentManagement') {
-    return <InvestmentManagementScreen onBack={() => navigate(HOME_PATH)} onOpenSettings={openSettings} />;
+    return <InvestmentManagementScreen onOpenTarget={id => navigate(`${INVESTMENT_MANAGEMENT_PATH}/targets/${id}`)} onBack={() => navigate(HOME_PATH)} onOpenSettings={openSettings} />;
   }
   if (screen === 'leetcodeInterview') {
     return <LeetCodeInterviewScreen onBack={() => navigate(HOME_PATH)} onOpenSettings={openSettings} />;

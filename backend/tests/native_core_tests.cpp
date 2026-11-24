@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "mogo/native/native_core.hpp"
 #include <nlohmann/json.hpp>
 #include <chrono>
@@ -29,7 +30,9 @@ int main() {
         std::int64_t custom_id;
         {
             mogo::native::NativeCore core(directory.path);
-            check(call(core, "capabilities").at("features").size() == 2, "Feature capabilities");
+            const auto capabilities = call(core, "capabilities").at("features");
+            check(std::find(capabilities.begin(), capabilities.end(), "personal-finance") != capabilities.end(), "Finance capability");
+            check(std::find(capabilities.begin(), capabilities.end(), "user-profile") != capabilities.end(), "Profile capability");
             const auto categories = call(core, "finance.getCategories");
             check(categories.size() == 4, "Seed categories");
             std::int64_t other_id = 0;

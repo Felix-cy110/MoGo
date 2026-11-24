@@ -23,10 +23,7 @@ export const buildExpensePayload = ({ date, amountCents, categoryId, note, clien
   clientRequestId
 });
 
-export const createClientRequestId = () => {
-  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-};
+export { createClientRequestId } from '@mogo/core-shared';
 
 export const createExpenseDraft = (expense) => ({
   amount: centsToYuan(expense?.amountCents || 0),

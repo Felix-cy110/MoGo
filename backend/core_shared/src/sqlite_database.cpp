@@ -1,9 +1,9 @@
-#include "mogo/personal_finance/sqlite/sqlite_database.hpp"
+#include "mogo/core_shared/sqlite_database.hpp"
 
 #include <filesystem>
 #include <stdexcept>
 
-namespace mogo::personal_finance {
+namespace mogo::core_shared {
 
 SqliteDatabase::SqliteDatabase(const std::string& path) {
     if (path != ":memory:") {
@@ -23,7 +23,8 @@ SqliteDatabase::SqliteDatabase(const std::string& path) {
         throw std::runtime_error("Unable to open SQLite database: " + message);
     }
     sqlite3_busy_timeout(database_, 5000);
-    execute("PRAGMA foreign_keys = ON");
+    try { execute("PRAGMA foreign_keys = ON"); }
+    catch (...) { sqlite3_close(database_); database_ = nullptr; throw; }
 }
 
 SqliteDatabase::~SqliteDatabase() {
@@ -39,4 +40,4 @@ void SqliteDatabase::execute(const std::string& sql) const {
     throw std::runtime_error("SQLite execution failed: " + message);
 }
 
-}  // namespace mogo::personal_finance
+}  // namespace mogo::core_shared
