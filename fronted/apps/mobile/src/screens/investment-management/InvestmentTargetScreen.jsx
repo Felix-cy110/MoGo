@@ -77,22 +77,24 @@ export default function InvestmentTargetScreen({ api, targetId }) {
                 />
               </>
             )}
-            <Action
-              title={t(
-                data.target.archivedAt
-                  ? 'investmentRestore'
-                  : 'investmentArchive',
-              )}
-              disabled={model.saving}
-              onPress={() =>
-                confirm(
+            {model.canArchive && (
+              <Action
+                title={t(
                   data.target.archivedAt
-                    ? 'investmentRestoreConfirm'
-                    : 'investmentArchiveConfirm',
-                  () => model.archive(!data.target.archivedAt),
-                )
-              }
-            />
+                    ? 'investmentRestore'
+                    : 'investmentArchive',
+                )}
+                disabled={model.saving}
+                onPress={() =>
+                  confirm(
+                    data.target.archivedAt
+                      ? 'investmentRestoreConfirm'
+                      : 'investmentArchiveConfirm',
+                    () => model.archive(!data.target.archivedAt),
+                  )
+                }
+              />
+            )}
           </View>
           <Label accessibilityRole="header" style={styles.title}>
             {t('investmentTrades')}

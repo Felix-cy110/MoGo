@@ -6,6 +6,7 @@ using namespace mogo::investment;
 using core_shared::ApplicationError;
 template<class Json> Json targetJson(const Target& v) {
     return {{"id", v.id}, {"name", v.name}, {"symbol", v.symbol}, {"quoteCurrency", v.quote_currency}, {"note", v.note},
+        {"builtinCode", v.builtin_code ? Json(*v.builtin_code) : Json(nullptr)},
         {"archivedAt", v.archived_at ? Json(*v.archived_at) : Json(nullptr)}, {"createdAt", v.created_at}, {"updatedAt", v.updated_at}};
 }
 template<class Json> Json summaryJson(const Summary& v) {

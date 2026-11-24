@@ -8,6 +8,7 @@ import { Action, LinkRow } from '../src/components/Primitives';
 import InvestmentTargetScreen from '../src/screens/investment-management/InvestmentTargetScreen';
 import InvestmentManagementScreen from '../src/screens/InvestmentManagementScreen';
 import HomeScreen from '../src/screens/HomeScreen';
+import { useInvestmentDetail } from '@mogo/investment-management-react';
 import { createNativeApis } from '../src/services/nativeApi';
 
 let tree;
@@ -221,4 +222,53 @@ test('disabled builds hide investment and native adapter keeps decimal strings',
     'investment.archiveTarget',
     JSON.stringify({ id: 1, archived: true }),
   );
+});
+
+for (const builtinCode of ['BTC', 'ETH']) {
+  test.each([
+    ['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark'],
+  ])(`${builtinCode} is protected and remains editable in %s/%s`, async (language, theme) => {
+    const builtinTarget = { ...target, symbol: builtinCode, name: builtinCode, builtinCode };
+    const api = {
+      getTarget: async () => ({ ...detail, target: builtinTarget, symbolLocked: true, trades: [] }),
+      updateTarget: jest.fn(async () => builtinTarget),
+      archiveTarget: jest.fn(),
+    };
+    await render(<InvestmentTargetScreen api={api} targetId={1} />, language, theme);
+    expect(action('investmentArchive')).toBeUndefined();
+    expect(action('investmentAddTrade')).toBeDefined();
+    await act(async () => action('investmentEditTarget').props.onPress());
+    expect(field('investmentSymbol').props.editable).toBe(false);
+    expect(field('investmentName').props.editable).toBe(true);
+    expect(field('investmentNote').props.editable).toBe(true);
+    expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('investmentBuiltinHint'));
+    await act(async () => field('investmentNote').props.onChangeText('updated note'));
+    await act(async () => action('investmentSave').props.onPress());
+    expect(api.updateTarget).toHaveBeenCalledWith(1, expect.objectContaining({ symbol: builtinCode, note: 'updated note' }));
+    expect(api.archiveTarget).not.toHaveBeenCalled();
+  });
+}
+
+test('shared detail hook prevents builtin archive before either platform calls its adapter', async () => {
+  const api = {
+    getTarget: async () => ({ ...detail, target: { ...target, builtinCode: 'BTC' } }),
+    archiveTarget: jest.fn(),
+  };
+  let model;
+  function Probe() { model = useInvestmentDetail({ api, targetId: 1 }); return null; }
+  await render(<Probe />);
+  await act(async () => expect(await model.archive(true)).toBe(false));
+  expect(api.archiveTarget).not.toHaveBeenCalled();
+  expect(model.feedback).toEqual({ key: 'investmentBuiltinProtected', presentation: 'dialog' });
+});
+
+test('backend protection errors are shown in the shared modal feedback', async () => {
+  const api = {
+    getTarget: async () => detail,
+    archiveTarget: jest.fn(async () => { throw { code: 'INVESTMENT_BUILTIN_PROTECTED' }; }),
+  };
+  await render(<InvestmentTargetScreen api={api} targetId={1} />);
+  await act(async () => action('investmentArchive').props.onPress());
+  await act(async () => Alert.alert.mock.calls.at(-1)[2][1].onPress());
+  expect(Alert.alert).toHaveBeenLastCalledWith(i18n.t('investmentBuiltinProtected'), '', expect.any(Array), expect.any(Object));
 });

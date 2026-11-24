@@ -31,7 +31,7 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api =
           <button className="button-primary" onClick={() => setEditor({ kind: 'trade' })}>{t('investmentAddTrade')}</button>
           <button className="button-secondary" onClick={() => setEditor({ kind: 'target', value: data.target })}>{t('investmentEditTarget')}</button>
         </>}
-        <button className="button-secondary" disabled={model.saving} onClick={() => setConfirmation('archive')}>{t(data.target.archivedAt ? 'investmentRestore' : 'investmentArchive')}</button>
+        {model.canArchive && <button className="button-secondary" disabled={model.saving} onClick={() => setConfirmation('archive')}>{t(data.target.archivedAt ? 'investmentRestore' : 'investmentArchive')}</button>}
       </div>
       <h2 className="mb-2 text-sm font-semibold">{t('investmentTrades')}</h2>
       {!data.trades.length && <p className="py-3 text-sm text-slate-500 dark:text-slate-400">{t('investmentNoTrades')}</p>}

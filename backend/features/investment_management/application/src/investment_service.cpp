@@ -30,11 +30,12 @@ Detail InvestmentService::detail(std::int64_t target_id) {
         result.target = requireTarget(target_id);
         result.trades = repository_.trades(target_id);
         result.summary = calculateSummary(result.trades);
-        result.symbol_locked = !repository_.trades(target_id, true).empty();
+        result.symbol_locked = result.target.builtin_code.has_value() || !repository_.trades(target_id, true).empty();
     });
     return result;
 }
 Target InvestmentService::saveTarget(Target input) {
+    input.builtin_code.reset(); // Built-in identity comes only from persisted initialization.
     validateTarget(input);
     std::lock_guard lock(mutex_);
     repository_.transaction([&] {
@@ -43,9 +44,12 @@ Target InvestmentService::saveTarget(Target input) {
         if (input.id) {
             const auto existing = requireTarget(input.id, true);
             if (input.symbol != existing.symbol || input.quote_currency != existing.quote_currency) {
+                if (existing.builtin_code)
+                    throw ApplicationError(403, "INVESTMENT_BUILTIN_PROTECTED", "Built-in target identity is immutable");
                 if (!repository_.trades(input.id, true).empty())
                     throw ApplicationError(409, "INVESTMENT_SYMBOL_LOCKED", "Symbol is locked after trading");
             }
+            input.builtin_code = existing.builtin_code;
             input.created_at = existing.created_at;
         } else input.created_at = nowUtc();
         input.updated_at = nowUtc();
@@ -58,6 +62,8 @@ Target InvestmentService::archiveTarget(std::int64_t id, bool archived) {
     Target value;
     repository_.transaction([&] {
         value = requireTarget(id);
+        if (archived && value.builtin_code)
+            throw ApplicationError(403, "INVESTMENT_BUILTIN_PROTECTED", "Built-in targets cannot be removed");
         if (!archived && repository_.nameExists(value.name, id))
             throw ApplicationError(409, "INVESTMENT_TARGET_EXISTS", "Target name already in use");
         value.archived_at = archived ? std::optional{nowUtc()} : std::nullopt;

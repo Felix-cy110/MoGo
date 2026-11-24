@@ -55,7 +55,11 @@ export const tradePayload = (draft, targetId) => ({
     ? draft.originalOccurredAt : parseLocalTime(draft.localTime).toISOString(),
   note: draft.note.trim(), clientRequestId: draft.clientRequestId
 });
+export const canArchiveInvestmentTarget = target => !target?.builtinCode;
+export const investmentTargetHintKey = target => target?.builtinCode ? 'investmentBuiltinHint' : 'investmentSymbolHint';
+
 const errorKeys = {
+  INVESTMENT_BUILTIN_PROTECTED: 'investmentBuiltinProtected',
   INVESTMENT_DECIMAL_INVALID: 'investmentDecimalInvalid', INVESTMENT_TARGET_EXISTS: 'investmentTargetExists',
   INVESTMENT_TARGET_NOT_FOUND: 'investmentTargetMissing', INVESTMENT_TARGET_ARCHIVED: 'investmentTargetArchivedError',
   INVESTMENT_TRADE_NOT_FOUND: 'investmentTradeMissing', INVESTMENT_SYMBOL_LOCKED: 'investmentSymbolLocked',

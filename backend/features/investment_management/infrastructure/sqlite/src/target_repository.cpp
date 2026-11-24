@@ -3,9 +3,9 @@
 namespace mogo::investment {
 namespace {
 using core_shared::Statement;
-const std::string selectTarget = "SELECT id, name, symbol, quote_currency, note, archived_at, created_at, updated_at FROM investment_targets";
+const std::string selectTarget = "SELECT id, name, symbol, quote_currency, note, archived_at, created_at, updated_at, builtin_code FROM investment_targets";
 Target read(const Statement& s) {
-    return {s.integer(0), s.text(1), s.text(2), s.text(3), s.text(4), s.optionalText(5), s.text(6), s.text(7)};
+    return {s.integer(0), s.text(1), s.text(2), s.text(3), s.text(4), s.optionalText(5), s.text(6), s.text(7), s.optionalText(8)};
 }
 }
 std::vector<Target> SqliteInvestmentRepository::targets(bool archived) {
