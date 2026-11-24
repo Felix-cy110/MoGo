@@ -10,6 +10,7 @@ import FinanceScreen from '../src/screens/personal-finance/FinanceScreen';
 import AnalyticsScreen from '../src/screens/personal-finance/AnalyticsScreen';
 import CategoriesScreen from '../src/screens/personal-finance/CategoriesScreen';
 import SettingsScreen from '../src/screens/SettingsScreen';
+import InvestmentManagementScreen from '../src/screens/InvestmentManagementScreen';
 import { Action, LinkRow } from '../src/components/Primitives';
 
 let tree;
@@ -63,7 +64,7 @@ test.each([
   ['en', 'light'],
   ['zh', 'dark'],
 ])(
-  'home, profile, settings and analytics render in %s/%s',
+  'home, investment, profile, settings and analytics render in %s/%s',
   async (language, theme) => {
     await render(
       <HomeScreen features={['personal-finance']} navigate={jest.fn()} />,
@@ -73,6 +74,12 @@ test.each([
     const rows = tree.root.findAllByType(LinkRow);
     expect(rows[0].props.title).toBe(i18n.t('financeFeatureName'));
     expect(rows[1].props.title).toBe(i18n.t('leetcodeInterviewFeatureName'));
+    expect(rows[2].props.title).toBe(i18n.t('investmentManagementFeatureName'));
+    await act(async () => tree.unmount());
+    await render(<InvestmentManagementScreen />, language, theme);
+    expect(JSON.stringify(tree.toJSON())).toContain(
+      i18n.t('investmentManagementPlanning'),
+    );
     await act(async () => tree.unmount());
     await render(<SettingsScreen />, language, theme);
     expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('appearance'));
@@ -286,13 +293,14 @@ test('failed profile loading never exposes an editable empty form', async () => 
   ).toEqual([i18n.t('profileRetry')]);
 });
 
-test('navigation honors native feature capabilities and opens settings', async () => {
+test('navigation honors native capabilities and returns from investment settings', async () => {
   const AppNavigator = require('../src/AppNavigator').default;
   await render(
     <AppNavigator apis={{ capabilities: async () => ({ features: [] }) }} />,
   );
   expect(tree.root.findAllByType(LinkRow).map(row => row.props.title)).toEqual([
     i18n.t('leetcodeInterviewFeatureName'),
+    i18n.t('investmentManagementFeatureName'),
   ]);
   const IconButton = require('../src/components/IconButton').default;
   expect(
@@ -300,9 +308,33 @@ test('navigation honors native feature capabilities and opens settings', async (
   ).not.toContain(i18n.t('userProfile'));
   await act(async () =>
     tree.root
+      .findAllByType(LinkRow)
+      .find(
+        row => row.props.title === i18n.t('investmentManagementFeatureName'),
+      )
+      .props.onPress(),
+  );
+  expect(JSON.stringify(tree.toJSON())).toContain(
+    i18n.t('investmentManagementPlanning'),
+  );
+  await act(async () =>
+    tree.root
       .findAllByType(IconButton)
       .find(button => button.props.label === i18n.t('settings'))
       .props.onPress(),
   );
   expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('appearance'));
+  const back = () =>
+    tree.root
+      .findAllByType(IconButton)
+      .find(button => button.props.label === i18n.t('back'))
+      .props.onPress();
+  await act(async () => back());
+  expect(JSON.stringify(tree.toJSON())).toContain(
+    i18n.t('investmentManagementPlanning'),
+  );
+  await act(async () => back());
+  expect(
+    tree.root.findAllByType(LinkRow).map(row => row.props.title),
+  ).toContain(i18n.t('investmentManagementFeatureName'));
 });

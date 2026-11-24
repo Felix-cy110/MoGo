@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import { financeMessages } from '@mogo/personal-finance-core';
 import { profileMessages } from '@mogo/user-profile-core';
 import { leetcodeInterviewMessages } from '@mogo/leetcode-interview-core';
+import { investmentManagementMessages } from '@mogo/investment-management-core';
 import { settingsMessages } from '@mogo/core-shared';
 
 const mobileMessages = {
@@ -43,6 +44,7 @@ export const resources = Object.fromEntries(
         ...profileMessages[language],
         ...settingsMessages[language],
         ...leetcodeInterviewMessages[language],
+        ...investmentManagementMessages[language],
         ...mobileMessages[language],
       },
     },

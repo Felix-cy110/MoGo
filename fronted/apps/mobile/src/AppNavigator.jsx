@@ -20,6 +20,7 @@ import AnalyticsScreen from './screens/personal-finance/AnalyticsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import LeetCodeScreen from './screens/LeetCodeScreen';
+import InvestmentManagementScreen from './screens/InvestmentManagementScreen';
 
 const titles = {
   home: 'toolboxName',
@@ -29,6 +30,7 @@ const titles = {
   profile: 'userProfile',
   settings: 'settings',
   leetcode: 'leetcodeInterviewTitle',
+  investmentManagement: 'investmentManagementTitle',
 };
 // Missing native linkage is shown as a retryable error, never silently replaced with HTTP or demo data.
 const nativeApis = createNativeApis(TurboModuleRegistry.get('NativeMoGo'));
@@ -101,6 +103,9 @@ export default function AppNavigator({ apis = nativeApis }) {
       case 'settings':
         content = <SettingsScreen />;
         break;
+      case 'investmentManagement':
+        content = <InvestmentManagementScreen />;
+        break;
       case 'leetcode':
         content = <LeetCodeScreen />;
         break;
@@ -131,7 +136,9 @@ export default function AppNavigator({ apis = nativeApis }) {
             onPress={() => navigate('profile')}
           />
         )}
-        {(screen === 'home' || financeScreen) && (
+        {(screen === 'home' ||
+          financeScreen ||
+          screen === 'investmentManagement') && (
           <IconButton
             icon="settings"
             label={t('settings')}

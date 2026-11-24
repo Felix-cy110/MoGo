@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
+import { TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AppControls } from '../../components/AppControls';
 
-export function ToolboxHome({ onOpenFinance, onOpenLeetCodeInterview, onOpenProfile, onOpenSettings }) {
+export function ToolboxHome({ onOpenFinance, onOpenLeetCodeInterview, onOpenInvestmentManagement, onOpenProfile, onOpenSettings }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
 
@@ -36,6 +37,14 @@ export function ToolboxHome({ onOpenFinance, onOpenLeetCodeInterview, onOpenProf
           <span className="min-w-0 flex-1 text-left">
             <span className="block font-medium">{t('leetcodeInterviewFeatureName')}</span>
             <span className="mt-1 block text-sm text-slate-500 dark:text-slate-400">{t('leetcodeInterviewFeatureDescription')}</span>
+          </span>
+          <span className="text-lg text-slate-400 dark:text-slate-500" aria-hidden="true">›</span>
+        </button>
+        <button className="tool-row" type="button" onClick={onOpenInvestmentManagement}>
+          <span className="tool-row-icon" aria-hidden="true"><TrendingUp size={18} /></span>
+          <span className="min-w-0 flex-1 text-left">
+            <span className="block font-medium">{t('investmentManagementFeatureName')}</span>
+            <span className="mt-1 block text-sm text-slate-500 dark:text-slate-400">{t('investmentManagementFeatureDescription')}</span>
           </span>
           <span className="text-lg text-slate-400 dark:text-slate-500" aria-hidden="true">›</span>
         </button>

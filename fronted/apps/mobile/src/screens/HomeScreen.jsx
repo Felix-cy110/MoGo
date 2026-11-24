@@ -16,6 +16,10 @@ export default function HomeScreen({ navigate, features }) {
           title={t('leetcodeInterviewFeatureName')}
           onPress={() => navigate('leetcode')}
         />
+        <LinkRow
+          title={t('investmentManagementFeatureName')}
+          onPress={() => navigate('investmentManagement')}
+        />
       </Section>
     </Page>
   );
