@@ -8,10 +8,18 @@
 #include "mogo/user_profile/json/json_profile_repository.hpp"
 #endif
 
+#ifdef MOGO_FEATURE_INVESTMENT_MANAGEMENT
+#include "mogo/investment/sqlite/sqlite_repository.hpp"
+#endif
+
 namespace mogo::native {
 using Json = nlohmann::json;
 using core_shared::ApplicationError;
 struct NativeCore::Impl {
+#ifdef MOGO_FEATURE_INVESTMENT_MANAGEMENT
+    std::unique_ptr<investment::SqliteInvestmentRepository> investment_repository;
+    std::unique_ptr<investment::InvestmentService> investment;
+#endif
 #ifdef MOGO_FEATURE_PERSONAL_FINANCE
     std::unique_ptr<personal_finance::SqliteFinanceRepository> finance_repository;
     std::unique_ptr<personal_finance::FinanceService> finance;
@@ -25,6 +33,10 @@ struct NativeCore::Impl {
             throw std::invalid_argument("Private absolute directory required");
         }
         std::filesystem::create_directories(directory);
+#ifdef MOGO_FEATURE_INVESTMENT_MANAGEMENT
+        investment_repository = std::make_unique<investment::SqliteInvestmentRepository>((directory / "mogo.db").string());
+        investment = std::make_unique<investment::InvestmentService>(*investment_repository);
+#endif
 #ifdef MOGO_FEATURE_PERSONAL_FINANCE
         finance_repository = std::make_unique<personal_finance::SqliteFinanceRepository>(
             (directory / "mogo.db").string());
@@ -39,6 +51,9 @@ struct NativeCore::Impl {
     Json dispatch(const std::string& method, const Json& payload) {
         if (method == "capabilities") {
             Json features = Json::array();
+#ifdef MOGO_FEATURE_INVESTMENT_MANAGEMENT
+            features.push_back("investment-management");
+#endif
 #ifdef MOGO_FEATURE_PERSONAL_FINANCE
             features.push_back("personal-finance");
 #endif
@@ -52,6 +67,9 @@ struct NativeCore::Impl {
 #endif
 #ifdef MOGO_FEATURE_USER_PROFILE
         if (method.starts_with("profile.")) return profileCommand(*profile, method.substr(8), payload);
+#endif
+#ifdef MOGO_FEATURE_INVESTMENT_MANAGEMENT
+        if (method.starts_with("investment.")) return investmentCommand(*investment, method.substr(11), payload);
 #endif
         throw ApplicationError(400, "FEATURE_UNAVAILABLE", "Unknown or disabled native operation");
     }

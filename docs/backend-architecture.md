@@ -24,7 +24,7 @@ Domain 和 Application 不依赖 libhv、React Native 或具体数据库。HTTP�
 
 | 目录 | 职责 |
 | --- | --- |
-| `backend/core_shared/` | 跨功能共享的错误类型和基础能力，不放个人财务规则 |
+| `backend/core_shared/` | 跨功能共享的错误类型、SQLite 连接及预处理语句，不放领域规则 |
 | `backend/features/personal_finance/domain/` | 金额、分类、消费、预警等领域模型 |
 | `backend/features/personal_finance/application/` | 用例、校验、事务边界和仓储接口 |
 | `backend/features/personal_finance/infrastructure/sqlite/` | SQLite 连接、迁移和仓储实现 |
@@ -59,6 +59,7 @@ Personal Finance 对外保留 `FinanceService` 门面，HTTP 与未来原生适�
 | CMake Option | 默认值 | 作用 |
 | --- | --- | --- |
 | `MOGO_FEATURE_PERSONAL_FINANCE` | `ON` | 编译个人财务领域、应用与 SQLite 适配器 |
+| `MOGO_FEATURE_INVESTMENT_MANAGEMENT` | `ON` | 编译投资管理领域、应用与 SQLite 适配器 |
 | `MOGO_FEATURE_USER_PROFILE` | `ON` | 编译独立用户资料领域、应用与 JSON 文件适配器 |
 | `MOGO_ENABLE_HTTP` | `ON` | 编译 libhv HTTP 适配器和桌面进程 |
 | `MOGO_BUILD_TESTS` | `ON` | 编译 CTest 测试 |
@@ -92,3 +93,5 @@ V001 在事务中创建个人财务表、索引和默认数据。迁移 SQL 的�
 - `fronted/apps/mobile/native` 的 Kotlin/JNI、Objective-C++ 将应用私有目录注入核心，并在串行后台队列执行，避免 UI 阻塞。
 - Android 用 CMake 编译 SQLite amalgamation，iOS 通过 CocoaPods 编译同一份 C++ 文件并链接系统 SQLite。
 - iOS 按环境变量、Android 按 Gradle 参数裁剪 feature；关闭 feature 不链接其持久化实现，手机通过 capabilities 隐藏入口。
+
+投资管理的独立分层、数据表和精确计算策略见 [investment-management.md](investment-management.md)。

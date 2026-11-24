@@ -37,3 +37,8 @@ export const createJsonRequest = ({ baseUrl = '', fetchImpl = globalThis.fetch }
     return response.json();
   };
 };
+
+export const createClientRequestId = () => {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};

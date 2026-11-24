@@ -11,7 +11,8 @@ MoGo 的 Web 与未来 React Native 客户端遵循“共享业务逻辑，平�
 | `fronted/features/personal-finance/react` | 基于 React Hook 的页面状态、异步流程和业务动作 | 可以，Web 与 RN 使用同一套 Hook |
 | `fronted/features/user-profile/core` | 用户资料草稿、选填校验、接口模型、错误映射和中英文文案 | 可以，不依赖个人财务模块 |
 | `fronted/features/user-profile/react` | 用户资料加载、重试、保存和反馈状态 | 可以，未来 RN 注入同契约的 Native Adapter |
-| `fronted/features/investment-management/core` | 投资管理入口与规划页的中英文文案；业务需求确认后在此扩展领域逻辑 | 可以，Web 与 RN 共用文案 |
+| `fronted/features/investment-management/core` | 投资 API、精确十进制输入校验、日期草稿、展示格式、中英文文案 | 可以，计算结果来自 C++ 核心 |
+| `fronted/features/investment-management/react` | 标的列表、买入编辑、保存与刷新反馈流程 | 可以，Web 与 RN 共用 Hook |
 | `fronted/apps/web/src/components` | Web 公共控件与左标题右输入的表单行 | 仅 Web 组件复用 |
 | `fronted/apps/web/src/features` | Web 页面和 Web 组件 | 不直接复用，包含 HTML 与 Tailwind 类名 |
 | 未来 `fronted/apps/mobile/` | React Native Screen 与原生组件 | 使用共享核心和 Hook，独立实现原生 UI |
@@ -127,3 +128,5 @@ Web 已确认的功能、信息层级和入口位置是 RN 个人财务页面的
 - 统计共用 `buildAnalyticsView` 的分类占比和 `buildTrendChart` / `findNearestTrendPoint` 的几何、节点选择算法；平台只处理事件与绘制。
 - RN 的预算概览、记录列表、分类汇总与编辑弹窗分别拆分组件；公共表单行、按钮与 `FormDialog` 放在移动平台公共组件中。
 - 新增或修改 Web 功能时检查 RN 是否接入同一共享状态和流程；使用中英文、明暗主题及窄屏场景验收两个平台。
+
+投资管理的计算口径、数据结构和接口见 [investment-management.md](investment-management.md)。

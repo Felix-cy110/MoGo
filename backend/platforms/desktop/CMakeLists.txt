@@ -10,3 +10,7 @@ endif()
 set_target_properties(mogo_backend PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
+
+if(MOGO_FEATURE_INVESTMENT_MANAGEMENT)
+  target_link_libraries(mogo_backend PRIVATE mogo_investment_sqlite)
+endif()

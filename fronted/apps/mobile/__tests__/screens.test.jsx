@@ -67,7 +67,10 @@ test.each([
   'home, investment, profile, settings and analytics render in %s/%s',
   async (language, theme) => {
     await render(
-      <HomeScreen features={['personal-finance']} navigate={jest.fn()} />,
+      <HomeScreen
+        features={['personal-finance', 'investment-management']}
+        navigate={jest.fn()}
+      />,
       language,
       theme,
     );
@@ -76,10 +79,15 @@ test.each([
     expect(rows[1].props.title).toBe(i18n.t('leetcodeInterviewFeatureName'));
     expect(rows[2].props.title).toBe(i18n.t('investmentManagementFeatureName'));
     await act(async () => tree.unmount());
-    await render(<InvestmentManagementScreen />, language, theme);
-    expect(JSON.stringify(tree.toJSON())).toContain(
-      i18n.t('investmentManagementPlanning'),
+    await render(
+      <InvestmentManagementScreen
+        api={{ listTargets: async () => [] }}
+        navigate={jest.fn()}
+      />,
+      language,
+      theme,
     );
+    expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('investmentEmpty'));
     await act(async () => tree.unmount());
     await render(<SettingsScreen />, language, theme);
     expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('appearance'));
@@ -296,7 +304,12 @@ test('failed profile loading never exposes an editable empty form', async () => 
 test('navigation honors native capabilities and returns from investment settings', async () => {
   const AppNavigator = require('../src/AppNavigator').default;
   await render(
-    <AppNavigator apis={{ capabilities: async () => ({ features: [] }) }} />,
+    <AppNavigator
+      apis={{
+        capabilities: async () => ({ features: ['investment-management'] }),
+        investment: { listTargets: async () => [] },
+      }}
+    />,
   );
   expect(tree.root.findAllByType(LinkRow).map(row => row.props.title)).toEqual([
     i18n.t('leetcodeInterviewFeatureName'),
@@ -314,9 +327,7 @@ test('navigation honors native capabilities and returns from investment settings
       )
       .props.onPress(),
   );
-  expect(JSON.stringify(tree.toJSON())).toContain(
-    i18n.t('investmentManagementPlanning'),
-  );
+  expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('investmentEmpty'));
   await act(async () =>
     tree.root
       .findAllByType(IconButton)
@@ -330,9 +341,7 @@ test('navigation honors native capabilities and returns from investment settings
       .find(button => button.props.label === i18n.t('back'))
       .props.onPress();
   await act(async () => back());
-  expect(JSON.stringify(tree.toJSON())).toContain(
-    i18n.t('investmentManagementPlanning'),
-  );
+  expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('investmentEmpty'));
   await act(async () => back());
   expect(
     tree.root.findAllByType(LinkRow).map(row => row.props.title),

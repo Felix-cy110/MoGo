@@ -13,3 +13,10 @@ namespace mogo::native {
 nlohmann::json profileCommand(user_profile::ProfileService&, const std::string&, const nlohmann::json&);
 }
 #endif
+
+#ifdef MOGO_FEATURE_INVESTMENT_MANAGEMENT
+#include "mogo/investment/application/investment_service.hpp"
+namespace mogo::native {
+nlohmann::json investmentCommand(investment::InvestmentService&, const std::string&, const nlohmann::json&);
+}
+#endif

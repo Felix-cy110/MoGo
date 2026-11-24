@@ -19,7 +19,6 @@ add_library(mogo_personal_finance_sqlite
   infrastructure/sqlite/src/sqlite_alert_repository.cpp
   infrastructure/sqlite/src/sqlite_budget_repository.cpp
   infrastructure/sqlite/src/sqlite_category_repository.cpp
-  infrastructure/sqlite/src/sqlite_database.cpp
   infrastructure/sqlite/src/sqlite_expense_repository.cpp
   infrastructure/sqlite/src/sqlite_finance_read_repository.cpp
   infrastructure/sqlite/src/sqlite_finance_repository.cpp
@@ -28,5 +27,5 @@ add_library(mogo_personal_finance_sqlite
 )
 target_include_directories(mogo_personal_finance_sqlite PUBLIC infrastructure/sqlite/include)
 target_link_libraries(mogo_personal_finance_sqlite
-  PUBLIC mogo_personal_finance_application SQLite::SQLite3
+  PUBLIC mogo_personal_finance_application mogo_sqlite
 )

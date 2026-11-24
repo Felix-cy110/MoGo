@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(MOGO_FEATURE_PERSONAL_FINANCE "Build the personal finance feature" ON)
+option(MOGO_FEATURE_INVESTMENT_MANAGEMENT "Build the investment management feature" ON)
 option(MOGO_FEATURE_USER_PROFILE "Build the local user profile feature" ON)
 option(MOGO_ENABLE_HTTP "Build the libhv HTTP adapter" ON)
 option(MOGO_ENABLE_NATIVE "Build the offline native adapter" OFF)
@@ -18,6 +19,14 @@ include(cmake/Dependencies.cmake)
 
 add_library(mogo_core_shared INTERFACE)
 target_include_directories(mogo_core_shared INTERFACE core_shared/include)
+
+if(MOGO_FEATURE_PERSONAL_FINANCE OR MOGO_FEATURE_INVESTMENT_MANAGEMENT)
+  add_library(mogo_sqlite core_shared/src/sqlite_database.cpp core_shared/src/sqlite_statement.cpp)
+  target_link_libraries(mogo_sqlite PUBLIC mogo_core_shared SQLite::SQLite3)
+endif()
+if(MOGO_FEATURE_INVESTMENT_MANAGEMENT)
+  add_subdirectory(features/investment_management)
+endif()
 
 if(MOGO_FEATURE_PERSONAL_FINANCE)
   add_subdirectory(features/personal_finance)
