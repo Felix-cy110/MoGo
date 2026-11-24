@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import { defaultLanguage, financeMessages, supportedLanguages } from '@mogo/personal-finance-core';
 import { profileMessages } from '@mogo/user-profile-core';
 import { leetcodeInterviewMessages } from '@mogo/leetcode-interview-core';
+import { investmentManagementMessages } from '@mogo/investment-management-core';
 import { settingsMessages } from '@mogo/core-shared';
 
 const STORAGE_KEY = 'mogo.language';
@@ -11,7 +12,7 @@ const initialLanguage = supportedLanguages.includes(storedLanguage) ? storedLang
 
 const resources = Object.fromEntries(
   Object.entries(financeMessages).map(([language, translation]) => [language, {
-    translation: { ...translation, ...profileMessages[language], ...settingsMessages[language], ...leetcodeInterviewMessages[language] }
+    translation: { ...translation, ...profileMessages[language], ...settingsMessages[language], ...leetcodeInterviewMessages[language], ...investmentManagementMessages[language] }
   }])
 );
 
