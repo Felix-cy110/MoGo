@@ -116,7 +116,7 @@ MOGO_FEATURE_PERSONAL_FINANCE=OFF MOGO_FEATURE_USER_PROFILE=ON bundle exec pod i
 
 ## 投资管理
 
-投资管理已接入本地 C++ 核心和 SQLite，支持标的管理、归档恢复、买入记录、编辑删除与开仓均价。价格和实际投入 USDT 全程使用十进制字符串，精确计算由 C++ 负责。详见 [investment-management.md](investment-management.md)。
+投资管理已接入本地 C++ 核心和 SQLite，支持指标管理、归档恢复、买入记录、编辑删除与开仓均价。价格和实际投入 USDT 全程使用十进制字符串，精确计算由 C++ 负责。详见 [investment-management.md](investment-management.md)。
 
 Android 裁剪：`./gradlew assembleDebug -PmogoFeatureInvestmentManagement=OFF`。iOS 裁剪：`MOGO_FEATURE_INVESTMENT_MANAGEMENT=OFF bundle exec pod install`。关闭后 RN capabilities 不提供此入口。
 

@@ -1,6 +1,6 @@
 # 投资管理
 
-Web 与 React Native 共用表单校验、异步流程和 C++ 投资核心。用户手动维护标的，记录买入单价和实际投入 USDT；当前只支持买入，暂不计手续费、杠杆、卖出和行情。已有买入记录后锁定标的代码，包含已软删除的记录。
+Web 与 React Native 共用表单校验、异步流程和 C++ 投资核心。用户手动维护指标，记录买入单价和实际投入 USDT；当前只支持买入，暂不计手续费、杠杆、卖出和行情。已有买入记录后锁定指标代码，包含已软删除的记录。
 
 ## 计算与精度
 
@@ -27,7 +27,7 @@ Web 与 React Native 共用表单校验、异步流程和 C++ 投资核心。用
 | archived_at | TEXT | 可空；非空表示归档，不删除历史 |
 | created_at / updated_at | TEXT | 系统生成的 UTC ISO 8601 时间 |
 
-未归档标的通过 `(name COLLATE NOCASE, quote_currency)` 部分唯一索引防重复。SQLite NOCASE 对 ASCII 字母忽略大小写；其他字符按原文比较。归档可恢复；若活动列表已有同名标的，恢复操作返回冲突。
+未归档指标通过 `(name COLLATE NOCASE, quote_currency)` 部分唯一索引防重复。SQLite NOCASE 对 ASCII 字母忽略大小写；其他字符按原文比较。归档可恢复；若活动列表已有同名指标，恢复操作返回冲突。
 
 ### investment_trades
 
@@ -44,28 +44,28 @@ Web 与 React Native 共用表单校验、异步流程和 C++ 投资核心。用
 | created_at / updated_at | TEXT | 系统生成时间 |
 | deleted_at | TEXT | 可空，软删除记录不参与汇总 |
 
-记录按 `occurred_at DESC, id DESC` 排序，并建立对应的标的联合索引。记录不允许迁移到另一标的。同一保存的重试复用请求标识及载荷；修改过载荷或重试已删除的记录会返回 `INVESTMENT_REQUEST_CONFLICT`，不会静默创建另一笔。编辑与删除均重新计算汇总。
+记录按 `occurred_at DESC, id DESC` 排序，并建立对应的指标联合索引。记录不允许迁移到另一指标。同一保存的重试复用请求标识及载荷；修改过载荷或重试已删除的记录会返回 `INVESTMENT_REQUEST_CONFLICT`，不会静默创建另一笔。编辑与删除均重新计算汇总。
 
 ## 分层与接口
 
 - `backend/features/investment_management/domain`：数据模型、十进制验证、精确数量和均价计算。
-- `application`：标的、交易生命周期、幂等检查、字段锁定与仓储接口。
+- `application`：指标、交易生命周期、幂等检查、字段锁定与仓储接口。
 - `infrastructure/sqlite`：迁移、约束和查询；复用 `core_shared` 的 SQLite 连接和语句封装。
 - 读取完整汇总、写入前校验及写入由事务包围；`BEGIN IMMEDIATE` 保护不同连接对同一 SQLite 文件的并发操作。
 - HTTP 与 Native 共用 `transports/contracts/.../investment_json.hpp`。手机继续通过后台串行 Native Adapter 调用 C++，不使用 HTTP。
 
 | HTTP | Native 方法 | 作用 |
 | --- | --- | --- |
-| GET /api/investment/targets?archived=false | investment.listTargets | 活动或归档标的及汇总 |
-| GET /api/investment/targets/:id | investment.getTarget | 标的、汇总、有效交易及 symbolLocked |
-| POST /api/investment/targets | investment.addTarget | 创建标的 |
+| GET /api/investment/targets?archived=false | investment.listTargets | 活动或归档指标及汇总 |
+| GET /api/investment/targets/:id | investment.getTarget | 指标、汇总、有效交易及 symbolLocked |
+| POST /api/investment/targets | investment.addTarget | 创建指标 |
 | PUT /api/investment/targets/:id | investment.updateTarget | 修改名称、备注；有历史记录后禁止换币 |
 | PUT /api/investment/targets/:id/archive | investment.archiveTarget | 归档/恢复，载荷 archived 为 boolean |
 | POST /api/investment/trades | investment.addTrade | 添加买入 |
 | PUT /api/investment/trades/:id | investment.updateTrade | 修改买入 |
 | DELETE /api/investment/trades/:id | investment.deleteTrade | 软删除买入 |
 
-目标输入为 `name, symbol, note, quoteCurrency`；买入输入为 `targetId, unitPrice, quoteAmount, occurredAt, note, clientRequestId`。所有价格、金额、数量、均价在响应中也是字符串。归档标的可以查询，恢复后才能继续编辑。
+目标输入为 `name, symbol, note, quoteCurrency`；买入输入为 `targetId, unitPrice, quoteAmount, occurredAt, note, clientRequestId`。所有价格、金额、数量、均价在响应中也是字符串。归档指标可以查询，恢复后才能继续编辑。
 
 共享前端 core 提供 API 契约、草稿、校验和展示格式；react 包提供两个共享 Hook。Web 和 RN 分别渲染页面，复用平台表单与弹窗。保存失败保留草稿和请求标识；写入已成功但刷新失败时显示加载重试入口，避免再次提交已经成功的保存。
 
