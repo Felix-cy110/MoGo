@@ -3,8 +3,10 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { formatInvestmentDecimal } from '@mogo/investment-management-core';
 import { Label } from '../../components/Primitives';
+import { usePreferences } from '../../platform/PreferencesProvider';
 export default function InvestmentSummary({ summary, symbol }) {
   const { t, i18n } = useTranslation();
+  const { colors } = usePreferences();
   const values = [
     ['investmentTotalAmount', summary.totalQuoteAmount],
     ['investmentTotalQuantity', summary.totalQuantity],
@@ -13,14 +15,20 @@ export default function InvestmentSummary({ summary, symbol }) {
   ];
   return (
     <View style={styles.grid}>
-      {values.map(([key, value]) => (
-        <View key={key} style={styles.item}>
-          <Label muted style={styles.label}>
-            {t(key, { symbol })}
-          </Label>
-          <Label>{formatInvestmentDecimal(value, i18n.resolvedLanguage)}</Label>
-        </View>
-      ))}
+      {values.map(([key, value]) => {
+        const highlighted = key === 'investmentAveragePrice';
+        const highlightColor = highlighted && { color: colors.highlight };
+        return (
+          <View key={key} style={styles.item}>
+            <Label muted style={[styles.label, highlightColor]}>
+              {t(key, { symbol })}
+            </Label>
+            <Label style={[highlightColor, highlighted && styles.highlightValue]}>
+              {formatInvestmentDecimal(value, i18n.resolvedLanguage)}
+            </Label>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -33,4 +41,5 @@ const styles = StyleSheet.create({
   },
   item: { width: '47%' },
   label: { fontSize: 12 },
+  highlightValue: { fontWeight: '600' },
 });

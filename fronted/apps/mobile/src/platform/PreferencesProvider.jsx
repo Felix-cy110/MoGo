@@ -11,6 +11,7 @@ const palettes = {
     muted: '#6b6b67',
     line: '#ddddda',
     accent: '#2e6250',
+    highlight: '#1d4ed8',
     danger: '#b02b30',
   },
   dark: {
@@ -20,6 +21,7 @@ const palettes = {
     muted: '#a5aaa4',
     line: '#3c423c',
     accent: '#a1cdb7',
+    highlight: '#93c5fd',
     danger: '#ff9c9c',
   },
 };
