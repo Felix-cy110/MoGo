@@ -30,6 +30,31 @@ test('normalizes targets and keeps both languages complete', () => {
   assert.equal(validateTargetDraft({...draft, symbol:'btc/usdt'}), 'investmentSymbolInvalid');
   assert.deepEqual(Object.keys(investmentManagementMessages.zh).sort(), Object.keys(investmentManagementMessages.en).sort());
 });
+test('uses the same Chinese investment terminology across screens and dialogs', () => {
+  const keys = [
+    'investmentTargetDetail',
+    'investmentAddTarget',
+    'investmentEditTarget',
+    'investmentName',
+    'investmentSymbol',
+    'investmentEmpty',
+    'investmentNoMatches',
+    'investmentSearch',
+    'investmentArchive',
+    'investmentRestore',
+    'investmentArchiveConfirm',
+    'investmentRestoreConfirm',
+    'investmentArchivedHint',
+    'investmentSymbolHint',
+    'investmentTargetExists',
+    'investmentTargetMissing',
+    'investmentTargetArchivedError',
+    'investmentSymbolLocked',
+  ];
+  for (const key of keys) {
+    assert.match(investmentManagementMessages.zh[key], /指标/, key);
+  }
+});
 test('HTTP adapter preserves decimal strings and lifecycle operations', async () => {
   const calls = [];
   const api = createInvestmentApi({baseUrl:'/api', fetchImpl: async (...args) => { calls.push(args); return {ok:true,json:async()=>({})}; }});

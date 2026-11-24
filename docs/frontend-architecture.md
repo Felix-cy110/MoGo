@@ -12,7 +12,7 @@ MoGo 的 Web 与未来 React Native 客户端遵循“共享业务逻辑，平�
 | `fronted/features/user-profile/core` | 用户资料草稿、选填校验、接口模型、错误映射和中英文文案 | 可以，不依赖个人财务模块 |
 | `fronted/features/user-profile/react` | 用户资料加载、重试、保存和反馈状态 | 可以，未来 RN 注入同契约的 Native Adapter |
 | `fronted/features/investment-management/core` | 投资 API、精确十进制输入校验、日期草稿、展示格式、中英文文案 | 可以，计算结果来自 C++ 核心 |
-| `fronted/features/investment-management/react` | 标的列表、买入编辑、保存与刷新反馈流程 | 可以，Web 与 RN 共用 Hook |
+| `fronted/features/investment-management/react` | 指标列表、买入编辑、保存与刷新反馈流程 | 可以，Web 与 RN 共用 Hook |
 | `fronted/apps/web/src/components` | Web 公共控件与左标题右输入的表单行 | 仅 Web 组件复用 |
 | `fronted/apps/web/src/features` | Web 页面和 Web 组件 | 不直接复用，包含 HTML 与 Tailwind 类名 |
 | 未来 `fronted/apps/mobile/` | React Native Screen 与原生组件 | 使用共享核心和 Hook，独立实现原生 UI |
