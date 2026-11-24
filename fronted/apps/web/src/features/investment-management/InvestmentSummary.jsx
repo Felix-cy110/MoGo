@@ -10,9 +10,12 @@ export function InvestmentSummary({ summary, symbol }) {
     ['investmentBuyCount', String(summary.buyCount)]
   ];
   return <dl className="grid grid-cols-2 gap-x-4 gap-y-3 py-3">
-    {values.map(([key, value]) => <div key={key} className="min-w-0">
-      <dt className="text-xs text-slate-500 dark:text-slate-400">{t(key, { symbol })}</dt>
-      <dd className="mt-1 break-all text-sm font-medium tabular-nums">{formatInvestmentDecimal(value, i18n.resolvedLanguage)}</dd>
-    </div>)}
+    {values.map(([key, value]) => {
+      const highlighted = key === 'investmentAveragePrice';
+      return <div key={key} className="min-w-0">
+        <dt className={`text-xs ${highlighted ? 'text-blue-700 dark:text-blue-300' : 'text-slate-500 dark:text-slate-400'}`}>{t(key, { symbol })}</dt>
+        <dd className={`mt-1 break-all text-sm tabular-nums ${highlighted ? 'font-semibold text-blue-700 dark:text-blue-300' : 'font-medium'}`}>{formatInvestmentDecimal(value, i18n.resolvedLanguage)}</dd>
+      </div>;
+    })}
   </dl>;
 }
