@@ -3,10 +3,9 @@
 #include "validation.hpp"
 namespace mogo::investment {
 using core_shared::ApplicationError;
-Target InvestmentService::requireTarget(std::int64_t id, bool writable) {
+Target InvestmentService::requireTarget(std::int64_t id) {
     auto value = repository_.target(id);
     if (!value) throw ApplicationError(404, "INVESTMENT_TARGET_NOT_FOUND", "Target not found");
-    if (writable && value->archived_at) throw ApplicationError(409, "INVESTMENT_TARGET_ARCHIVED", "Target archived");
     return *value;
 }
 Trade InvestmentService::requireTrade(std::int64_t id) {
@@ -14,11 +13,11 @@ Trade InvestmentService::requireTrade(std::int64_t id) {
     if (!value || value->deleted_at) throw ApplicationError(404, "INVESTMENT_TRADE_NOT_FOUND", "Trade not found");
     return *value;
 }
-std::vector<TargetView> InvestmentService::list(bool archived) {
+std::vector<TargetView> InvestmentService::list() {
     std::lock_guard lock(mutex_);
     std::vector<TargetView> result;
     repository_.transaction([&] {
-        for (const auto& target : repository_.targets(archived))
+        for (const auto& target : repository_.targets())
             result.push_back({target, calculateSummary(repository_.trades(target.id))});
     });
     return result;
@@ -39,38 +38,24 @@ Target InvestmentService::saveTarget(Target input) {
     validateTarget(input);
     std::lock_guard lock(mutex_);
     repository_.transaction([&] {
-        if (repository_.nameExists(input.name, input.id))
+        const auto existing = input.id ? std::optional{requireTarget(input.id)} : std::nullopt;
+        // Legacy archives may share names. Preserve those records, but reject new collisions.
+        if ((!existing || input.name != existing->name) && repository_.nameExists(input.name, input.id))
             throw ApplicationError(409, "INVESTMENT_TARGET_EXISTS", "Target already exists");
-        if (input.id) {
-            const auto existing = requireTarget(input.id, true);
-            if (input.symbol != existing.symbol || input.quote_currency != existing.quote_currency) {
-                if (existing.builtin_code)
+        if (existing) {
+            if (input.symbol != existing->symbol || input.quote_currency != existing->quote_currency) {
+                if (existing->builtin_code)
                     throw ApplicationError(403, "INVESTMENT_BUILTIN_PROTECTED", "Built-in target identity is immutable");
                 if (!repository_.trades(input.id, true).empty())
                     throw ApplicationError(409, "INVESTMENT_SYMBOL_LOCKED", "Symbol is locked after trading");
             }
-            input.builtin_code = existing.builtin_code;
-            input.created_at = existing.created_at;
+            input.builtin_code = existing->builtin_code;
+            input.created_at = existing->created_at;
         } else input.created_at = nowUtc();
         input.updated_at = nowUtc();
         input = repository_.saveTarget(input);
     });
     return input;
-}
-Target InvestmentService::archiveTarget(std::int64_t id, bool archived) {
-    std::lock_guard lock(mutex_);
-    Target value;
-    repository_.transaction([&] {
-        value = requireTarget(id);
-        if (archived && value.builtin_code)
-            throw ApplicationError(403, "INVESTMENT_BUILTIN_PROTECTED", "Built-in targets cannot be removed");
-        if (!archived && repository_.nameExists(value.name, id))
-            throw ApplicationError(409, "INVESTMENT_TARGET_EXISTS", "Target name already in use");
-        value.archived_at = archived ? std::optional{nowUtc()} : std::nullopt;
-        value.updated_at = nowUtc();
-        value = repository_.saveTarget(value);
-    });
-    return value;
 }
 Trade InvestmentService::addTrade(Trade input) {
     validateTrade(input, true);
@@ -85,7 +70,7 @@ Trade InvestmentService::addTrade(Trade input) {
             input = *existing;
             return;
         }
-        requireTarget(input.target_id, true);
+        requireTarget(input.target_id);
         input.created_at = input.updated_at = nowUtc();
         input = repository_.saveTrade(input);
     });
@@ -96,7 +81,7 @@ Trade InvestmentService::updateTrade(std::int64_t id, Trade input) {
     std::lock_guard lock(mutex_);
     repository_.transaction([&] {
         const auto existing = requireTrade(id);
-        requireTarget(existing.target_id, true);
+        requireTarget(existing.target_id);
         input.id = id; input.target_id = existing.target_id;
         input.client_request_id = existing.client_request_id;
         input.created_at = existing.created_at; input.updated_at = nowUtc();
@@ -108,7 +93,7 @@ void InvestmentService::deleteTrade(std::int64_t id) {
     std::lock_guard lock(mutex_);
     repository_.transaction([&] {
         auto value = requireTrade(id);
-        requireTarget(value.target_id, true);
+        requireTarget(value.target_id);
         value.deleted_at = value.updated_at = nowUtc();
         repository_.saveTrade(value);
     });

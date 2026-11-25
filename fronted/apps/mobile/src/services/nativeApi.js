@@ -36,14 +36,11 @@ export const createNativeApis = bridge => {
         call('finance.updateExpense', { ...payload, id }),
     }),
     investment: Object.freeze({
-      listTargets: (archived = false) =>
-        call('investment.listTargets', { archived }),
+      listTargets: () => call('investment.listTargets'),
       getTarget: id => call('investment.getTarget', { id }),
       addTarget: payload => call('investment.addTarget', payload),
       updateTarget: (id, payload) =>
         call('investment.updateTarget', { ...payload, id }),
-      archiveTarget: (id, archived) =>
-        call('investment.archiveTarget', { id, archived }),
       addTrade: payload => call('investment.addTrade', payload),
       updateTrade: (id, payload) =>
         call('investment.updateTrade', { ...payload, id }),

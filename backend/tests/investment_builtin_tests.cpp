@@ -47,7 +47,6 @@ void freshDatabase() {
         btc_id = btc.id; eth_id = eth.id;
         for (auto value : {btc, eth}) {
             check(service.detail(value.id).symbol_locked, "Default symbols locked before trading");
-            protectedOperation([&] { service.archiveTarget(value.id, true); });
             value.symbol = "SOL";
             protectedOperation([&] { service.saveTarget(value); });
         }
@@ -63,7 +62,6 @@ void freshDatabase() {
         Target custom; custom.name = "Solana"; custom.symbol = "SOL"; custom.builtin_code = "BTC";
         custom = service.saveTarget(custom);
         check(!custom.builtin_code, "Clients cannot forge built-in identity");
-        service.archiveTarget(custom.id, true);
         SqliteDatabase raw(file.path.string());
         const auto id = std::to_string(eth.id);
         rejectsSql(raw, "DELETE FROM investment_targets WHERE id=" + id);
@@ -73,7 +71,7 @@ void freshDatabase() {
         rejectsSql(raw, "INSERT OR REPLACE INTO investment_targets(id,name,symbol,created_at,updated_at) VALUES(" + id + ",'replacement','SOL','now','now')");
     }
     SqliteInvestmentRepository reopened(file.path.string()); InvestmentService service(reopened);
-    check(service.list().size() == 2 && service.list(true).size() == 1, "Reopen never duplicates defaults");
+    check(service.list().size() == 3, "Reopen never duplicates defaults");
     const auto btc = builtin(service, "BTC");
     check(btc.id == btc_id && builtin(service, "ETH").id == eth_id, "Stable default IDs");
     check(btc.name == "My Bitcoin" && btc.note == "Keep my note", "Reopen preserves edited name and note");
@@ -96,7 +94,7 @@ VALUES(200,42,'60000','600','2026-11-24T00:00:00.000Z','legacy-buy','old','old')
     check(builtin(service, "BTC").id == 42 && builtin(service, "ETH").id == 43, "Reuse existing active and safely restorable targets");
     check(service.detail(42).summary.average_entry_price == "60000", "Historical buy and average preserved");
     check(service.detail(42).target.note == "retain" && service.detail(42).target.name == "我的比特币", "Custom fields preserved");
-    check(service.detail(43).target.note == "archived note" && !service.detail(43).target.archived_at, "Restore an archived default");
+    check(service.detail(43).target.note == "archived note", "Restore an archived default");
     check(!service.detail(44).target.builtin_code && service.list().size() == 3, "Do not merge duplicate coin histories");
 }
 void migrateNameConflicts() {
@@ -113,7 +111,19 @@ INSERT INTO investment_targets(id,name,symbol,archived_at,created_at,updated_at)
     SqliteInvestmentRepository repo(file.path.string()); InvestmentService service(repo);
     check(builtin(service, "BTC").name == "BTC (2)" && builtin(service, "ETH").name == "ETH (1)", "Default names avoid active case-insensitive conflicts");
     check(service.detail(1).target.symbol == "SOL" && !service.detail(1).target.builtin_code, "Do not adopt by name");
-    check(service.list(true).size() == 2, "Conflicting archived histories remain untouched");
+    check(service.list().size() == 7, "Conflicting archived histories remain visible");
+    auto legacy = service.detail(5).target;
+    legacy.note = "Still editable";
+    service.saveTarget(legacy);
+    check(service.detail(5).target.name == "btc" && service.detail(1).target.name == "btc", "Unchanged legacy names are not merged or renamed");
+    auto active = service.detail(1).target;
+    active.note = "Active duplicate remains editable";
+    service.saveTarget(active);
+    legacy.name = "BTC (1)";
+    try { service.saveTarget(legacy); throw std::runtime_error("Expected duplicate rejection"); }
+    catch (const mogo::core_shared::ApplicationError& error) { check(error.code() == "INVESTMENT_TARGET_EXISTS", "Renames cannot collide with any existing target"); }
+    SqliteInvestmentRepository reopened(file.path.string()); InvestmentService again(reopened);
+    check(again.list().size() == 7 && again.detail(5).target.note == "Still editable", "Legacy records and edits survive reopening");
 }
 void concurrentInitialization() {
     TemporaryData file;

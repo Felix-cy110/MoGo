@@ -20,23 +20,12 @@ export default function InvestmentManagementScreen({ api, navigate, marketClient
   return (
     <Page plain>
       <View style={styles.actions}>
-        {[false, true].map(archived => (
-          <Action
-            key={String(archived)}
-            title={t(archived ? 'investmentArchived' : 'investmentActive')}
-            disabled={model.saving}
-            variant={model.archived === archived ? 'primary' : 'secondary'}
-            onPress={() => model.setArchived(archived)}
-          />
-        ))}
-        {!model.archived && (
-          <Action
-            ref={addButton}
-            title={t('investmentAddTarget')}
-            disabled={model.loading || Boolean(model.loadError)}
-            onPress={() => setAdding(true)}
-          />
-        )}
+        <Action
+          ref={addButton}
+          title={t('investmentAddTarget')}
+          disabled={model.loading || Boolean(model.loadError)}
+          onPress={() => setAdding(true)}
+        />
       </View>
       <Field
         label={t('investmentSearch')}
@@ -55,7 +44,7 @@ export default function InvestmentManagementScreen({ api, navigate, marketClient
           {!model.items.length && (
             <Label muted style={styles.empty}>
               {t(
-                model.query || model.archived
+                model.query
                   ? 'investmentNoMatches'
                   : 'investmentEmpty',
               )}
@@ -90,7 +79,7 @@ export default function InvestmentManagementScreen({ api, navigate, marketClient
   );
 }
 const styles = StyleSheet.create({
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 12 },
   item: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 12 },
   name: { fontWeight: '600' },
   empty: { paddingVertical: 16 },

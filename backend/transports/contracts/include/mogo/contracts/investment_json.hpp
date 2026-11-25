@@ -7,7 +7,7 @@ using core_shared::ApplicationError;
 template<class Json> Json targetJson(const Target& v) {
     return {{"id", v.id}, {"name", v.name}, {"symbol", v.symbol}, {"quoteCurrency", v.quote_currency}, {"note", v.note},
         {"builtinCode", v.builtin_code ? Json(*v.builtin_code) : Json(nullptr)},
-        {"archivedAt", v.archived_at ? Json(*v.archived_at) : Json(nullptr)}, {"createdAt", v.created_at}, {"updatedAt", v.updated_at}};
+        {"createdAt", v.created_at}, {"updatedAt", v.updated_at}};
 }
 template<class Json> Json summaryJson(const Summary& v) {
     return {{"totalQuoteAmount", v.total_quote_amount}, {"totalQuantity", v.total_quantity},
@@ -27,10 +27,6 @@ template<class Json> std::int64_t id(const Json& body, const char* key = "id") {
     if (!body.contains(key) || !body.at(key).is_number_integer() || body.at(key) <= 0 || body.at(key) > 9007199254740991LL)
         throw ApplicationError(400, "VALIDATION_ERROR", "Expected a positive safe integer ID");
     return body.at(key).template get<std::int64_t>();
-}
-template<class Json> bool boolean(const Json& body, const char* key) {
-    if (!body.contains(key) || !body.at(key).is_boolean()) throw ApplicationError(400, "VALIDATION_ERROR", "Expected boolean");
-    return body.at(key).template get<bool>();
 }
 template<class Json> Target targetInput(const Json& body) {
     Target v; v.name = text(body, "name"); v.symbol = text(body, "symbol"); v.note = text(body, "note", false);

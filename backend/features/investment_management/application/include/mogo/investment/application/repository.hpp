@@ -6,7 +6,7 @@ class InvestmentRepository {
 public:
     virtual ~InvestmentRepository() = default;
     virtual void transaction(const std::function<void()>& action) = 0;
-    virtual std::vector<Target> targets(bool archived) = 0;
+    virtual std::vector<Target> targets() = 0;
     virtual std::optional<Target> target(std::int64_t id) = 0;
     virtual bool nameExists(const std::string& name, std::int64_t except_id) = 0;
     virtual Target saveTarget(const Target& value) = 0;

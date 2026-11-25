@@ -5,15 +5,14 @@ namespace mogo::investment {
 class InvestmentService final {
 public:
     explicit InvestmentService(InvestmentRepository& repository) : repository_(repository) {}
-    std::vector<TargetView> list(bool archived = false);
+    std::vector<TargetView> list();
     Detail detail(std::int64_t target_id);
     Target saveTarget(Target input);
-    Target archiveTarget(std::int64_t id, bool archived);
     Trade addTrade(Trade input);
     Trade updateTrade(std::int64_t id, Trade input);
     void deleteTrade(std::int64_t id);
 private:
-    Target requireTarget(std::int64_t id, bool writable = false);
+    Target requireTarget(std::int64_t id);
     Trade requireTrade(std::int64_t id);
     InvestmentRepository& repository_;
     std::mutex mutex_;

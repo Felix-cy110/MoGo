@@ -61,15 +61,16 @@ int main() {
             service.deleteTrade(second.id);
             check(service.detail(id).summary.total_quote_amount == "600", "Delete excludes cost and quantity");
             rejects([&] { service.addTrade(buy(id,"66000","1320","request-2")); }, "INVESTMENT_REQUEST_CONFLICT");
-            service.archiveTarget(id, true);
-            check(service.list().size() == 2 && service.list(true).size() == 1, "Custom archive preserves both built-in targets");
-            rejects([&] { service.addTrade(buy(id,"1","1","request-archive")); }, "INVESTMENT_TARGET_ARCHIVED");
-            rejects([&] { service.deleteTrade(first_id); }, "INVESTMENT_TARGET_ARCHIVED");
+            prior.execute("UPDATE investment_targets SET archived_at='legacy' WHERE id=" + std::to_string(id));
+            check(service.list().size() == 3, "All legacy archived targets remain listed");
+            target.note = "Updated legacy note";
+            check(service.saveTarget(target).note == target.note, "Legacy targets remain editable");
+            const auto legacy_buy = service.addTrade(buy(id,"10","20","request-legacy"));
+            service.updateTrade(legacy_buy.id, buy(id,"10","30","unused-key"));
+            check(service.detail(id).summary.total_quote_amount == "630", "Legacy targets accept and edit buys");
+            service.deleteTrade(legacy_buy.id);
             Target replacement; replacement.name = target.name; replacement.symbol = "BTC";
-            replacement = service.saveTarget(replacement);
-            rejects([&] { service.archiveTarget(id, false); }, "INVESTMENT_TARGET_EXISTS");
-            check(service.detail(id).target.archived_at.has_value(), "Restore conflict is rolled back");
-            service.archiveTarget(replacement.id, true); service.archiveTarget(id, false);
+            rejects([&] { service.saveTarget(replacement); }, "INVESTMENT_TARGET_EXISTS");
             bool restricted = false;
             try { prior.execute("PRAGMA foreign_keys=ON; DELETE FROM investment_targets WHERE id=" + std::to_string(id)); }
             catch (const std::exception&) { restricted = true; }
@@ -83,7 +84,7 @@ int main() {
             check(service.detail(id).summary.total_quote_amount == "600", "Reopen database");
             service.deleteTrade(first_id);
             check(!service.detail(id).summary.average_entry_price && service.detail(id).symbol_locked, "All records deleted: empty summary but immutable symbol");
-            check(repo.trades(id, true).size() == 2, "Soft delete retains history");
+            check(repo.trades(id, true).size() == 3, "Soft delete retains history");
             auto target = service.detail(id).target; target.symbol = "ETH";
             rejects([&] { service.saveTarget(target); }, "INVESTMENT_SYMBOL_LOCKED");
         }
