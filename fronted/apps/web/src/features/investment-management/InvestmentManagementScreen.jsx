@@ -5,9 +5,12 @@ import { InvestmentLayout } from './InvestmentLayout';
 import { InvestmentSummary } from './InvestmentSummary';
 import { InvestmentEditor } from './InvestmentEditor';
 import { investmentApi } from './investmentApi';
-export function InvestmentManagementScreen({ onBack, onOpenSettings, onOpenTarget, api = investmentApi }) {
+import { InvestmentMarketPrice } from './InvestmentMarketPrice';
+import { useMarketPrices } from './useMarketPrices';
+export function InvestmentManagementScreen({ onBack, onOpenSettings, onOpenTarget, api = investmentApi, marketClient }) {
   const { t } = useTranslation();
   const model = useInvestmentTargets({ api });
+  const prices = useMarketPrices(model.items.map(item => item.target), marketClient);
   const [adding, setAdding] = useState(false);
   return <InvestmentLayout title={t('investmentManagementTitle')} backKey="investmentManagementBack" onBack={onBack} onOpenSettings={onOpenSettings} model={model}>
     <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -19,8 +22,8 @@ export function InvestmentManagementScreen({ onBack, onOpenSettings, onOpenTarge
     {!model.loading && !model.loadError && <>
       {!model.items.length && <p className="py-4 text-sm text-slate-500 dark:text-slate-400">{t(model.query || model.archived ? 'investmentNoMatches' : 'investmentEmpty')}</p>}
       {model.items.map(({ target, summary }) => <button type="button" key={target.id} onClick={() => onOpenTarget(target.id)}
-        className="block w-full border-b border-slate-200 py-3 text-left dark:border-slate-800" aria-label={target.name}>
-        <div className="flex items-center justify-between gap-3"><span className="min-w-0 break-words font-medium">{target.name} <span className="text-sm text-slate-500 dark:text-slate-400">{target.symbol}</span></span><span aria-hidden="true">›</span></div>
+        className="block w-full border-b border-slate-200 py-3 text-left dark:border-slate-800">
+        <div className="flex items-center justify-between gap-3"><span className="min-w-0 break-words font-medium">{target.name}{target.name !== target.symbol && <> <span className="text-sm text-slate-500 dark:text-slate-400">{target.symbol}</span></>}<InvestmentMarketPrice target={target} price={prices[target.symbol]} /></span><span aria-hidden="true">›</span></div>
         <InvestmentSummary summary={summary} symbol={target.symbol} />
       </button>)}
     </>}

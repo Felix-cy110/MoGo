@@ -1,4 +1,1 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Metro is a development-only dependency; the release app works without network access. -->
-    <uses-permission android:name="android.permission.INTERNET" />
-</manifest>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />
