@@ -7,10 +7,13 @@ import useFeedback from '../components/useFeedback';
 import { usePreferences } from '../platform/PreferencesProvider';
 import InvestmentSummary from './investment-management/InvestmentSummary';
 import InvestmentEditor from './investment-management/InvestmentEditor';
-export default function InvestmentManagementScreen({ api, navigate }) {
+import InvestmentMarketPrice from './investment-management/InvestmentMarketPrice';
+import useMarketPrices from './investment-management/useMarketPrices';
+export default function InvestmentManagementScreen({ api, navigate, marketClient }) {
   const { t } = useTranslation();
   const { colors } = usePreferences();
   const model = useInvestmentTargets({ api });
+  const prices = useMarketPrices(model.items.map(item => item.target), marketClient);
   const [adding, setAdding] = useState(false);
   const addButton = useRef(null);
   useFeedback(model.feedback, model.clearFeedback);
@@ -62,12 +65,12 @@ export default function InvestmentManagementScreen({ api, navigate }) {
             <Pressable
               key={target.id}
               accessibilityRole="button"
-              accessibilityLabel={target.name}
               onPress={() => navigate('investmentTarget', target.id)}
               style={[styles.item, { borderColor: colors.line }]}
             >
               <Label style={styles.name}>
-                {target.name} <Label muted>{target.symbol}</Label>
+                {target.name}{target.name !== target.symbol && <> <Label muted>{target.symbol}</Label></>}
+                <InvestmentMarketPrice target={target} price={prices[target.symbol]} />
               </Label>
               <InvestmentSummary summary={summary} symbol={target.symbol} />
             </Pressable>

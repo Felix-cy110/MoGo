@@ -77,7 +77,16 @@ Web 与 React Native 共用表单校验、异步流程和 C++ 投资核心。初
 
 目标输入为 `name, symbol, note, quoteCurrency`；买入输入为 `targetId, unitPrice, quoteAmount, occurredAt, note, clientRequestId`。指标响应包含只读 `builtinCode`（BTC / ETH / null）；请求中的该字段不用于创建或修改内置身份。内置指标的 `symbolLocked` 恒为 true；移除或替换请求返回 `INVESTMENT_BUILTIN_PROTECTED`（HTTP 403），两端映射为模态弹窗。所有价格、金额、数量、均价在响应中也是字符串。归档指标可以查询，恢复后才能继续编辑。
 
-共享前端 core 提供 API 契约、草稿、校验和展示格式；react 包提供两个共享 Hook。Web 和 RN 分别渲染页面，复用平台表单与弹窗。保存失败保留草稿和请求标识；写入已成功但刷新失败时显示加载重试入口，避免再次提交已经成功的保存。
+共享前端 core 提供 API 契约、草稿、校验和展示格式；react 包提供共享 Hook。Web 和 RN 分别渲染页面，复用平台表单与弹窗。保存失败保留草稿和请求标识；写入已成功但刷新失败时显示加载重试入口，避免再次提交已经成功的保存。
+
+## 可选在线行情
+
+- Web 与 RN 在 BTC、ETH 指标名称旁及详情页币种旁显示 OKX 现货最新成交价，单位为 USDT；按 `symbol + quoteCurrency` 匹配，重命名指标后仍可显示。其他币种暂不请求行情。
+- 使用 OKX 公开接口 `GET https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT` / `ETH-USDT`，读取 `last` 与 `ts`；无需 API Key。官方协议见 [GET / Ticker](https://www.okx.com/docs-v5/en/#order-book-trading-market-data-get-ticker)。
+- 共享 `core/marketPrices.js` 负责请求、5 秒超时与响应校验；`react/useInvestmentPrices.js` 负责按币种去重、15 秒刷新、取消请求及过期清理。价格全程保留十进制字符串，并通过 Intl 按当前语言格式化。
+- 行情只保存在当前页面内存，不写入 SQLite/用户资料，不参与开仓均价计算。只访问公开币对，不向 OKX 上传本地指标名称、持仓或买入记录。
+- 浏览器监听网络与页面可见状态；RN 使用 NetInfo 的原生连接状态及 AppState，不向其他站点发连通性探测。页面隐藏、App 进入后台或检测到断网时立即隐藏行情并停止请求；回来或重连后重新获取。
+- 接口不可达、限流、超时、格式异常或行情超过 60 秒均省略价格，不展示占位符、旧缓存或错误弹窗。网络已连接但 OKX 不可达时，在下一次请求失败/超时后隐藏；不同币种独立处理失败。
 
 ## 构建和验证
 

@@ -21,7 +21,7 @@ backend/transports/
 
 - 分类、金额、预算预警、统计、资料校验继续复用 `fronted/features/*/{core,react}` 与 `backend/features/*`；原生适配层不写 SQL 或领域规则。
 - Android/iOS 在单独串行队列执行 C++ 与磁盘操作，不阻塞 JS/UI 线程；Android 释放模块时关闭 C++ 句柄。
-- 手机内不启动 libhv、HTTP Server、WebView，也不访问开发机 API。首次构建需要下载开发依赖，**安装完成后的业务运行不需要网络**。
+- 手机内不启动 libhv、HTTP Server、WebView，也不访问开发机 API。首次构建需要下载开发依赖，**安装完成后的记账、投资记录及资料管理不需要网络**；BTC/ETH 的可选行情直接读取 OKX 公共 HTTPS API，断网时省略价格。
 - 财务：Android `filesDir/mogo/mogo.db`；iOS `Application Support/MoGo/mogo.db`。
 - 个人资料：同目录 `user-profile.json`，所有字段选填（包括月收入），不放 SQLite。
 - 语言/主题偏好才使用 AsyncStorage；财务和资料不能放入 AsyncStorage。
@@ -50,7 +50,7 @@ make dev-mobile       # 第一个终端：Metro
 make mobile-android  # 第二个终端：编译、安装、启动
 ```
 
-Android debug 允许网络连接 Metro；release Manifest 不申请 INTERNET 权限。模板 release 暂用公开 debug key，**仅供开发验收，正式分发前必须配置私有签名**。Android SQLite 使用校验哈希的官方 amalgamation，不能链接开发机 SQLite 或 Android 私有系统库。
+Android 主 Manifest 申请 INTERNET 权限以获取可选的 OKX 行情，debug 同时用于连接 Metro；断网仍可操作全部本地记录。模板 release 暂用公开 debug key，**仅供开发验收，正式分发前必须配置私有签名**。Android SQLite 使用校验哈希的官方 amalgamation，不能链接开发机 SQLite 或 Android 私有系统库。
 
 ### iOS
 
@@ -121,3 +121,5 @@ MOGO_FEATURE_PERSONAL_FINANCE=OFF MOGO_FEATURE_USER_PROFILE=ON bundle exec pod i
 Android 裁剪：`./gradlew assembleDebug -PmogoFeatureInvestmentManagement=OFF`。iOS 裁剪：`MOGO_FEATURE_INVESTMENT_MANAGEMENT=OFF bundle exec pod install`。关闭后 RN capabilities 不提供此入口。
 
 本次检查覆盖双平台 Codegen、双平台 release JS Bundle、宿主机 C++ 及 feature 开关组合、RN 测试，并用临时浏览器适配预览检查 320/390 宽度、中英文、明暗主题下的 RN 页面与表单。这些检查不替代 Android/iOS 真机验证；当前主机缺少完整 Xcode 和 Android SDK。后续需要检查原生 Intl/BigInt、软键盘、表单与系统弹窗焦点、飞行模式及强制重开后的持久化。
+
+行情网络状态使用 `@react-native-community/netinfo` 原生模块；更新依赖后需重新构建安装 App，iOS 先重新安装 Pods，单独刷新 Metro 不能补齐原生模块。

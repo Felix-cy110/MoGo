@@ -11,14 +11,17 @@ import useFeedback from '../../components/useFeedback';
 import { usePreferences } from '../../platform/PreferencesProvider';
 import InvestmentSummary from './InvestmentSummary';
 import InvestmentEditor from './InvestmentEditor';
-export default function InvestmentTargetScreen({ api, targetId }) {
+import InvestmentMarketPrice from './InvestmentMarketPrice';
+import useMarketPrices from './useMarketPrices';
+export default function InvestmentTargetScreen({ api, targetId, marketClient }) {
   const { t, i18n } = useTranslation();
   const { colors } = usePreferences();
-  const model = useInvestmentDetail({ api, targetId });
+  const model = useInvestmentDetail({ api, targetId, marketClient });
   const [editor, setEditor] = useState(null);
   const addButton = useRef(null);
   useFeedback(model.feedback, model.clearFeedback);
   const data = model.data;
+  const prices = useMarketPrices(data ? [data.target] : [], marketClient);
   const confirm = (key, action) =>
     Alert.alert(t(key), '', [
       { text: t('investmentCancel'), style: 'cancel' },
@@ -46,6 +49,7 @@ export default function InvestmentTargetScreen({ api, targetId }) {
           </Label>
           <Label muted>
             {data.target.symbol} / {data.target.quoteCurrency}
+            <InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} />
           </Label>
           <InvestmentSummary
             summary={data.summary}

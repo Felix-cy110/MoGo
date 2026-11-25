@@ -7,12 +7,15 @@ import { InvestmentSummary } from './InvestmentSummary';
 import { InvestmentEditor } from './InvestmentEditor';
 import { InvestmentConfirm } from './InvestmentConfirm';
 import { investmentApi } from './investmentApi';
-export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api = investmentApi }) {
+import { InvestmentMarketPrice } from './InvestmentMarketPrice';
+import { useMarketPrices } from './useMarketPrices';
+export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api = investmentApi, marketClient }) {
   const { t, i18n } = useTranslation();
   const model = useInvestmentDetail({ api, targetId });
   const [editor, setEditor] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
   const data = model.data;
+  const prices = useMarketPrices(data ? [data.target] : [], marketClient);
   const number = value => formatInvestmentDecimal(value, i18n.resolvedLanguage);
   const confirm = async () => {
     const done = confirmation === 'delete' ? await model.deleteTrade(editor.value.id) : await model.archive(!data.target.archivedAt);
@@ -21,7 +24,7 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api =
   };
   return <InvestmentLayout title={data?.target.name || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenSettings={onOpenSettings} model={model}>
     {data && !model.loading && !model.loadError && <>
-      <p className="text-sm text-slate-500 dark:text-slate-400">{data.target.symbol} / {data.target.quoteCurrency}</p>
+      <p className="text-sm text-slate-500 dark:text-slate-400">{data.target.symbol} / {data.target.quoteCurrency}<InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} /></p>
       <InvestmentSummary summary={data.summary} symbol={data.target.symbol} />
       <p className="mb-3 text-xs leading-5 text-slate-500 dark:text-slate-400">{t('investmentCalculationNote')}</p>
       {data.target.note && <p className="mb-3 break-words text-sm">{data.target.note}</p>}
