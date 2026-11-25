@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useInvestmentTargets } from '@mogo/investment-management-react';
-import { Action, Field, Label, Loading, Page } from '../components/Primitives';
+import { Action, Label, Loading, Page } from '../components/Primitives';
 import useFeedback from '../components/useFeedback';
 import { usePreferences } from '../platform/PreferencesProvider';
 import InvestmentSummary from './investment-management/InvestmentSummary';
@@ -19,19 +19,28 @@ export default function InvestmentManagementScreen({ api, navigate, marketClient
   useFeedback(model.feedback, model.clearFeedback);
   return (
     <Page plain>
-      <View style={styles.actions}>
+      <View style={styles.toolbar}>
+        <TextInput
+          accessibilityLabel={t('investmentSearch')}
+          placeholder={t('investmentSearch')}
+          placeholderTextColor={colors.muted}
+          value={model.query}
+          onChangeText={model.setQuery}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+          autoCapitalize="none"
+          autoCorrect={false}
+          style={[styles.search, { borderColor: colors.line, color: colors.text }]}
+        />
         <Action
           ref={addButton}
           title={t('investmentAddTarget')}
+          variant="secondary"
+          style={[styles.addButton, { borderColor: colors.line }]}
           disabled={model.loading || Boolean(model.loadError)}
           onPress={() => setAdding(true)}
         />
       </View>
-      <Field
-        label={t('investmentSearch')}
-        value={model.query}
-        onChangeText={model.setQuery}
-      />
       {model.loading && <Loading />}
       {model.loadError && (
         <>
@@ -79,7 +88,17 @@ export default function InvestmentManagementScreen({ api, navigate, marketClient
   );
 }
 const styles = StyleSheet.create({
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 12 },
+  toolbar: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  search: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 44,
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    fontSize: 14,
+  },
+  addButton: { flexShrink: 0, borderRadius: 4 },
   item: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 12 },
   name: { fontWeight: '600' },
   empty: { paddingVertical: 16 },

@@ -13,10 +13,10 @@ export function InvestmentManagementScreen({ onBack, onOpenSettings, onOpenTarge
   const prices = useMarketPrices(model.items.map(item => item.target), marketClient);
   const [adding, setAdding] = useState(false);
   return <InvestmentLayout title={t('investmentManagementTitle')} backKey="investmentManagementBack" onBack={onBack} onOpenSettings={onOpenSettings} model={model}>
-    <div className="mb-3 flex flex-wrap items-center gap-2">
-      <button className="button-secondary ml-auto" disabled={model.loading || Boolean(model.loadError)} onClick={() => setAdding(true)}>{t('investmentAddTarget')}</button>
+    <div className="mb-3 flex items-center gap-2 text-sm">
+      <input type="search" className="field min-h-11 min-w-0 flex-1" aria-label={t('investmentSearch')} placeholder={t('investmentSearch')} value={model.query} onChange={event => model.setQuery(event.target.value)} />
+      <button type="button" className="button-secondary min-h-11 shrink-0 whitespace-nowrap" disabled={model.loading || Boolean(model.loadError)} onClick={() => setAdding(true)}>{t('investmentAddTarget')}</button>
     </div>
-    <input className="field mb-3 w-full" aria-label={t('investmentSearch')} placeholder={t('investmentSearch')} value={model.query} onChange={event => model.setQuery(event.target.value)} />
     {!model.loading && !model.loadError && <>
       {!model.items.length && <p className="py-4 text-sm text-slate-500 dark:text-slate-400">{t(model.query ? 'investmentNoMatches' : 'investmentEmpty')}</p>}
       {model.items.map(({ target, summary }) => <button type="button" key={target.id} onClick={() => onOpenTarget(target.id)}
