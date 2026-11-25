@@ -34,11 +34,7 @@ std::int64_t pathId(const HttpContextPtr& context) {
 }
 void InvestmentHttpRoutes::registerRoutes(hv::HttpService& router) {
     router.GET("/api/investment/targets", [this](const HttpContextPtr& c) {
-        return respond(c, [&] {
-            const auto archived = c->param("archived", "false");
-            if (archived != "true" && archived != "false") throw ApplicationError(400, "VALIDATION_ERROR", "Invalid archived filter");
-            return wire::listJson<Json>(service_.list(archived == "true"));
-        });
+        return respond(c, [&] { return wire::listJson<Json>(service_.list()); });
     });
     router.POST("/api/investment/targets", [this](const HttpContextPtr& c) {
         return respond(c, [&] { return wire::targetJson<Json>(service_.saveTarget(wire::targetInput(body(c)))); });
@@ -48,9 +44,6 @@ void InvestmentHttpRoutes::registerRoutes(hv::HttpService& router) {
     });
     router.PUT("/api/investment/targets/:id", [this](const HttpContextPtr& c) {
         return respond(c, [&] { auto value = wire::targetInput(body(c)); value.id = pathId(c); return wire::targetJson<Json>(service_.saveTarget(value)); });
-    });
-    router.PUT("/api/investment/targets/:id/archive", [this](const HttpContextPtr& c) {
-        return respond(c, [&] { return wire::targetJson<Json>(service_.archiveTarget(pathId(c), wire::boolean(body(c), "archived"))); });
     });
     router.POST("/api/investment/trades", [this](const HttpContextPtr& c) {
         return respond(c, [&] { return wire::tradeJson<Json>(service_.addTrade(wire::tradeInput(body(c), true))); });

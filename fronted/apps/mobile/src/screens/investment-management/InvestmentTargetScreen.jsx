@@ -61,44 +61,17 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient }) 
           {Boolean(data.target.note) && (
             <Label style={styles.hint}>{data.target.note}</Label>
           )}
-          {data.target.archivedAt && (
-            <Label style={styles.hint}>{t('investmentArchivedHint')}</Label>
-          )}
           <View style={styles.actions}>
-            {!data.target.archivedAt && (
-              <>
-                <Action
-                  ref={addButton}
-                  title={t('investmentAddTrade')}
-                  variant="primary"
-                  onPress={() => setEditor({ kind: 'trade', openedAt: new Date() })}
-                />
-                <Action
-                  title={t('investmentEditTarget')}
-                  onPress={() =>
-                    setEditor({ kind: 'target', value: data.target })
-                  }
-                />
-              </>
-            )}
-            {model.canArchive && (
-              <Action
-                title={t(
-                  data.target.archivedAt
-                    ? 'investmentRestore'
-                    : 'investmentArchive',
-                )}
-                disabled={model.saving}
-                onPress={() =>
-                  confirm(
-                    data.target.archivedAt
-                      ? 'investmentRestoreConfirm'
-                      : 'investmentArchiveConfirm',
-                    () => model.archive(!data.target.archivedAt),
-                  )
-                }
-              />
-            )}
+            <Action
+              ref={addButton}
+              title={t('investmentAddTrade')}
+              variant="primary"
+              onPress={() => setEditor({ kind: 'trade', openedAt: new Date() })}
+            />
+            <Action
+              title={t('investmentEditTarget')}
+              onPress={() => setEditor({ kind: 'target', value: data.target })}
+            />
           </View>
           <Label accessibilityRole="header" style={styles.title}>
             {t('investmentTrades')}
@@ -118,7 +91,6 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient }) 
                 amount: number(trade.quoteAmount),
                 price: number(trade.unitPrice),
               })}
-              disabled={Boolean(data.target.archivedAt)}
               onPress={() => setEditor({ kind: 'trade', value: trade })}
               style={[styles.trade, { borderColor: colors.line }]}
             >

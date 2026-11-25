@@ -1,13 +1,13 @@
 # 投资管理
 
-Web 与 React Native 共用表单校验、异步流程和 C++ 投资核心。初始化自带 BTC、ETH 指标，用户也可手动添加其他指标，记录买入单价和实际投入 USDT；当前只支持买入，暂不计手续费、杠杆和卖出；可选在线行情仅作展示。已有买入记录后锁定指标代码，包含已软删除的记录。
+Web 与 React Native 共用表单校验、异步流程和 C++ 投资核心。初始化自带 BTC、ETH 指标，用户也可手动添加其他指标，记录买入单价和实际投入 USDT；当前只支持买入，暂不计手续费、杠杆和卖出；可选在线行情仅作展示。所有指标在同一列表展示和搜索，不区分进行中或已归档，也不提供归档、恢复操作。已有买入记录后锁定指标代码，包含已软删除的记录。
 
 ## 内置指标与升级
 
 - BTC、ETH 在投资模块首次打开 SQLite 时自动创建，Web HTTP 与 RN Native 使用同一初始化逻辑；关闭投资 Feature 时不创建这些表或数据。
 - `builtin_code` 是持久化的内置身份，允许值为 BTC、ETH；自定义指标为 NULL。前端不根据名称或 symbol 猜测内置身份。
-- 内置指标禁止归档、删除或替换币种，即使尚无买入记录也锁定代码；名称、备注和买入记录仍可正常编辑。两端不显示内置指标的归档入口，服务层和 SQLite 约束共同保护。
-- 升级优先采用同币种的活动指标（按 ID 最早），其次采用名称不冲突的已归档指标并恢复；保留其 ID、名称、备注、时间及全部交易。其他同币种指标不合并，仍属于自定义指标。
+- 内置指标禁止删除或替换币种，即使尚无买入记录也锁定代码；名称、备注和买入记录仍可正常编辑，服务层和 SQLite 约束共同保护。
+- 历史内置指标迁移保持不变：优先采用同币种且未带旧归档标记的指标（按 ID 最早），其次采用名称不冲突的旧归档指标并清除该标记；保留其 ID、名称、备注、时间及全部交易。其他同币种指标不合并，仍属于自定义指标。
 - 缺少可用指标时自动补齐；若 BTC、ETH 名称被其他指标占用，则依次使用 `BTC (1)`、`BTC (2)` 等空闲名称，不覆盖用户数据。
 - 字段迁移、选择已有指标和补齐默认值在同一个事务完成；重启和并发初始化不会重复创建。审计 SQL `V003__investment_builtin_targets.sql` 与 `builtin_migration.hpp` 同步维护。
 
@@ -32,12 +32,12 @@ Web 与 React Native 共用表单校验、异步流程和 C++ 投资核心。初
 | name | TEXT | 必填，去除首尾空格；最多 240 UTF-8 字节 |
 | symbol | TEXT | 必填，规范成大写；1–20 位字母、数字、点、横线、下划线，以字母或数字开头 |
 | quote_currency | TEXT | 固定 USDT，系统填写 |
-| builtin_code | TEXT | 可空；BTC / ETH 表示内置身份，非空值唯一；内置指标不可归档、删除或更换代码 |
+| builtin_code | TEXT | 可空；BTC / ETH 表示内置身份，非空值唯一；内置指标不可删除或更换代码 |
 | note | TEXT | 选填，空字符串；最多 1500 UTF-8 字节 |
-| archived_at | TEXT | 可空；非空表示归档，不删除历史 |
+| archived_at | TEXT | 仅保留旧版存储兼容；业务层不读取、不筛选，新增指标不填写 |
 | created_at / updated_at | TEXT | 系统生成的 UTC ISO 8601 时间 |
 
-未归档指标通过 `(name COLLATE NOCASE, quote_currency)` 部分唯一索引防重复。SQLite NOCASE 对 ASCII 字母忽略大小写；其他字符按原文比较。归档可恢复；若活动列表已有同名指标，恢复操作返回冲突。
+新建或重命名指标时，服务层在事务内检查所有指标的名称，SQLite NOCASE 对 ASCII 字母忽略大小写，其他字符按原文比较。旧版允许归档指标重名，因此保留 `archived_at` 存量值及原有部分唯一索引，不批量清空标记，不合并或删除记录，也不改写历史迁移。已有重名指标仍可修改备注和买入记录；名称不变时允许保存，改名则按全量名称查重。旧归档指标直接出现在统一列表中，可继续记录、编辑和删除买入。
 
 ### investment_trades
 
@@ -66,16 +66,17 @@ Web 与 React Native 共用表单校验、异步流程和 C++ 投资核心。初
 
 | HTTP | Native 方法 | 作用 |
 | --- | --- | --- |
-| GET /api/investment/targets?archived=false | investment.listTargets | 活动或归档指标及汇总 |
+| GET /api/investment/targets | investment.listTargets | 全部指标及汇总；Native 无需筛选参数 |
 | GET /api/investment/targets/:id | investment.getTarget | 指标、汇总、有效交易及 symbolLocked |
 | POST /api/investment/targets | investment.addTarget | 创建指标 |
 | PUT /api/investment/targets/:id | investment.updateTarget | 修改名称、备注；有历史记录后禁止换币 |
-| PUT /api/investment/targets/:id/archive | investment.archiveTarget | 归档/恢复，载荷 archived 为 boolean |
 | POST /api/investment/trades | investment.addTrade | 添加买入 |
 | PUT /api/investment/trades/:id | investment.updateTrade | 修改买入 |
 | DELETE /api/investment/trades/:id | investment.deleteTrade | 软删除买入 |
 
-目标输入为 `name, symbol, note, quoteCurrency`；买入输入为 `targetId, unitPrice, quoteAmount, occurredAt, note, clientRequestId`。指标响应包含只读 `builtinCode`（BTC / ETH / null）；请求中的该字段不用于创建或修改内置身份。内置指标的 `symbolLocked` 恒为 true；移除或替换请求返回 `INVESTMENT_BUILTIN_PROTECTED`（HTTP 403），两端映射为模态弹窗。所有价格、金额、数量、均价在响应中也是字符串。归档指标可以查询，恢复后才能继续编辑。
+目标输入为 `name, symbol, note, quoteCurrency`；买入输入为 `targetId, unitPrice, quoteAmount, occurredAt, note, clientRequestId`。指标响应包含只读 `builtinCode`（BTC / ETH / null）；请求中的该字段不用于创建或修改内置身份。内置指标的 `symbolLocked` 恒为 true；移除或替换请求返回 `INVESTMENT_BUILTIN_PROTECTED`（HTTP 403），两端映射为模态弹窗。所有价格、金额、数量、均价在响应中也是字符串。
+
+接口变更：移除 HTTP `/api/investment/targets/:id/archive` 和 Native `investment.archiveTarget` 操作，指标响应不再包含 `archivedAt`。列表始终返回全部指标，旧 `archived` 筛选参数不再生效；Web、RN 与 C++ 核心需同步升级。SQLite 表结构及存量数据无需迁移。
 
 共享前端 core 提供 API 契约、草稿、校验和展示格式；react 包提供共享 Hook。Web 和 RN 分别渲染页面，复用平台表单与弹窗。Web 和 RN 点击「记录买入」时，由设备当前时间创建草稿并固定买入时间，表单不再提供时间输入；编辑已有记录保留原买入时间。保存失败保留草稿、买入时间和请求标识；写入已成功但刷新失败时显示加载重试入口，避免再次提交已经成功的保存。
 

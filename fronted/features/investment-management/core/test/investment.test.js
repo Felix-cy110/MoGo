@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, canArchiveInvestmentTarget, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
+import { createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
 
 test('validates exact decimal strings without numeric conversion', () => {
   for (const value of ['0.000000000000000001', '999999999999999999.999999999999999999', '0001.200']) assert.ok(validInvestmentDecimal(value));
@@ -56,15 +56,9 @@ test('uses the same Chinese investment terminology across screens and dialogs', 
     'investmentEmpty',
     'investmentNoMatches',
     'investmentSearch',
-    'investmentArchive',
-    'investmentRestore',
-    'investmentArchiveConfirm',
-    'investmentRestoreConfirm',
-    'investmentArchivedHint',
     'investmentSymbolHint',
     'investmentTargetExists',
     'investmentTargetMissing',
-    'investmentTargetArchivedError',
     'investmentSymbolLocked',
   ];
   for (const key of keys) {
@@ -75,20 +69,16 @@ test('HTTP adapter preserves decimal strings and lifecycle operations', async ()
   const calls = [];
   const api = createInvestmentApi({baseUrl:'/api', fetchImpl: async (...args) => { calls.push(args); return {ok:true,json:async()=>({})}; }});
   await api.addTrade({targetId:1, unitPrice:'0.000000000000000001', quoteAmount:'100'});
-  await api.archiveTarget(1,true); await api.deleteTrade(2); await api.listTargets(true);
+  await api.deleteTrade(2); await api.listTargets();
   assert.equal(JSON.parse(calls[0][1].body).unitPrice,'0.000000000000000001');
-  assert.equal(calls[1][0],'/api/investment/targets/1/archive');
-  assert.equal(calls[2][1].method,'DELETE'); assert.equal(calls[3][0],'/api/investment/targets?archived=true');
+  assert.equal(calls[1][1].method,'DELETE'); assert.equal(calls[2][0],'/api/investment/targets');
 });
 
-test('built-in removal policy uses persisted identity and translates backend protections', () => {
+test('built-in hints use persisted identity and translate backend protections', () => {
   for (const builtinCode of ['BTC', 'ETH']) {
     const target = { builtinCode, symbol: builtinCode, name: 'custom name' };
-    assert.equal(canArchiveInvestmentTarget(target), false);
     assert.equal(investmentTargetHintKey(target), 'investmentBuiltinHint');
   }
-  assert.equal(canArchiveInvestmentTarget({symbol: 'BTC', builtinCode: null}), true);
-  assert.equal(canArchiveInvestmentTarget({symbol: 'SOL'}), true);
   assert.equal(investmentTargetHintKey({symbol: 'SOL'}), 'investmentSymbolHint');
   assert.equal(investmentErrorKey('INVESTMENT_BUILTIN_PROTECTED'), 'investmentBuiltinProtected');
   for (const language of ['zh', 'en']) {

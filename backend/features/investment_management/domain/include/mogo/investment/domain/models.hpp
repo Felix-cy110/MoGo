@@ -7,7 +7,6 @@ namespace mogo::investment {
 struct Target {
     std::int64_t id{};
     std::string name, symbol, quote_currency = "USDT", note;
-    std::optional<std::string> archived_at;
     std::string created_at, updated_at;
     std::optional<std::string> builtin_code;
 };

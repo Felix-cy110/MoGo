@@ -4,11 +4,10 @@ import { Alert, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../src/platform/i18n';
 import { PreferencesProvider } from '../src/platform/PreferencesProvider';
-import { Action, LinkRow } from '../src/components/Primitives';
+import { Action, Label, LinkRow } from '../src/components/Primitives';
 import InvestmentTargetScreen from '../src/screens/investment-management/InvestmentTargetScreen';
 import InvestmentManagementScreen from '../src/screens/InvestmentManagementScreen';
 import HomeScreen from '../src/screens/HomeScreen';
-import { useInvestmentDetail } from '@mogo/investment-management-react';
 import { createNativeApis } from '../src/services/nativeApi';
 
 let tree;
@@ -18,7 +17,6 @@ const target = {
   symbol: 'BTC',
   quoteCurrency: 'USDT',
   note: '',
-  archivedAt: null,
 };
 const trade = {
   id: 10,
@@ -162,7 +160,7 @@ test.each([
   expect(api.addTrade.mock.calls[2][0].clientRequestId).not.toBe(api.addTrade.mock.calls[0][0].clientRequestId);
 });
 
-test('deletion requires confirmation and archived details are read-only', async () => {
+test('deletion requires confirmation', async () => {
   const api = {
     getTarget: async () => detail,
     deleteTrade: jest.fn(async () => ({})),
@@ -179,20 +177,7 @@ test('deletion requires confirmation and archived details are read-only', async 
   expect(buttons[0].style).toBe('cancel');
   await act(async () => buttons[1].onPress());
   expect(api.deleteTrade).toHaveBeenCalledWith(10);
-  await act(async () => tree.unmount());
-  await render(
-    <InvestmentTargetScreen
-      targetId={1}
-      api={{
-        getTarget: async () => ({
-          ...detail,
-          target: { ...target, archivedAt: '2026-11-24T00:00:00.000Z' },
-        }),
-      }}
-    />,
-  );
-  expect(action('investmentAddTrade')).toBeUndefined();
-  expect(action('investmentRestore')).toBeDefined();
+
 });
 
 test('committed save followed by refresh failure is not offered as another save', async () => {
@@ -235,11 +220,8 @@ test('disabled builds hide investment and native adapter keeps decimal strings',
       quoteAmount: '100',
     }),
   );
-  await api.archiveTarget(1, true);
-  expect(bridge.execute).toHaveBeenLastCalledWith(
-    'investment.archiveTarget',
-    JSON.stringify({ id: 1, archived: true }),
-  );
+  await api.listTargets();
+  expect(bridge.execute).toHaveBeenLastCalledWith('investment.listTargets', '{}');
 });
 
 for (const builtinCode of ['BTC', 'ETH']) {
@@ -250,10 +232,8 @@ for (const builtinCode of ['BTC', 'ETH']) {
     const api = {
       getTarget: async () => ({ ...detail, target: builtinTarget, symbolLocked: true, trades: [] }),
       updateTarget: jest.fn(async () => builtinTarget),
-      archiveTarget: jest.fn(),
     };
     await render(<InvestmentTargetScreen api={api} targetId={1} />, language, theme);
-    expect(action('investmentArchive')).toBeUndefined();
     expect(action('investmentAddTrade')).toBeDefined();
     await act(async () => action('investmentEditTarget').props.onPress());
     expect(field('investmentSymbol').props.editable).toBe(false);
@@ -263,30 +243,52 @@ for (const builtinCode of ['BTC', 'ETH']) {
     await act(async () => field('investmentNote').props.onChangeText('updated note'));
     await act(async () => action('investmentSave').props.onPress());
     expect(api.updateTarget).toHaveBeenCalledWith(1, expect.objectContaining({ symbol: builtinCode, note: 'updated note' }));
-    expect(api.archiveTarget).not.toHaveBeenCalled();
   });
 }
-
-test('shared detail hook prevents builtin archive before either platform calls its adapter', async () => {
-  const api = {
-    getTarget: async () => ({ ...detail, target: { ...target, builtinCode: 'BTC' } }),
-    archiveTarget: jest.fn(),
-  };
-  let model;
-  function Probe() { model = useInvestmentDetail({ api, targetId: 1 }); return null; }
-  await render(<Probe />);
-  await act(async () => expect(await model.archive(true)).toBe(false));
-  expect(api.archiveTarget).not.toHaveBeenCalled();
-  expect(model.feedback).toEqual({ key: 'investmentBuiltinProtected', presentation: 'dialog' });
-});
 
 test('backend protection errors are shown in the shared modal feedback', async () => {
   const api = {
     getTarget: async () => detail,
-    archiveTarget: jest.fn(async () => { throw { code: 'INVESTMENT_BUILTIN_PROTECTED' }; }),
+    updateTarget: jest.fn(async () => { throw { code: 'INVESTMENT_BUILTIN_PROTECTED' }; }),
   };
   await render(<InvestmentTargetScreen api={api} targetId={1} />);
-  await act(async () => action('investmentArchive').props.onPress());
-  await act(async () => Alert.alert.mock.calls.at(-1)[2][1].onPress());
+  await act(async () => action('investmentEditTarget').props.onPress());
+  await act(async () => action('investmentSave').props.onPress());
   expect(Alert.alert).toHaveBeenLastCalledWith(i18n.t('investmentBuiltinProtected'), '', expect.any(Array), expect.any(Object));
+});
+
+test.each([
+  ['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark'],
+])('one searchable list includes legacy investments in %s/%s', async (language, theme) => {
+  const legacy = { ...target, id: 2, name: 'Solana', symbol: 'SOL', archivedAt: '2026-11-24T00:00:00.000Z' };
+  const api = {
+    listTargets: jest.fn(async () => [
+      { target, summary: detail.summary },
+      { target: legacy, summary: detail.summary },
+    ]),
+    getTarget: async () => ({ ...detail, target: legacy }),
+    updateTrade: jest.fn(async () => trade),
+  };
+  const navigate = jest.fn();
+  await render(<InvestmentManagementScreen api={api} navigate={navigate} />, language, theme);
+  expect(api.listTargets).toHaveBeenCalledWith();
+  expect(tree.root.findAllByType(Action).map(item => item.props.title)).toEqual([i18n.t('investmentAddTarget')]);
+  const search = () => tree.root.findAllByType(TextInput).find(item => item.props.accessibilityLabel === i18n.t('investmentSearch'));
+  await act(async () => search().props.onChangeText('sol'));
+  const symbol = tree.root.findAllByType(Label).find(item => React.Children.toArray(item.props.children).includes('SOL'));
+  expect(symbol).toBeDefined();
+  let row = symbol.parent;
+  while (row && typeof row.props.onPress !== 'function') row = row.parent;
+  expect(row).not.toBeNull();
+  await act(async () => row.props.onPress());
+  expect(navigate).toHaveBeenCalledWith('investmentTarget', 2);
+  await act(async () => tree.unmount());
+  await render(<InvestmentTargetScreen api={api} targetId={2} />, language, theme);
+  expect(tree.root.findAllByType(Action).map(item => item.props.title)).toEqual([i18n.t('investmentAddTrade'), i18n.t('investmentEditTarget')]);
+  const buyRow = tree.root.findAll(item => item.props.accessibilityLabel?.includes('600 USDT') && item.props.onPress)[0];
+  expect(buyRow.props.disabled).not.toBe(true);
+  await act(async () => buyRow.props.onPress());
+  await act(async () => field('investmentQuoteAmount').props.onChangeText('800'));
+  await act(async () => action('investmentSave').props.onPress());
+  expect(api.updateTrade).toHaveBeenCalledWith(10, expect.objectContaining({ targetId: 2, quoteAmount: '800', occurredAt: trade.occurredAt }));
 });

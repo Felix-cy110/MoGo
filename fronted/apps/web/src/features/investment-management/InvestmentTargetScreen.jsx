@@ -13,13 +13,13 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api =
   const { t, i18n } = useTranslation();
   const model = useInvestmentDetail({ api, targetId });
   const [editor, setEditor] = useState(null);
-  const [confirmation, setConfirmation] = useState(null);
+  const [confirmation, setConfirmation] = useState(false);
   const data = model.data;
   const prices = useMarketPrices(data ? [data.target] : [], marketClient);
   const number = value => formatInvestmentDecimal(value, i18n.resolvedLanguage);
   const confirm = async () => {
-    const done = confirmation === 'delete' ? await model.deleteTrade(editor.value.id) : await model.archive(!data.target.archivedAt);
-    setConfirmation(null);
+    const done = await model.deleteTrade(editor.value.id);
+    setConfirmation(false);
     if (done) setEditor(null);
   };
   return <InvestmentLayout title={data?.target.symbol || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenSettings={onOpenSettings} model={model}>
@@ -28,17 +28,13 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api =
       <InvestmentSummary summary={data.summary} symbol={data.target.symbol} />
       <p className="mb-3 text-xs leading-5 text-slate-500 dark:text-slate-400">{t('investmentCalculationNote')}</p>
       {data.target.note && <p className="mb-3 break-words text-sm">{data.target.note}</p>}
-      {data.target.archivedAt && <p className="mb-3 text-sm">{t('investmentArchivedHint')}</p>}
       <div className="mb-5 flex flex-wrap gap-2">
-        {!data.target.archivedAt && <>
-          <button className="button-primary" onClick={() => setEditor({ kind: 'trade', openedAt: new Date() })}>{t('investmentAddTrade')}</button>
-          <button className="button-secondary" onClick={() => setEditor({ kind: 'target', value: data.target })}>{t('investmentEditTarget')}</button>
-        </>}
-        {model.canArchive && <button className="button-secondary" disabled={model.saving} onClick={() => setConfirmation('archive')}>{t(data.target.archivedAt ? 'investmentRestore' : 'investmentArchive')}</button>}
+        <button className="button-primary" onClick={() => setEditor({ kind: 'trade', openedAt: new Date() })}>{t('investmentAddTrade')}</button>
+        <button className="button-secondary" onClick={() => setEditor({ kind: 'target', value: data.target })}>{t('investmentEditTarget')}</button>
       </div>
       <h2 className="mb-2 text-sm font-semibold">{t('investmentTrades')}</h2>
       {!data.trades.length && <p className="py-3 text-sm text-slate-500 dark:text-slate-400">{t('investmentNoTrades')}</p>}
-      {data.trades.map(trade => <button key={trade.id} type="button" disabled={Boolean(data.target.archivedAt)}
+      {data.trades.map(trade => <button key={trade.id} type="button"
         className="block w-full border-b border-slate-200 py-3 text-left dark:border-slate-800" onClick={() => setEditor({ kind: 'trade', value: trade })}>
         <span className="mb-2 block text-sm text-slate-500 dark:text-slate-400">{formatInvestmentTime(trade.occurredAt, i18n.resolvedLanguage)}</span>
         <dl className="grid grid-cols-2 gap-3 text-sm">
@@ -51,8 +47,8 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api =
     {editor && <InvestmentEditor key={`${editor.kind}-${editor.value?.id || 'new'}`} {...editor} symbolLocked={data?.symbolLocked}
       saving={model.saving} onClose={() => setEditor(null)}
       onSave={draft => editor.kind === 'target' ? model.saveTarget(draft) : model.saveTrade(draft, editor.value?.id)}
-      onDelete={editor.kind === 'trade' && editor.value ? () => setConfirmation('delete') : undefined} />}
-    {confirmation && <InvestmentConfirm busy={model.saving} onClose={() => setConfirmation(null)} onConfirm={confirm}
-      messageKey={confirmation === 'delete' ? 'investmentDeleteConfirm' : data?.target.archivedAt ? 'investmentRestoreConfirm' : 'investmentArchiveConfirm'} />}
+      onDelete={editor.kind === 'trade' && editor.value ? () => setConfirmation(true) : undefined} />}
+    {confirmation && <InvestmentConfirm busy={model.saving} onClose={() => setConfirmation(false)} onConfirm={confirm}
+      messageKey="investmentDeleteConfirm" />}
   </InvestmentLayout>;
 }
