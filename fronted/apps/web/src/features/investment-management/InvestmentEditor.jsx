@@ -3,10 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { createTargetDraft, createTradeDraft, investmentTargetHintKey } from '@mogo/investment-management-core';
 import { FormDialog } from '../../components/FormDialog';
 import { FormFieldRow } from '../../components/FormFieldRow';
-export function InvestmentEditor({ kind, value, symbolLocked = false, saving, onSave, onClose, onDelete }) {
+export function InvestmentEditor({ kind, value, openedAt, symbolLocked = false, saving, onSave, onClose, onDelete }) {
   const { t } = useTranslation();
   const target = kind === 'target';
-  const [draft, setDraft] = useState(() => target ? createTargetDraft(value) : createTradeDraft(value));
+  const [draft, setDraft] = useState(() => target ? createTargetDraft(value) : createTradeDraft(value, openedAt));
   const titleKey = target ? (value ? 'investmentEditTarget' : 'investmentAddTarget') : (value ? 'investmentEditTrade' : 'investmentAddTrade');
   const field = (name, key, props = {}) => (
     <FormFieldRow label={t(key)} htmlFor={`investment-${name}`} key={name}>
@@ -24,7 +24,6 @@ export function InvestmentEditor({ kind, value, symbolLocked = false, saving, on
         </> : <>
           {field('unitPrice', 'investmentUnitPrice', { inputMode: 'decimal', autoFocus: true })}
           {field('quoteAmount', 'investmentQuoteAmount', { inputMode: 'decimal' })}
-          {field('localTime', 'investmentOccurredAt', { type: 'datetime-local', step: '60' })}
         </>}
         {field('note', 'investmentNote')}
       </div>

@@ -48,7 +48,7 @@ Web 与 React Native 共用表单校验、异步流程和 C++ 投资核心。初
 | side | TEXT | 当前只允许 BUY |
 | unit_price | TEXT | 正的精确十进制字符串，USDT/币 |
 | quote_amount | TEXT | 正的精确十进制字符串，实际投入 USDT |
-| occurred_at | TEXT | 用户可补录的实际买入时间，UTC ISO 8601，含毫秒 |
+| occurred_at | TEXT | 点击「记录买入」时自动记录的时间，UTC ISO 8601，含毫秒 |
 | note | TEXT | 选填，空字符串；最多 1500 UTF-8 字节 |
 | client_request_id | TEXT | 必填且唯一，8–80 位字母、数字、下划线或横线 |
 | created_at / updated_at | TEXT | 系统生成时间 |
@@ -77,7 +77,7 @@ Web 与 React Native 共用表单校验、异步流程和 C++ 投资核心。初
 
 目标输入为 `name, symbol, note, quoteCurrency`；买入输入为 `targetId, unitPrice, quoteAmount, occurredAt, note, clientRequestId`。指标响应包含只读 `builtinCode`（BTC / ETH / null）；请求中的该字段不用于创建或修改内置身份。内置指标的 `symbolLocked` 恒为 true；移除或替换请求返回 `INVESTMENT_BUILTIN_PROTECTED`（HTTP 403），两端映射为模态弹窗。所有价格、金额、数量、均价在响应中也是字符串。归档指标可以查询，恢复后才能继续编辑。
 
-共享前端 core 提供 API 契约、草稿、校验和展示格式；react 包提供共享 Hook。Web 和 RN 分别渲染页面，复用平台表单与弹窗。保存失败保留草稿和请求标识；写入已成功但刷新失败时显示加载重试入口，避免再次提交已经成功的保存。
+共享前端 core 提供 API 契约、草稿、校验和展示格式；react 包提供共享 Hook。Web 和 RN 分别渲染页面，复用平台表单与弹窗。Web 和 RN 点击「记录买入」时，由设备当前时间创建草稿并固定买入时间，表单不再提供时间输入；编辑已有记录保留原买入时间。保存失败保留草稿、买入时间和请求标识；写入已成功但刷新失败时显示加载重试入口，避免再次提交已经成功的保存。
 
 ## 可选在线行情
 

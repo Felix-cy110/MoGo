@@ -31,7 +31,7 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api =
       {data.target.archivedAt && <p className="mb-3 text-sm">{t('investmentArchivedHint')}</p>}
       <div className="mb-5 flex flex-wrap gap-2">
         {!data.target.archivedAt && <>
-          <button className="button-primary" onClick={() => setEditor({ kind: 'trade' })}>{t('investmentAddTrade')}</button>
+          <button className="button-primary" onClick={() => setEditor({ kind: 'trade', openedAt: new Date() })}>{t('investmentAddTrade')}</button>
           <button className="button-secondary" onClick={() => setEditor({ kind: 'target', value: data.target })}>{t('investmentEditTarget')}</button>
         </>}
         {model.canArchive && <button className="button-secondary" disabled={model.saving} onClick={() => setConfirmation('archive')}>{t(data.target.archivedAt ? 'investmentRestore' : 'investmentArchive')}</button>}

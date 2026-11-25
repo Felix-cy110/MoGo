@@ -17,6 +17,7 @@ import {
 export default function InvestmentEditor({
   kind,
   value,
+  openedAt,
   symbolLocked = false,
   saving,
   onSave,
@@ -27,7 +28,7 @@ export default function InvestmentEditor({
   const { t } = useTranslation();
   const target = kind === 'target';
   const [draft, setDraft] = useState(() =>
-    target ? createTargetDraft(value) : createTradeDraft(value),
+    target ? createTargetDraft(value) : createTradeDraft(value, openedAt),
   );
   const title = target
     ? value
@@ -74,24 +75,10 @@ export default function InvestmentEditor({
               autoFocus: true,
             })}
             {field('quoteAmount', 'investmentQuoteAmount', { numeric: true })}
-            {field('localTime', 'investmentOccurredAt', {
-              value: draft.localTime.replace('T', ' '),
-              autoCapitalize: 'none',
-              onChangeText: text =>
-                setDraft(current => ({
-                  ...current,
-                  localTime: text.replace(' ', 'T'),
-                })),
-            })}
           </>
         )}
         {field('note', 'investmentNote')}
       </FormSheet>
-      {!target && (
-        <Label muted style={styles.hint}>
-          {t('investmentDateHint')}
-        </Label>
-      )}
       <Label muted style={styles.hint}>
         {t(target ? investmentTargetHintKey(value) : 'investmentCalculationNote')}
       </Label>

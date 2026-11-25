@@ -25,7 +25,7 @@ const trade = {
   unitPrice: '60000',
   quoteAmount: '600',
   quantity: '0.01',
-  occurredAt: '2026-11-24T00:00:00.000Z',
+  occurredAt: '2026-11-24T00:00:37.123Z',
   note: 'first buy',
   clientRequestId: 'native-test-1',
 };
@@ -57,6 +57,7 @@ afterEach(async () => {
   if (tree) await act(async () => tree.unmount());
   tree = null;
   jest.restoreAllMocks();
+  jest.useRealTimers();
 });
 const action = key =>
   tree.root
@@ -104,6 +105,7 @@ test.each([
         unitPrice: '60000',
         quoteAmount: '900',
         targetId: 1,
+        occurredAt: trade.occurredAt,
       }),
     );
     expect(Alert.alert).toHaveBeenLastCalledWith(
@@ -115,7 +117,10 @@ test.each([
   },
 );
 
-test('failed buy keeps inputs and the same request ID for retry', async () => {
+test.each([
+  ['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark'],
+])('buy time is captured on press and retained after a failed save in %s/%s', async (language, theme) => {
+  jest.useFakeTimers({ now: new Date('2026-11-25T15:59:37.456Z') });
   const api = {
     getTarget: async () => detail,
     addTrade: jest
@@ -123,8 +128,12 @@ test('failed buy keeps inputs and the same request ID for retry', async () => {
       .mockRejectedValueOnce({ code: 'INTERNAL_ERROR' })
       .mockResolvedValue(trade),
   };
-  await render(<InvestmentTargetScreen api={api} targetId={1} />);
-  await act(async () => action('investmentAddTrade').props.onPress());
+  await render(<InvestmentTargetScreen api={api} targetId={1} />, language, theme);
+  await act(async () => {
+    action('investmentAddTrade').props.onPress();
+    // A delayed render or save must not replace the instant captured by the button.
+    jest.setSystemTime(new Date('2026-11-25T16:02:00.000Z'));
+  });
   await act(async () => action('investmentSave').props.onPress());
   expect(api.addTrade).not.toHaveBeenCalled();
   await act(async () =>
@@ -139,9 +148,18 @@ test('failed buy keeps inputs and the same request ID for retry', async () => {
   expect(field('investmentQuoteAmount').props.value).toBe(
     '999999999999999999.123456789012345678',
   );
+  jest.setSystemTime(new Date('2026-11-26T00:00:00.000Z'));
   await act(async () => action('investmentSave').props.onPress());
+  expect(api.addTrade).toHaveBeenCalledTimes(2);
+  expect(api.addTrade.mock.calls[0][0].occurredAt).toBe('2026-11-25T15:59:37.456Z');
   expect(api.addTrade.mock.calls[0][0]).toEqual(api.addTrade.mock.calls[1][0]);
   expect(api.addTrade.mock.calls[0][0].unitPrice).toBe('0.000000000000000001');
+  await act(async () => action('investmentAddTrade').props.onPress());
+  await act(async () => field('investmentUnitPrice').props.onChangeText('60000'));
+  await act(async () => field('investmentQuoteAmount').props.onChangeText('600'));
+  await act(async () => action('investmentSave').props.onPress());
+  expect(api.addTrade.mock.calls[2][0].occurredAt).toBe('2026-11-26T00:00:00.000Z');
+  expect(api.addTrade.mock.calls[2][0].clientRequestId).not.toBe(api.addTrade.mock.calls[0][0].clientRequestId);
 });
 
 test('deletion requires confirmation and archived details are read-only', async () => {
