@@ -71,7 +71,7 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient }) 
                   ref={addButton}
                   title={t('investmentAddTrade')}
                   variant="primary"
-                  onPress={() => setEditor({ kind: 'trade' })}
+                  onPress={() => setEditor({ kind: 'trade', openedAt: new Date() })}
                 />
                 <Action
                   title={t('investmentEditTarget')}

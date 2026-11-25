@@ -22,37 +22,25 @@ export const validateTargetDraft = draft => {
   return null;
 };
 export const targetPayload = draft => ({ name: draft.name.trim(), symbol: draft.symbol.trim().toUpperCase(), quoteCurrency: 'USDT', note: draft.note.trim() });
-// datetime-local and the RN text editor use this machine format; display dates use Intl below.
-export const localDateTimeInput = date => {
-  const pad = number => String(number).padStart(2, '0');
-  return `${String(date.getFullYear()).padStart(4, '0')}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-};
+// Capture the record action once; editing and retries must preserve the original instant.
 export const createTradeDraft = (trade, now = new Date()) => ({
   unitPrice: trade?.unitPrice || '', quoteAmount: trade?.quoteAmount || '', note: trade?.note || '',
-  localTime: localDateTimeInput(trade ? new Date(trade.occurredAt) : now).slice(0, 16),
-  clientRequestId: trade?.clientRequestId || createClientRequestId(),
-  originalOccurredAt: trade?.occurredAt,
-  originalLocalTime: trade ? localDateTimeInput(new Date(trade.occurredAt)).slice(0, 16) : null
+  occurredAt: trade ? trade.occurredAt : now.toISOString(),
+  clientRequestId: trade?.clientRequestId || createClientRequestId()
 });
-export const parseLocalTime = value => {
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?$/.test(value)) return null;
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime()) || date.getFullYear() < 1 || date.getFullYear() > 9999) return null;
-  const normalized = value.length === 16 ? `${value}:00` : value;
-  return localDateTimeInput(date) === normalized ? date : null;
-};
 export const validateTradeDraft = draft => {
   if (!validInvestmentDecimal(draft.unitPrice)) return 'investmentPriceInvalid';
   if (!validInvestmentDecimal(draft.quoteAmount)) return 'investmentAmountInvalid';
-  if (!parseLocalTime(draft.localTime)) return 'investmentDateInvalid';
+  const time = new Date(draft.occurredAt);
+  if (!Number.isFinite(time.getTime()) || time.getUTCFullYear() < 1 || time.getUTCFullYear() > 9999 ||
+      time.toISOString() !== draft.occurredAt) return 'investmentDateInvalid';
   if (!validText(draft.note, 1500)) return 'investmentTextInvalid';
   return null;
 };
 export const tradePayload = (draft, targetId) => ({
   targetId, side: 'BUY', unitPrice: normalizeInvestmentDecimal(draft.unitPrice),
   quoteAmount: normalizeInvestmentDecimal(draft.quoteAmount),
-  occurredAt: draft.originalOccurredAt && draft.localTime === draft.originalLocalTime
-    ? draft.originalOccurredAt : parseLocalTime(draft.localTime).toISOString(),
+  occurredAt: draft.occurredAt,
   note: draft.note.trim(), clientRequestId: draft.clientRequestId
 });
 export const canArchiveInvestmentTarget = target => !target?.builtinCode;

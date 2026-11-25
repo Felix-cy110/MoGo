@@ -32,8 +32,6 @@ export const investmentManagementMessages = Object.freeze({
     "investmentUnitPrice": "买入单价（USDT）",
     "investmentQuoteAmount": "投入金额（USDT）",
     "investmentQuantity": "买入数量（{{symbol}}）",
-    "investmentOccurredAt": "买入时间（本地）",
-    "investmentDateHint": "本地时间：YYYY-MM-DD HH:mm",
     "investmentTotalAmount": "累计投入（USDT）",
     "investmentTotalQuantity": "累计买入（{{symbol}}）",
     "investmentAveragePrice": "开仓均价（USDT）",
@@ -66,7 +64,7 @@ export const investmentManagementMessages = Object.freeze({
     "investmentPriceInvalid": "请输入大于 0 的单价，整数和小数各最多 18 位",
     "investmentAmountInvalid": "请输入大于 0 的 USDT 金额，整数和小数各最多 18 位",
     "investmentDecimalInvalid": "请输入有效的正数，整数和小数各最多 18 位",
-    "investmentDateInvalid": "请输入有效的本地买入时间",
+    "investmentDateInvalid": "买入时间无效，请重新打开记录窗口",
     "investmentRequestConflict": "保存请求已被使用，请刷新后检查记录",
     "investmentUnavailable": "当前构建未启用投资管理"
   },
@@ -103,8 +101,6 @@ export const investmentManagementMessages = Object.freeze({
     "investmentUnitPrice": "Price (USDT)",
     "investmentQuoteAmount": "Spent (USDT)",
     "investmentQuantity": "Quantity ({{symbol}})",
-    "investmentOccurredAt": "Buy time (local)",
-    "investmentDateHint": "Local time: YYYY-MM-DD HH:mm",
     "investmentTotalAmount": "Total spent (USDT)",
     "investmentTotalQuantity": "Total bought ({{symbol}})",
     "investmentAveragePrice": "Average entry (USDT)",
@@ -137,7 +133,7 @@ export const investmentManagementMessages = Object.freeze({
     "investmentPriceInvalid": "Enter a positive price with up to 18 integer and 18 decimal digits",
     "investmentAmountInvalid": "Enter a positive USDT amount with up to 18 integer and 18 decimal digits",
     "investmentDecimalInvalid": "Enter a positive decimal with up to 18 integer and 18 decimal digits",
-    "investmentDateInvalid": "Enter a valid local buy time",
+    "investmentDateInvalid": "Invalid buy time. Please reopen the record form.",
     "investmentRequestConflict": "This save request was already used. Refresh and check the buy history.",
     "investmentUnavailable": "Investment management is not enabled in this build"
   }

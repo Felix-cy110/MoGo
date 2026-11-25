@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, parseLocalTime, canArchiveInvestmentTarget, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
+import { createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, canArchiveInvestmentTarget, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
 
 test('validates exact decimal strings without numeric conversion', () => {
   for (const value of ['0.000000000000000001', '999999999999999999.999999999999999999', '0001.200']) assert.ok(validInvestmentDecimal(value));
@@ -9,19 +9,35 @@ test('validates exact decimal strings without numeric conversion', () => {
   assert.equal(formatInvestmentDecimal('999999999999999999.123456789012345678', 'en'), '999,999,999,999,999,999.123456789012345678');
   assert.equal(formatInvestmentDecimal('0.000000000000000001', 'zh'), '0.000000000000000001');
 });
-test('builds USDT buy payloads and retains retry IDs', () => {
-  const draft = createTradeDraft(null, new Date('2026-11-24T00:00:00.000Z'));
+test('builds USDT buy payloads with the captured instant and stable retry IDs', () => {
+  const draft = createTradeDraft(null, new Date('2026-11-25T08:09:27.456+08:00'));
   draft.unitPrice = '60000.00'; draft.quoteAmount = '0600';
   assert.equal(validateTradeDraft(draft), null);
   const first = tradePayload(draft, 1); const retry = tradePayload(draft, 1);
   assert.deepEqual(first, retry);
   assert.equal(first.unitPrice, '60000'); assert.equal(first.quoteAmount, '600');
-  assert.equal(first.occurredAt, '2026-11-24T00:00:00.000Z');
-  assert.notEqual(createTradeDraft().clientRequestId, draft.clientRequestId);
-  assert.equal(parseLocalTime('2026-02-30T12:00'), null);
-  assert.equal(parseLocalTime('2026-11-24T25:00'), null);
-  const existing = createTradeDraft({unitPrice:'1',quoteAmount:'1',occurredAt:'2026-11-24T00:00:00.123Z',clientRequestId:'existing-buy'});
-  assert.equal(tradePayload(existing, 1).occurredAt, '2026-11-24T00:00:00.123Z');
+  assert.equal(first.occurredAt, '2026-11-25T00:09:27.456Z');
+  const next = createTradeDraft(null, new Date('2026-11-25T00:10:15.789Z'));
+  assert.notEqual(next.clientRequestId, draft.clientRequestId);
+  assert.equal(next.occurredAt, '2026-11-25T00:10:15.789Z');
+});
+test('editing a buy preserves the original timestamp and request ID', () => {
+  const draft = createTradeDraft({
+    unitPrice: '1', quoteAmount: '1', occurredAt: '2026-11-24T23:59:37.123Z', clientRequestId: 'existing-buy'
+  }, new Date('2026-11-25T12:00:00.000Z'));
+  draft.quoteAmount = '900';
+  assert.equal(validateTradeDraft(draft), null);
+  const payload = tradePayload(draft, 1);
+  assert.equal(payload.occurredAt, '2026-11-24T23:59:37.123Z');
+  assert.equal(payload.clientRequestId, 'existing-buy');
+  assert.equal(payload.quoteAmount, '900');
+});
+test('rejects missing, invalid or noncanonical persisted timestamps', () => {
+  const draft = { ...createTradeDraft(), unitPrice: '1', quoteAmount: '1' };
+  for (const occurredAt of [undefined, null, '', 'invalid', '2026-02-30T12:00:00.000Z',
+    '2026-11-25T25:00:00.000Z', '0000-01-01T00:00:00.000Z', '+010000-01-01T00:00:00.000Z', '2026-11-25T12:00']) {
+    assert.equal(validateTradeDraft({ ...draft, occurredAt }), 'investmentDateInvalid');
+  }
 });
 test('normalizes targets and keeps both languages complete', () => {
   const draft = createTargetDraft({name:' 比特币 ', symbol:'btc'});
