@@ -45,7 +45,7 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient }) 
       {data && !model.loading && !model.loadError && (
         <>
           <Label accessibilityRole="header" style={styles.title}>
-            {data.target.name}
+            {data.target.symbol}
           </Label>
           <Label muted>
             {data.target.symbol} / {data.target.quoteCurrency}

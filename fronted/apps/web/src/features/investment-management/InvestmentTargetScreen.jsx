@@ -22,7 +22,7 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api =
     setConfirmation(null);
     if (done) setEditor(null);
   };
-  return <InvestmentLayout title={data?.target.name || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenSettings={onOpenSettings} model={model}>
+  return <InvestmentLayout title={data?.target.symbol || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenSettings={onOpenSettings} model={model}>
     {data && !model.loading && !model.loadError && <>
       <p className="text-sm text-slate-500 dark:text-slate-400">{data.target.symbol} / {data.target.quoteCurrency}<InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} /></p>
       <InvestmentSummary summary={data.summary} symbol={data.target.symbol} />
