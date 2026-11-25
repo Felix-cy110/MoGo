@@ -23,7 +23,7 @@ export function InvestmentManagementScreen({ onBack, onOpenSettings, onOpenTarge
       {!model.items.length && <p className="py-4 text-sm text-slate-500 dark:text-slate-400">{t(model.query || model.archived ? 'investmentNoMatches' : 'investmentEmpty')}</p>}
       {model.items.map(({ target, summary }) => <button type="button" key={target.id} onClick={() => onOpenTarget(target.id)}
         className="block w-full border-b border-slate-200 py-3 text-left dark:border-slate-800">
-        <div className="flex items-center justify-between gap-3"><span className="min-w-0 break-words font-medium">{target.name}{target.name !== target.symbol && <> <span className="text-sm text-slate-500 dark:text-slate-400">{target.symbol}</span></>}<InvestmentMarketPrice target={target} price={prices[target.symbol]} /></span><span aria-hidden="true">›</span></div>
+        <div className="flex items-center justify-between gap-3"><span className="min-w-0 break-words font-medium">{target.symbol}<InvestmentMarketPrice target={target} price={prices[target.symbol]} /></span><span aria-hidden="true">›</span></div>
         <InvestmentSummary summary={summary} symbol={target.symbol} />
       </button>)}
     </>}

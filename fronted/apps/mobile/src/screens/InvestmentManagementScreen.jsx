@@ -69,7 +69,7 @@ export default function InvestmentManagementScreen({ api, navigate, marketClient
               style={[styles.item, { borderColor: colors.line }]}
             >
               <Label style={styles.name}>
-                {target.name}{target.name !== target.symbol && <> <Label muted>{target.symbol}</Label></>}
+                {target.symbol}
                 <InvestmentMarketPrice target={target} price={prices[target.symbol]} />
               </Label>
               <InvestmentSummary summary={summary} symbol={target.symbol} />

@@ -81,7 +81,7 @@ Web 与 React Native 共用表单校验、异步流程和 C++ 投资核心。初
 
 ## 可选在线行情
 
-- Web 与 RN 在 BTC、ETH 指标名称旁及详情页币种旁显示 OKX 现货最新成交价，单位为 USDT；按 `symbol + quoteCurrency` 匹配，重命名指标后仍可显示。其他币种暂不订阅行情。
+- Web 与 RN 的指标列表和详情标题只显示代码（如 BTC、ETH），不附加指标名称；在列表代码旁及详情页币种旁显示 OKX 现货最新成交价，单位为 USDT；按 `symbol + quoteCurrency` 匹配，重命名指标后仍可显示。其他币种暂不订阅行情。
 - 两端直接连接 OKX 公共 WebSocket `wss://ws.okx.com/ws/v5/public`（默认 443 端口），订阅 `tickers` 频道的 `BTC-USDT` / `ETH-USDT`，读取 `last` 与 `ts`；无需 API Key、自建服务器或手机内 HTTP 服务，不再发起 REST 行情轮询。官方协议见 [WS / Tickers channel](https://www.okx.com/docs-v5/en/#order-book-trading-market-data-ws-tickers-channel)。
 - `core/src/market/okxProtocol.js` 负责订阅消息与行情校验；`OkxMarketConnection.js` 管理连接、订阅确认、心跳、重连与资源释放；`core/src/marketPrices.js` 按消费者合并币种订阅并维护内存快照。`react/useInvestmentPrices.js` 只订阅快照，Web/RN 平台层注入 WebSocket 创建能力和前后台/网络信号。共享模块不引用浏览器或 RN 专属 API。
 - 同一应用内多个消费者共用一条连接；新增/移除币种只调整订阅，最后一个消费者离开时关闭连接并取消所有定时器。高频推送合并为每 500ms 最多一次行情刷新，同价消息不重复触发渲染；断线和无效报价立即清除，不等待刷新窗口。
