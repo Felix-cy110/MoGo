@@ -1,55 +1,63 @@
-export const INVESTMENT_PRICE_REFRESH_MS = 15_000;
-export const INVESTMENT_PRICE_MAX_AGE_MS = 60_000;
-const instruments = Object.freeze({ BTC: 'BTC-USDT', ETH: 'ETH-USDT' });
+import { OkxMarketConnection } from './market/OkxMarketConnection.js';
+import { supportedMarketSymbols } from './market/okxProtocol.js';
+export { investmentMarketSymbol } from './market/okxProtocol.js';
 
-export const investmentMarketSymbol = target =>
-  target?.quoteCurrency === 'USDT' && Object.hasOwn(instruments, target.symbol)
-    ? target.symbol : null;
+export const INVESTMENT_PRICE_RENDER_MS = 500;
 
-// Quotes are optional display data; they never enter portfolio calculations or storage.
-export const createOkxMarketClient = ({
-  fetchImpl = (...args) => globalThis.fetch(...args),
-  timeoutMs = 5_000,
-  now = Date.now,
-} = {}) => ({
-  async getPrice(symbol, { signal } = {}) {
-    if (!Object.hasOwn(instruments, symbol) || signal?.aborted) return null;
-    const controller = new AbortController();
-    let timer;
-    let cancel;
-    try {
-      const cancelled = new Promise(resolve => {
-        cancel = () => { controller.abort(); resolve(null); };
-        timer = setTimeout(cancel, timeoutMs);
-        signal?.addEventListener('abort', cancel, { once: true });
-      });
-      const request = async () => {
-        const response = await fetchImpl(
-          `https://www.okx.com/api/v5/market/ticker?instId=${instruments[symbol]}`,
-          { signal: controller.signal, credentials: 'omit', cache: 'no-store' },
-        );
-        if (!response.ok) return null;
-        const body = await response.json();
-        const ticker = Array.isArray(body?.data) ? body.data[0] : null;
-        if (body?.code !== '0' || ticker?.instId !== instruments[symbol] || ticker?.instType !== 'SPOT') return null;
-        const price = ticker.last;
-        const timestamp = Number(ticker.ts);
-        const age = now() - timestamp;
-        if (typeof price !== 'string' || price.length > 80 ||
-            !/^(0|[1-9]\d*)(\.\d+)?$/.test(price) || !/[1-9]/.test(price) ||
-            !Number.isSafeInteger(timestamp) || timestamp <= 0 ||
-            age < -5_000 || age >= INVESTMENT_PRICE_MAX_AGE_MS) return null;
-        return { price, timestamp };
+// The platform injects WebSocket construction. Quotes stay in memory and never affect investments.
+export const createOkxMarketClient = ({ createSocket, now = Date.now, random = Math.random }) => {
+  const subscribers = new Set();
+  let quotes = {};
+  let publishTimer;
+  const publish = () => {
+    clearTimeout(publishTimer);
+    publishTimer = null;
+    subscribers.forEach(subscriber => {
+      const prices = Object.fromEntries(subscriber.symbols
+        .filter(symbol => quotes[symbol])
+        .map(symbol => [symbol, quotes[symbol].price]));
+      const previous = subscriber.prices;
+      if (!previous || Object.keys(previous).length !== Object.keys(prices).length ||
+          Object.keys(prices).some(symbol => prices[symbol] !== previous[symbol])) {
+        subscriber.prices = prices;
+        subscriber.listener(prices);
+      }
+    });
+  };
+  const connection = new OkxMarketConnection({
+    createSocket, now, random,
+    onDisconnect: () => { quotes = {}; publish(); },
+    onQuote: (symbol, quote) => {
+      if (!quote) {
+        delete quotes[symbol];
+        publish();
+        return;
+      }
+      if (quotes[symbol]?.timestamp > quote.timestamp) return;
+      // A quiet ticker remains valid while the socket is healthy; only incoming replays are age-checked.
+      const changed = quotes[symbol]?.price !== quote.price;
+      quotes[symbol] = quote;
+      if (changed && !publishTimer) publishTimer = setTimeout(publish, INVESTMENT_PRICE_RENDER_MS);
+    },
+  });
+  const updateSymbols = () => {
+    const symbols = supportedMarketSymbols([...subscribers].flatMap(subscriber => subscriber.symbols));
+    Object.keys(quotes).forEach(symbol => { if (!symbols.includes(symbol)) delete quotes[symbol]; });
+    connection.setSymbols(symbols);
+  };
+
+  return {
+    // Multiple views share one connection. The last unsubscribe closes it and cancels all work.
+    subscribe(symbols, listener) {
+      const subscriber = { symbols: supportedMarketSymbols(symbols), listener };
+      if (!subscriber.symbols.length) { listener({}); return () => {}; }
+      subscribers.add(subscriber);
+      updateSymbols();
+      publish();
+      return () => {
+        if (!subscribers.delete(subscriber)) return;
+        updateSymbols();
       };
-      // Race the entire response body as well as fetch: a stalled body must also time out.
-      return await Promise.race([request(), cancelled]);
-    } catch {
-      return null;
-    } finally {
-      clearTimeout(timer);
-      signal?.removeEventListener('abort', cancel);
-    }
-  },
-});
-
-export const okxMarketClient = createOkxMarketClient();
+    },
+  };
+};

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { createOkxMarketClient } from '@mogo/investment-management-core';
 import { useInvestmentPrices } from '@mogo/investment-management-react';
 
+const okxMarketClient = createOkxMarketClient({ createSocket: url => new WebSocket(url) });
 const isAvailable = () => navigator.onLine && document.visibilityState !== 'hidden';
-export const useMarketPrices = (targets, client) => {
+export const useMarketPrices = (targets, client = okxMarketClient) => {
   const [enabled, setEnabled] = useState(isAvailable);
   useEffect(() => {
     const update = () => setEnabled(isAvailable());

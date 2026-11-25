@@ -21,7 +21,7 @@ backend/transports/
 
 - 分类、金额、预算预警、统计、资料校验继续复用 `fronted/features/*/{core,react}` 与 `backend/features/*`；原生适配层不写 SQL 或领域规则。
 - Android/iOS 在单独串行队列执行 C++ 与磁盘操作，不阻塞 JS/UI 线程；Android 释放模块时关闭 C++ 句柄。
-- 手机内不启动 libhv、HTTP Server、WebView，也不访问开发机 API。首次构建需要下载开发依赖，**安装完成后的记账、投资记录及资料管理不需要网络**；BTC/ETH 的可选行情直接读取 OKX 公共 HTTPS API，断网时省略价格。
+- 手机内不启动 libhv、HTTP Server、WebView，也不访问开发机 API。首次构建需要下载开发依赖，**安装完成后的记账、投资记录及资料管理不需要网络**；BTC/ETH 的可选行情直接订阅 OKX 公共 WebSocket（WSS），后台停止连接，断网时省略价格。
 - 财务：Android `filesDir/mogo/mogo.db`；iOS `Application Support/MoGo/mogo.db`。
 - 个人资料：同目录 `user-profile.json`，所有字段选填（包括月收入），不放 SQLite。
 - 语言/主题偏好才使用 AsyncStorage；财务和资料不能放入 AsyncStorage。

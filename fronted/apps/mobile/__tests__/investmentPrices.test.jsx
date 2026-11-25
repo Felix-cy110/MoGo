@@ -4,7 +4,6 @@ import { AppState, Alert } from 'react-native';
 import { useNetInfoInstance } from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useInvestmentPrices } from '@mogo/investment-management-react';
-import { INVESTMENT_PRICE_REFRESH_MS, INVESTMENT_PRICE_MAX_AGE_MS } from '@mogo/investment-management-core';
 import i18n from '../src/platform/i18n';
 import { PreferencesProvider } from '../src/platform/PreferencesProvider';
 import InvestmentManagementScreen from '../src/screens/InvestmentManagementScreen';
@@ -16,13 +15,21 @@ const btc = { id: 1, name: 'BTC', symbol: 'BTC', quoteCurrency: 'USDT', builtinC
 const eth = { ...btc, id: 2, name: 'ETH', symbol: 'ETH', builtinCode: 'ETH' };
 const sol = { ...btc, id: 3, name: 'BTC', symbol: 'SOL', builtinCode: null };
 const summary = { totalQuoteAmount: '600', totalQuantity: '0.01', averageEntryPrice: '60000', buyCount: 1 };
-const quote = price => ({ price, timestamp: Date.now() });
 const initialAppState = AppState.currentState;
 let tree;
 let prices;
 let onAppState;
 let removeAppState;
 function Probe(props) { prices = useInvestmentPrices(props); return null; }
+const marketClient = () => ({
+  subscribe: jest.fn((symbols, listener) => {
+    listener(Object.fromEntries(symbols.map(symbol => [symbol, symbol === 'BTC' ? '59045.1' : '2001.23'])));
+    return jest.fn();
+  }),
+});
+const push = async (client, value, subscription = client.subscribe.mock.calls.length - 1) => {
+  await act(async () => client.subscribe.mock.calls[subscription][1](value));
+};
 async function render(element) {
   await act(async () => { tree = renderer.create(element); });
 }
@@ -52,70 +59,67 @@ afterEach(async () => {
   useNetInfoInstance.mockReturnValue({ netInfo: { isConnected: false } });
 });
 
-test('deduplicates supported symbols and independently hides a failed refresh', async () => {
-  const client = { getPrice: jest.fn(async symbol => quote(symbol === 'BTC' ? '59045.1' : '2001.23')) };
+test('deduplicates subscriptions, preserves them across target reordering and receives pushed prices', async () => {
+  const client = marketClient();
   const props = { targets: [btc, btc, eth, sol], enabled: true, client };
   await render(<Probe {...props} />);
-  expect(client.getPrice.mock.calls.map(call => call[0])).toEqual(['BTC', 'ETH']);
+  expect(client.subscribe.mock.calls[0][0]).toEqual(['BTC', 'ETH']);
   expect(prices).toEqual({ BTC: '59045.1', ETH: '2001.23' });
   await update(<Probe {...props} targets={[btc, eth, btc, sol]} />);
-  expect(client.getPrice).toHaveBeenCalledTimes(2);
-  client.getPrice.mockImplementation(async symbol => symbol === 'BTC' ? null : quote('2002'));
-  await advance(INVESTMENT_PRICE_REFRESH_MS);
+  expect(client.subscribe).toHaveBeenCalledTimes(1);
+  await push(client, { ETH: '2002' });
   expect(prices).toEqual({ ETH: '2002' });
+  await advance(60_000);
+  expect(client.subscribe).toHaveBeenCalledTimes(1);
 });
 
-test('going offline cancels pending work, hides old prices and reconnect starts fresh', async () => {
-  let resolveOld;
-  const client = { getPrice: jest.fn().mockResolvedValueOnce(quote('59045.1')).mockImplementationOnce(
-    () => new Promise(resolve => { resolveOld = resolve; }),
-  ).mockImplementation(async () => quote('59050')) };
+test('going offline unsubscribes, ignores late pushes and reconnect starts a fresh subscription', async () => {
+  const client = marketClient();
   const props = { targets: [btc], enabled: true, client };
   await render(<Probe {...props} />);
-  expect(prices.BTC).toBe('59045.1');
-  await advance(INVESTMENT_PRICE_REFRESH_MS);
-  const requestSignal = client.getPrice.mock.calls[1][1].signal;
   await update(<Probe {...props} enabled={false} />);
-  expect(requestSignal.aborted).toBe(true);
+  expect(client.subscribe.mock.results[0].value).toHaveBeenCalledTimes(1);
   expect(prices).toEqual({});
-  await act(async () => resolveOld(quote('1')));
-  await advance(INVESTMENT_PRICE_REFRESH_MS * 2);
+  await push(client, { BTC: '1' });
+  await advance(60_000);
   expect(prices).toEqual({});
-  expect(client.getPrice).toHaveBeenCalledTimes(2);
+  expect(client.subscribe).toHaveBeenCalledTimes(1);
   await update(<Probe {...props} />);
-  expect(prices).toEqual({ BTC: '59050' });
+  expect(prices).toEqual({ BTC: '59045.1' });
+  expect(client.subscribe).toHaveBeenCalledTimes(2);
+  await push(client, { BTC: '1' }, 0);
+  expect(prices).toEqual({ BTC: '59045.1' });
 });
 
-test('expires stale prices while a request stalls and stops timers on unmount', async () => {
-  const client = { getPrice: jest.fn().mockResolvedValueOnce(quote('59045.1')).mockImplementation(() => new Promise(() => {})) };
+test('unmount releases the subscription and time passing does not resubscribe', async () => {
+  const client = marketClient();
   await render(<Probe targets={[btc]} enabled client={client} />);
-  await advance(INVESTMENT_PRICE_REFRESH_MS);
-  await advance(INVESTMENT_PRICE_MAX_AGE_MS);
-  expect(prices).toEqual({});
-  expect(client.getPrice).toHaveBeenCalledTimes(2);
   await act(async () => tree.unmount());
   tree = null;
-  expect(client.getPrice.mock.calls[1][1].signal.aborted).toBe(true);
-  await advance(INVESTMENT_PRICE_REFRESH_MS * 3);
-  expect(client.getPrice).toHaveBeenCalledTimes(2);
+  expect(client.subscribe.mock.results[0].value).toHaveBeenCalledTimes(1);
+  await advance(120_000);
+  expect(client.subscribe).toHaveBeenCalledTimes(1);
 });
 
-test('changing target or client ignores late responses from the previous request', async () => {
-  let resolveOld;
-  const oldClient = { getPrice: jest.fn(() => new Promise(resolve => { resolveOld = resolve; })) };
+test('changing target or client ignores messages from the previous subscription', async () => {
+  const oldClient = marketClient();
   await render(<Probe targets={[btc]} enabled client={oldClient} />);
-  const client = { getPrice: jest.fn(async () => quote('2001')) };
+  const client = marketClient();
   await update(<Probe targets={[eth]} enabled client={client} />);
-  await act(async () => resolveOld(quote('59045.1')));
-  expect(prices).toEqual({ ETH: '2001' });
-  expect(oldClient.getPrice.mock.calls[0][1].signal.aborted).toBe(true);
+  await push(oldClient, { BTC: '1' });
+  expect(prices).toEqual({ ETH: '2001.23' });
+  expect(oldClient.subscribe.mock.results[0].value).toHaveBeenCalledTimes(1);
+  await update(<Probe targets={[sol]} enabled client={client} />);
+  expect(prices).toEqual({});
+  expect(client.subscribe.mock.results[0].value).toHaveBeenCalledTimes(1);
+  expect(client.subscribe).toHaveBeenCalledTimes(1);
 });
 
 test.each([['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark']])(
-  'list and detail display prices without affecting averages in %s/%s', async (language, theme) => {
+  'list and detail display pushed prices without affecting averages in %s/%s', async (language, theme) => {
     await AsyncStorage.multiSet([['mogo.language', language], ['mogo.theme', theme]]);
     await i18n.changeLanguage(language);
-    const client = { getPrice: jest.fn(async symbol => quote(symbol === 'BTC' ? '59045.1' : '2001.23')) };
+    const client = marketClient();
     const api = {
       listTargets: async () => [btc, eth, sol].map(target => ({ target, summary })),
       getTarget: async () => ({ target: btc, summary, trades: [], symbolLocked: true }),
@@ -125,16 +129,17 @@ test.each([['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark']])(
     expect(json).toContain('59,045.1 USDT');
     expect(json).toContain('2,001.23 USDT');
     expect(json).toContain('60,000');
-    expect(client.getPrice.mock.calls.map(call => call[0])).toEqual(['BTC', 'ETH']);
+    expect(client.subscribe.mock.calls[0][0]).toEqual(['BTC', 'ETH']);
     await update(<PreferencesProvider><InvestmentTargetScreen api={api} marketClient={client} targetId={1} /></PreferencesProvider>);
-    expect(JSON.stringify(tree.toJSON())).toContain('59,045.1 USDT');
+    await push(client, { BTC: '59050' });
+    expect(JSON.stringify(tree.toJSON())).toContain('59,050 USDT');
     expect(JSON.stringify(tree.toJSON())).toContain('60,000');
     expect(Alert.alert).not.toHaveBeenCalled();
   },
 );
 
 test('mobile network loss and backgrounding hide quotes; local records remain visible', async () => {
-  const client = { getPrice: jest.fn(async () => quote('59045.1')) };
+  const client = marketClient();
   const api = { getTarget: async () => ({ target: btc, summary, trades: [], symbolLocked: true }) };
   const screen = () => <PreferencesProvider><InvestmentTargetScreen api={api} marketClient={client} targetId={1} /></PreferencesProvider>;
   await render(screen());
@@ -143,22 +148,25 @@ test('mobile network loss and backgrounding hide quotes; local records remain vi
   await update(screen());
   expect(JSON.stringify(tree.toJSON())).not.toContain('59,045.1 USDT');
   expect(JSON.stringify(tree.toJSON())).toContain('60,000');
-  await advance(INVESTMENT_PRICE_REFRESH_MS * 3);
-  expect(client.getPrice).toHaveBeenCalledTimes(1);
+  expect(client.subscribe.mock.results[0].value).toHaveBeenCalledTimes(1);
+  await advance(60_000);
+  expect(client.subscribe).toHaveBeenCalledTimes(1);
   // Native connectivity is sufficient; no external reachability probe is needed.
   useNetInfoInstance.mockReturnValue({ netInfo: { isConnected: true, isInternetReachable: false } });
   await update(screen());
-  expect(client.getPrice).toHaveBeenCalledTimes(2);
+  expect(client.subscribe).toHaveBeenCalledTimes(2);
   await act(async () => onAppState('background'));
   expect(JSON.stringify(tree.toJSON())).not.toContain('59,045.1 USDT');
-  await advance(INVESTMENT_PRICE_REFRESH_MS * 3);
-  expect(client.getPrice).toHaveBeenCalledTimes(2);
+  expect(client.subscribe.mock.results[1].value).toHaveBeenCalledTimes(1);
+  await advance(60_000);
+  expect(client.subscribe).toHaveBeenCalledTimes(2);
   await act(async () => onAppState('active'));
   expect(JSON.stringify(tree.toJSON())).toContain('59,045.1 USDT');
-  expect(client.getPrice).toHaveBeenCalledTimes(3);
+  expect(client.subscribe).toHaveBeenCalledTimes(3);
   await act(async () => tree.unmount());
   tree = null;
   expect(removeAppState).toHaveBeenCalled();
+  expect(client.subscribe.mock.results[2].value).toHaveBeenCalledTimes(1);
   expect(Alert.alert).not.toHaveBeenCalled();
 });
 
@@ -170,8 +178,7 @@ test('absent prices and unsupported quote currencies render no placeholder', asy
   expect(tree.toJSON()).toBeNull();
 });
 
-
-test('web offline and visibility events clear prices, reconnect and remove listeners', async () => {
+test('web offline and visibility events clear prices, resubscribe and remove listeners', async () => {
   const names = ['window', 'document', 'navigator'];
   const original = names.map(name => Object.getOwnPropertyDescriptor(global, name));
   const browserEvents = new Map();
@@ -186,7 +193,7 @@ test('web offline and visibility events clear prices, reconnect and remove liste
   [browser, page, connection].forEach((value, index) =>
     Object.defineProperty(global, names[index], { configurable: true, writable: true, value }),
   );
-  const client = { getPrice: jest.fn(async () => quote('59045.1')) };
+  const client = marketClient();
   function WebProbe() { prices = useWebMarketPrices([btc], client); return null; }
   try {
     await render(<WebProbe />);
@@ -194,8 +201,8 @@ test('web offline and visibility events clear prices, reconnect and remove liste
     connection.onLine = false;
     await act(async () => browserEvents.get('offline')());
     expect(prices).toEqual({});
-    await advance(INVESTMENT_PRICE_REFRESH_MS * 2);
-    expect(client.getPrice).toHaveBeenCalledTimes(1);
+    await advance(60_000);
+    expect(client.subscribe).toHaveBeenCalledTimes(1);
     connection.onLine = true;
     await act(async () => browserEvents.get('online')());
     expect(prices).toEqual({ BTC: '59045.1' });
@@ -205,11 +212,12 @@ test('web offline and visibility events clear prices, reconnect and remove liste
     page.visibilityState = 'visible';
     await act(async () => pageEvents.get('visibilitychange')());
     expect(prices).toEqual({ BTC: '59045.1' });
-    expect(client.getPrice).toHaveBeenCalledTimes(3);
+    expect(client.subscribe).toHaveBeenCalledTimes(3);
     await act(async () => tree.unmount());
     tree = null;
-    await advance(INVESTMENT_PRICE_REFRESH_MS * 2);
-    expect(client.getPrice).toHaveBeenCalledTimes(3);
+    await advance(60_000);
+    expect(client.subscribe).toHaveBeenCalledTimes(3);
+    client.subscribe.mock.results.forEach(result => expect(result.value).toHaveBeenCalledTimes(1));
     expect(browserEvents.size).toBe(0);
     expect(pageEvents.size).toBe(0);
   } finally {
