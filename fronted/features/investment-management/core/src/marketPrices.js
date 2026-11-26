@@ -1,6 +1,7 @@
 import { OkxMarketConnection } from './market/OkxMarketConnection.js';
 import { supportedMarketSymbols } from './market/okxProtocol.js';
 export { investmentMarketSymbol } from './market/okxProtocol.js';
+export { OKX_SPOT_INSTRUMENTS, okxInstrumentId, okxMarketSymbol } from './market/okxInstruments.js';
 
 export const INVESTMENT_PRICE_RENDER_MS = 500;
 

@@ -13,14 +13,17 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api =
   const { t, i18n } = useTranslation();
   const model = useInvestmentDetail({ api, targetId });
   const [editor, setEditor] = useState(null);
-  const [confirmation, setConfirmation] = useState(false);
+  const [confirmation, setConfirmation] = useState(null);
   const data = model.data;
   const prices = useMarketPrices(data ? [data.target] : [], marketClient);
   const number = value => formatInvestmentDecimal(value, i18n.resolvedLanguage);
   const confirm = async () => {
-    const done = await model.deleteTrade(editor.value.id);
-    setConfirmation(false);
-    if (done) setEditor(null);
+    const target = confirmation === 'target';
+    const done = target ? await model.deleteTarget() : await model.deleteTrade(editor.value.id);
+    setConfirmation(null);
+    if (!done) return;
+    setEditor(null);
+    if (target) onBack();
   };
   return <InvestmentLayout title={data?.target.symbol || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenSettings={onOpenSettings} model={model}>
     {data && !model.loading && !model.loadError && <>
@@ -47,8 +50,8 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api =
     {editor && <InvestmentEditor key={`${editor.kind}-${editor.value?.id || 'new'}`} {...editor} symbolLocked={data?.symbolLocked}
       saving={model.saving} onClose={() => setEditor(null)}
       onSave={draft => editor.kind === 'target' ? model.saveTarget(draft) : model.saveTrade(draft, editor.value?.id)}
-      onDelete={editor.kind === 'trade' && editor.value ? () => setConfirmation(true) : undefined} />}
-    {confirmation && <InvestmentConfirm busy={model.saving} onClose={() => setConfirmation(false)} onConfirm={confirm}
-      messageKey="investmentDeleteConfirm" />}
+      onDelete={editor.value ? () => setConfirmation(editor.kind) : undefined} />}
+    {confirmation && <InvestmentConfirm busy={model.saving} onClose={() => setConfirmation(null)} onConfirm={confirm}
+      messageKey={confirmation === 'target' ? 'investmentDeleteTargetConfirm' : 'investmentDeleteConfirm'} />}
   </InvestmentLayout>;
 }

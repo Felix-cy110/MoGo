@@ -123,6 +123,7 @@ export default function AppNavigator({ apis = nativeApis }) {
             key={investmentTargetId}
             api={apis.investment}
             targetId={investmentTargetId}
+            onBack={back}
           />
         );
         break;

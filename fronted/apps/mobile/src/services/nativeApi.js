@@ -41,6 +41,7 @@ export const createNativeApis = bridge => {
       addTarget: payload => call('investment.addTarget', payload),
       updateTarget: (id, payload) =>
         call('investment.updateTarget', { ...payload, id }),
+      deleteTarget: id => call('investment.deleteTarget', { id }),
       addTrade: payload => call('investment.addTrade', payload),
       updateTrade: (id, payload) =>
         call('investment.updateTrade', { ...payload, id }),

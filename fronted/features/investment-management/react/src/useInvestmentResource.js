@@ -31,14 +31,14 @@ export const useInvestmentResource = load => {
   }, [reload]);
   const notify = useCallback(key => setFeedback({ key, presentation: 'dialog' }), []);
   const clearFeedback = useCallback(() => setFeedback(null), []);
-  const mutate = useCallback(async (action, successKey = 'investmentSaved') => {
+  const mutate = useCallback(async (action, successKey = 'investmentSaved', reloadAfter = true) => {
     if (busy.current) return false;
     busy.current = true; setSaving(true); setFeedback(null);
     try {
       await action();
       if (mounted.current) {
         // A failed refresh must never turn a committed write into a retryable save.
-        await reload();
+        if (reloadAfter) await reload();
         if (mounted.current) notify(successKey);
       }
       return true;

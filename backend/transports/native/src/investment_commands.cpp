@@ -8,6 +8,7 @@ nlohmann::json investmentCommand(investment::InvestmentService& service, const s
     if (method == "getTarget") return wire::detailJson<Json>(service.detail(wire::id(body)));
     if (method == "addTarget") return wire::targetJson<Json>(service.saveTarget(wire::targetInput(body)));
     if (method == "updateTarget") { auto value = wire::targetInput(body); value.id = wire::id(body); return wire::targetJson<Json>(service.saveTarget(value)); }
+    if (method == "deleteTarget") { service.deleteTarget(wire::id(body)); return Json::object(); }
     if (method == "addTrade") return wire::tradeJson<Json>(service.addTrade(wire::tradeInput(body, true)));
     if (method == "updateTrade") return wire::tradeJson<Json>(service.updateTrade(wire::id(body), wire::tradeInput(body, false)));
     if (method == "deleteTrade") { service.deleteTrade(wire::id(body)); return Json::object(); }

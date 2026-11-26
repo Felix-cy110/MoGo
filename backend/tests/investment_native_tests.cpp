@@ -21,6 +21,8 @@ int main() {
                 check(call("getTarget", {{"id",target.at("id")}}).at("data").at("symbolLocked") == true, "Native builtin symbol locked");
                 check(call("updateTarget", {{"id",target.at("id")},{"name","renamed"},{"symbol","SOL"}}).at("code") == "INVESTMENT_BUILTIN_PROTECTED", "Native cannot replace defaults");
             }
+            const auto deleted_default_id = defaults.at("data").back().at("target").at("id");
+            check(call("deleteTarget", {{"id", deleted_default_id}}).at("ok") == true, "Native can delete an unused default");
             auto result = call("addTarget", {{"name","Bitcoin"},{"symbol","BTC"}});
             check(result.at("ok") == true, "Native target"); id = result.at("data").at("id");
             Json buy = {{"targetId",id},{"unitPrice","60000"},{"quoteAmount","600"},{"occurredAt","2026-11-24T01:02:03.000Z"},{"clientRequestId","native-buy-1"}};
@@ -30,7 +32,7 @@ int main() {
             check(call("addTrade", buy).at("code") == "VALIDATION_ERROR", "Reject JSON numbers");
             check(call("getTarget", {{"id", id}}).at("data").at("summary").at("averageEntryPrice") == "60000", "Native summary");
             check(call("getTarget", {{"id", 1.5}}).at("code") == "VALIDATION_ERROR", "Reject fractional IDs");
-            check(call("listTargets", Json::object()).at("data").size() == 3, "Native list includes the two built-ins");
+            check(call("listTargets", Json::object()).at("data").size() == 2, "Native list reflects a deleted default");
         }
         {
             mogo::native::NativeCore core(path);

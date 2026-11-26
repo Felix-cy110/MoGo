@@ -13,7 +13,7 @@ import InvestmentSummary from './InvestmentSummary';
 import InvestmentEditor from './InvestmentEditor';
 import InvestmentMarketPrice from './InvestmentMarketPrice';
 import useMarketPrices from './useMarketPrices';
-export default function InvestmentTargetScreen({ api, targetId, marketClient }) {
+export default function InvestmentTargetScreen({ api, targetId, marketClient, onBack }) {
   const { t, i18n } = useTranslation();
   const { colors } = usePreferences();
   const model = useInvestmentDetail({ api, targetId, marketClient });
@@ -22,13 +22,16 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient }) 
   useFeedback(model.feedback, model.clearFeedback);
   const data = model.data;
   const prices = useMarketPrices(data ? [data.target] : [], marketClient);
-  const confirm = (key, action) =>
+  const confirm = (key, action, afterDelete) =>
     Alert.alert(t(key), '', [
       { text: t('investmentCancel'), style: 'cancel' },
       {
         text: t('investmentConfirm'),
         onPress: async () => {
-          if (await action()) setEditor(null);
+          if (await action()) {
+            setEditor(null);
+            afterDelete?.();
+          }
         },
       },
     ]);
@@ -129,14 +132,10 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient }) 
               ? model.saveTarget(draft)
               : model.saveTrade(draft, editor.value?.id)
           }
-          onDelete={
-            editor.kind === 'trade' && editor.value
-              ? () =>
-                  confirm('investmentDeleteConfirm', () =>
-                    model.deleteTrade(editor.value.id),
-                  )
-              : undefined
-          }
+          onDelete={editor.value ? () => editor.kind === 'target'
+            ? confirm('investmentDeleteTargetConfirm', model.deleteTarget, onBack)
+            : confirm('investmentDeleteConfirm', () => model.deleteTrade(editor.value.id))
+            : undefined}
         />
       )}
     </Page>

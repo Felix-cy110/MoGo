@@ -16,5 +16,6 @@ export const useInvestmentDetail = ({ api, targetId }) => {
     return resource.mutate(() => id ? api.updateTrade(id, payload) : api.addTrade(payload));
   };
   return { ...resource, saveTarget, saveTrade,
+    deleteTarget: () => resource.mutate(() => api.deleteTarget(targetId), 'investmentDeleted', false),
     deleteTrade: id => resource.mutate(() => api.deleteTrade(id), 'investmentDeleted') };
 };

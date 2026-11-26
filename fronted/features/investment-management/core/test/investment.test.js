@@ -108,9 +108,11 @@ test('HTTP adapter preserves decimal strings and lifecycle operations', async ()
   const calls = [];
   const api = createInvestmentApi({baseUrl:'/api', fetchImpl: async (...args) => { calls.push(args); return {ok:true,json:async()=>({})}; }});
   await api.addTrade({targetId:1, unitPrice:'0.000000000000000001', quoteAmount:'100'});
-  await api.deleteTrade(2); await api.listTargets();
+  await api.deleteTrade(2); await api.deleteTarget(1); await api.listTargets();
   assert.equal(JSON.parse(calls[0][1].body).unitPrice,'0.000000000000000001');
-  assert.equal(calls[1][1].method,'DELETE'); assert.equal(calls[2][0],'/api/investment/targets');
+  assert.equal(calls[1][1].method,'DELETE');
+  assert.equal(calls[2][0],'/api/investment/targets/1'); assert.equal(calls[2][1].method,'DELETE');
+  assert.equal(calls[3][0],'/api/investment/targets');
 });
 
 test('built-in hints use persisted identity and translate backend protections', () => {

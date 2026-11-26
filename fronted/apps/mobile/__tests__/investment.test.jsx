@@ -222,16 +222,22 @@ test('disabled builds hide investment and native adapter keeps decimal strings',
   );
   await api.listTargets();
   expect(bridge.execute).toHaveBeenLastCalledWith('investment.listTargets', '{}');
+  await api.deleteTarget(7);
+  expect(bridge.execute).toHaveBeenLastCalledWith(
+    'investment.deleteTarget',
+    JSON.stringify({ id: 7 }),
+  );
 });
 
 for (const builtinCode of ['BTC', 'ETH']) {
   test.each([
     ['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark'],
-  ])(`${builtinCode} is protected and remains editable in %s/%s`, async (language, theme) => {
+  ])(`${builtinCode} keeps its code but can be deleted in %s/%s`, async (language, theme) => {
     const builtinTarget = { ...target, symbol: builtinCode, name: builtinCode, builtinCode };
     const api = {
       getTarget: async () => ({ ...detail, target: builtinTarget, symbolLocked: true, trades: [] }),
       updateTarget: jest.fn(async () => builtinTarget),
+      deleteTarget: jest.fn(async () => ({})),
     };
     await render(<InvestmentTargetScreen api={api} targetId={1} />, language, theme);
     expect(action('investmentAddTrade')).toBeDefined();
@@ -239,12 +245,31 @@ for (const builtinCode of ['BTC', 'ETH']) {
     expect(field('investmentSymbol').props.editable).toBe(false);
     expect(field('investmentName').props.editable).toBe(true);
     expect(field('investmentNote').props.editable).toBe(true);
+    expect(action('investmentDeleteTarget')).toBeDefined();
     expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('investmentBuiltinHint'));
     await act(async () => field('investmentNote').props.onChangeText('updated note'));
     await act(async () => action('investmentSave').props.onPress());
     expect(api.updateTarget).toHaveBeenCalledWith(1, expect.objectContaining({ symbol: builtinCode, note: 'updated note' }));
   });
 }
+
+test('deleting an unused default confirms in a modal and returns to the list', async () => {
+  const api = {
+    getTarget: async () => ({ ...detail, target: { ...target, builtinCode: 'BTC' }, trades: [] }),
+    deleteTarget: jest.fn(async () => ({})),
+  };
+  const onBack = jest.fn();
+  await render(<InvestmentTargetScreen api={api} targetId={1} onBack={onBack} />);
+  await act(async () => action('investmentEditTarget').props.onPress());
+  await act(async () => action('investmentDeleteTarget').props.onPress());
+  expect(Alert.alert).toHaveBeenLastCalledWith(
+    i18n.t('investmentDeleteTargetConfirm'), '', expect.any(Array),
+  );
+  const buttons = Alert.alert.mock.calls.at(-1)[2];
+  await act(async () => buttons.find(button => button.text === i18n.t('investmentConfirm')).onPress());
+  expect(api.deleteTarget).toHaveBeenCalledWith(1);
+  expect(onBack).toHaveBeenCalledWith();
+});
 
 test('backend protection errors are shown in the shared modal feedback', async () => {
   const api = {

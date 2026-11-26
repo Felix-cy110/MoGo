@@ -60,6 +60,11 @@ export class OkxMarketConnection {
       this.armHeartbeat();
       if (this.now() - this.openedAt >= STABLE_CONNECTION_MS) this.retryCount = 0;
       if (!this.symbols.includes(message.symbol)) return;
+      if (message.type === 'rejected') {
+        this.acknowledge(message.symbol);
+        this.onQuote(message.symbol, null);
+        return;
+      }
       if (message.type === 'subscribed' || (message.type === 'quote' && message.quote)) {
         this.acknowledge(message.symbol);
       }

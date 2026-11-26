@@ -7,6 +7,7 @@ export const createInvestmentApi = (options = {}) => {
     getTarget: id => request(`/investment/targets/${id}`),
     addTarget: value => send('targets', 'POST', value),
     updateTarget: (id, value) => send(`targets/${id}`, 'PUT', value),
+    deleteTarget: id => request(`/investment/targets/${id}`, { method: 'DELETE' }),
     addTrade: value => send('trades', 'POST', value),
     updateTrade: (id, value) => send(`trades/${id}`, 'PUT', value),
     deleteTrade: id => request(`/investment/trades/${id}`, { method: 'DELETE' })

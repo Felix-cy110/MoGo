@@ -85,6 +85,19 @@ test('subscription errors, malformed frames and server maintenance clear quotes 
   }
 });
 
+test('one rejected dynamic pair does not disconnect valid subscriptions', t => {
+  const { sockets, subscribe, advance } = setupMarket(t);
+  const result = subscribe(['BTC', 'UNKNOWN']);
+  sockets[0].open();
+  sockets[0].receive({ event: 'error', code: '60018', arg: { channel: 'tickers', instId: 'UNKNOWN-USDT' } });
+  sockets[0].receive(tick('BTC', { last: '60000' }));
+  advance(500);
+  assert.deepEqual(result.latest(), { BTC: '60000' });
+  assert.equal(sockets[0].closeCount, 0);
+  advance(20_000);
+  assert.equal(sockets[0].sent.at(-1), 'ping');
+});
+
 test('repeated failures back off with jitter, cap at 30 seconds and reset only after stability', t => {
   const { sockets, subscribe, advance } = setupMarket(t, { random: () => 1 });
   subscribe(['BTC']);
