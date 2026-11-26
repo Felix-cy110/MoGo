@@ -42,3 +42,76 @@ export const createClientRequestId = () => {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
+
+export const COLOR_THEME = Object.freeze({
+  LIGHT: 'light',
+  DARK: 'dark'
+});
+
+const isManualColorTheme = theme => theme === COLOR_THEME.LIGHT || theme === COLOR_THEME.DARK;
+
+export const getScheduledColorTheme = (now = new Date()) => {
+  const hour = now.getHours();
+  return hour >= 18 || hour < 8 ? COLOR_THEME.DARK : COLOR_THEME.LIGHT;
+};
+
+export const getNextColorThemeBoundary = (now = new Date()) => {
+  const boundary = new Date(now.getTime());
+  const hour = now.getHours();
+
+  if (hour < 8) {
+    boundary.setHours(8, 0, 0, 0);
+  } else if (hour < 18) {
+    boundary.setHours(18, 0, 0, 0);
+  } else {
+    boundary.setDate(boundary.getDate() + 1);
+    boundary.setHours(8, 0, 0, 0);
+  }
+
+  return boundary;
+};
+
+export const isColorThemeOverrideActive = (overrideUntil, now = new Date()) => {
+  const timestamp = Number(overrideUntil);
+  return Number.isFinite(timestamp) && timestamp > now.getTime();
+};
+
+export const resolveColorThemePreference = ({
+  storedTheme,
+  storedOverrideUntil,
+  now = new Date()
+} = {}) => {
+  if (!isManualColorTheme(storedTheme)) {
+    return {
+      theme: getScheduledColorTheme(now),
+      overrideUntil: null,
+      shouldPersistOverride: false,
+      shouldClearOverride: storedTheme != null || storedOverrideUntil != null
+    };
+  }
+
+  if (storedOverrideUntil == null) {
+    return {
+      theme: storedTheme,
+      overrideUntil: getNextColorThemeBoundary(now).getTime(),
+      shouldPersistOverride: true,
+      shouldClearOverride: false
+    };
+  }
+
+  if (isColorThemeOverrideActive(storedOverrideUntil, now)) {
+    return {
+      theme: storedTheme,
+      overrideUntil: Number(storedOverrideUntil),
+      shouldPersistOverride: false,
+      shouldClearOverride: false
+    };
+  }
+
+  return {
+    theme: getScheduledColorTheme(now),
+    overrideUntil: null,
+    shouldPersistOverride: false,
+    shouldClearOverride: true
+  };
+};

@@ -14,7 +14,6 @@ const mobileMessages = {
     close: '关闭',
     storageError: '无法打开本机数据，请检查存储空间后重试。原数据不会被清除。',
     preferencesError: '设置读取或保存失败，请重试。',
-    followSystem: '跟随系统',
     lightTheme: '浅色',
     darkTheme: '深色',
     selection: '请选择',
@@ -28,7 +27,6 @@ const mobileMessages = {
     storageError:
       'Cannot open local data. Check available storage and retry. Existing data is not cleared.',
     preferencesError: 'Could not load or save preferences. Please retry.',
-    followSystem: 'System',
     lightTheme: 'Light',
     darkTheme: 'Dark',
     selection: 'Choose an option',

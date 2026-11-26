@@ -18,7 +18,7 @@ const summary = { totalQuoteAmount: '600', totalQuantity: '0.01', averageEntryPr
 const initialAppState = AppState.currentState;
 let tree;
 let prices;
-let onAppState;
+let appStateListeners;
 let removeAppState;
 function Probe(props) { prices = useInvestmentPrices(props); return null; }
 const marketClient = () => ({
@@ -39,14 +39,28 @@ async function update(element) {
 async function advance(ms) {
   await act(async () => { jest.advanceTimersByTime(ms); });
 }
+async function changeAppState(nextState) {
+  AppState.currentState = nextState;
+  await act(async () => {
+    await Promise.all(
+      [...appStateListeners].map(listener => listener(nextState)),
+    );
+  });
+}
 beforeEach(() => {
   jest.useFakeTimers();
   AppState.currentState = 'active';
   useNetInfoInstance.mockReturnValue({ netInfo: { isConnected: true } });
+  appStateListeners = new Set();
   removeAppState = jest.fn();
   jest.spyOn(AppState, 'addEventListener').mockImplementation((event, listener) => {
-    onAppState = listener;
-    return { remove: removeAppState };
+    appStateListeners.add(listener);
+    return {
+      remove: () => {
+        appStateListeners.delete(listener);
+        removeAppState();
+      },
+    };
   });
   jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 });
@@ -155,12 +169,12 @@ test('mobile network loss and backgrounding hide quotes; local records remain vi
   useNetInfoInstance.mockReturnValue({ netInfo: { isConnected: true, isInternetReachable: false } });
   await update(screen());
   expect(client.subscribe).toHaveBeenCalledTimes(2);
-  await act(async () => onAppState('background'));
+  await changeAppState('background');
   expect(JSON.stringify(tree.toJSON())).not.toContain('59,045.1 USDT');
   expect(client.subscribe.mock.results[1].value).toHaveBeenCalledTimes(1);
   await advance(60_000);
   expect(client.subscribe).toHaveBeenCalledTimes(2);
-  await act(async () => onAppState('active'));
+  await changeAppState('active');
   expect(JSON.stringify(tree.toJSON())).toContain('59,045.1 USDT');
   expect(client.subscribe).toHaveBeenCalledTimes(3);
   await act(async () => tree.unmount());

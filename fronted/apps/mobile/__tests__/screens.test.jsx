@@ -230,10 +230,13 @@ test('every mobile translation exists in both languages', () => {
   );
 });
 
-test('system theme resets the native appearance override', async () => {
+test('legacy system theme is replaced by the scheduled appearance', async () => {
   const setColorScheme = jest.spyOn(Appearance, 'setColorScheme');
   await render(<SettingsScreen />, 'zh', 'system');
-  expect(setColorScheme).toHaveBeenLastCalledWith('auto');
+  const hour = new Date().getHours();
+  expect(setColorScheme).toHaveBeenLastCalledWith(
+    hour >= 18 || hour < 8 ? 'dark' : 'light',
+  );
 });
 
 test('finance requires Other notes and shows budget alerts after insertion', async () => {

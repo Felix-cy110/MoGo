@@ -23,7 +23,6 @@ export default function SettingsScreen() {
           value={theme}
           onChange={value => update('theme', value)}
           options={[
-            { value: 'system', label: t('followSystem') },
             { value: 'light', label: t('lightTheme') },
             { value: 'dark', label: t('darkTheme') },
           ]}

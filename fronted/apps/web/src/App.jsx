@@ -8,6 +8,7 @@ import { SettingsScreen } from './features/settings/SettingsScreen';
 import { LeetCodeInterviewScreen } from './features/leetcode-interview/LeetCodeInterviewScreen';
 import { InvestmentManagementScreen } from './features/investment-management/InvestmentManagementScreen';
 import { InvestmentTargetScreen } from './features/investment-management/InvestmentTargetScreen';
+import { useColorTheme } from './hooks/useColorTheme';
 
 const HOME_PATH = '/';
 const FINANCE_PATH = '/finance';
@@ -31,6 +32,7 @@ const resolveScreen = path => {
 };
 
 function App() {
+  const { isDark, toggleTheme } = useColorTheme();
   const [path, setPath] = useState(() => globalThis.location?.pathname || HOME_PATH);
   const screen = resolveScreen(path);
   const [settingsReturnPath, setSettingsReturnPath] = useState(HOME_PATH);
@@ -52,7 +54,7 @@ function App() {
   };
 
   if (screen === 'settings') {
-    return <SettingsScreen onBack={() => navigate(settingsReturnPath === SETTINGS_PATH ? HOME_PATH : settingsReturnPath)} />;
+    return <SettingsScreen isDark={isDark} onToggleTheme={toggleTheme} onBack={() => navigate(settingsReturnPath === SETTINGS_PATH ? HOME_PATH : settingsReturnPath)} />;
   }
 
   if (screen === 'profile') {

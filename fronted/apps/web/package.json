@@ -9,6 +9,7 @@
     "preview": "rsbuild preview"
   },
   "dependencies": {
+    "@mogo/core-shared": "0.1.0",
     "@mogo/personal-finance-core": "0.1.0",
     "@mogo/personal-finance-react": "0.1.0",
     "@mogo/user-profile-core": "0.1.0",
