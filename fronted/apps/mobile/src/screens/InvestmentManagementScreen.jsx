@@ -8,6 +8,7 @@ import { usePreferences } from '../platform/PreferencesProvider';
 import InvestmentSummary from './investment-management/InvestmentSummary';
 import InvestmentEditor from './investment-management/InvestmentEditor';
 import InvestmentMarketPrice from './investment-management/InvestmentMarketPrice';
+import InvestmentProfitLoss from './investment-management/InvestmentProfitLoss';
 import useMarketPrices from './investment-management/useMarketPrices';
 export default function InvestmentManagementScreen({ api, navigate, marketClient }) {
   const { t } = useTranslation();
@@ -66,10 +67,16 @@ export default function InvestmentManagementScreen({ api, navigate, marketClient
               onPress={() => navigate('investmentTarget', target.id)}
               style={[styles.item, { borderColor: colors.line }]}
             >
-              <Label style={styles.name}>
-                {target.symbol}
-                <InvestmentMarketPrice target={target} price={prices[target.symbol]} />
-              </Label>
+              <View style={styles.heading}>
+                <Label style={styles.name}>
+                  {target.symbol}
+                  <InvestmentMarketPrice target={target} price={prices[target.symbol]} />
+                </Label>
+                <InvestmentProfitLoss
+                  price={prices[target.symbol]}
+                  summary={summary}
+                />
+              </View>
               <InvestmentSummary summary={summary} symbol={target.symbol} />
             </Pressable>
           ))}
@@ -100,6 +107,12 @@ const styles = StyleSheet.create({
   },
   addButton: { flexShrink: 0, borderRadius: 4 },
   item: { borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 12 },
-  name: { fontWeight: '600' },
+  heading: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  name: { flex: 1, minWidth: 0, fontWeight: '600' },
   empty: { paddingVertical: 16 },
 });

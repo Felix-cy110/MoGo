@@ -142,6 +142,12 @@ test.each([['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark']])(
     const json = JSON.stringify(tree.toJSON());
     expect(json).toContain('59,045.1 USDT');
     expect(json).toContain('2,001.23 USDT');
+    expect(json).toContain(
+      i18n.t('investmentProfitLoss', {
+        amount: '-9.55',
+        percentage: '-1.59',
+      }),
+    );
     expect(json).toContain('60,000');
     expect(client.subscribe.mock.calls[0][0]).toEqual(['BTC', 'ETH']);
     await update(<PreferencesProvider><InvestmentTargetScreen api={api} marketClient={client} targetId={1} /></PreferencesProvider>);
@@ -151,6 +157,29 @@ test.each([['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark']])(
     expect(Alert.alert).not.toHaveBeenCalled();
   },
 );
+
+test('investment list hides profit and loss when the live price is unavailable', async () => {
+  const client = marketClient();
+  const api = { listTargets: async () => [{ target: btc, summary }] };
+  const screen = () => (
+    <PreferencesProvider>
+      <InvestmentManagementScreen
+        api={api}
+        marketClient={client}
+        navigate={jest.fn()}
+      />
+    </PreferencesProvider>
+  );
+  await render(screen());
+  expect(JSON.stringify(tree.toJSON())).toContain('-9.55 USDT');
+
+  useNetInfoInstance.mockReturnValue({ netInfo: { isConnected: false } });
+  await update(screen());
+  const offlineJson = JSON.stringify(tree.toJSON());
+  expect(offlineJson).not.toContain('-9.55 USDT');
+  expect(offlineJson).not.toContain('59,045.1 USDT');
+  expect(offlineJson).toContain('60,000');
+});
 
 test('mobile network loss and backgrounding hide quotes; local records remain visible', async () => {
   const client = marketClient();

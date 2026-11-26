@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
+import { calculateInvestmentProfitLoss, createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, formatInvestmentProfitLoss, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
 
 test('validates exact decimal strings without numeric conversion', () => {
   for (const value of ['0.000000000000000001', '999999999999999999.999999999999999999', '0001.200']) assert.ok(validInvestmentDecimal(value));
@@ -8,6 +8,45 @@ test('validates exact decimal strings without numeric conversion', () => {
   assert.equal(normalizeInvestmentDecimal('0001.200'), '1.2');
   assert.equal(formatInvestmentDecimal('999999999999999999.123456789012345678', 'en'), '999,999,999,999,999,999.123456789012345678');
   assert.equal(formatInvestmentDecimal('0.000000000000000001', 'zh'), '0.000000000000000001');
+});
+test('calculates unrealized profit and loss with exact decimal arithmetic', () => {
+  const summary = {
+    totalQuoteAmount: '600',
+    totalQuantity: '0.01',
+    averageEntryPrice: '60000',
+  };
+  assert.deepEqual(calculateInvestmentProfitLoss({ price: '65000', summary }), {
+    amount: '50.00', percentage: '8.33', direction: 'profit'
+  });
+  assert.deepEqual(calculateInvestmentProfitLoss({ price: '59045.1', summary }), {
+    amount: '9.55', percentage: '1.59', direction: 'loss'
+  });
+  assert.deepEqual(calculateInvestmentProfitLoss({ price: '60000', summary }), {
+    amount: '0.00', percentage: '0.00', direction: 'flat'
+  });
+  assert.deepEqual(calculateInvestmentProfitLoss({
+    price: '0.000000000000000002',
+    summary: {
+      totalQuoteAmount: '0.000000000000000001',
+      totalQuantity: '0.500000000000000000000000000000000000',
+      averageEntryPrice: '0.000000000000000002',
+    },
+  }), { amount: '0.00', percentage: '0.00', direction: 'flat' });
+});
+test('hides unrealized profit and loss without a complete live position', () => {
+  const summary = { totalQuoteAmount: '600', totalQuantity: '0.01', averageEntryPrice: null };
+  assert.equal(calculateInvestmentProfitLoss({ price: '65000', summary }), null);
+  assert.equal(calculateInvestmentProfitLoss({ price: null, summary: { ...summary, averageEntryPrice: '60000' } }), null);
+  assert.equal(calculateInvestmentProfitLoss({ price: '65000', summary: { ...summary, totalQuantity: '0' } }), null);
+});
+test('formats profit and loss signs consistently across platforms', () => {
+  assert.deepEqual(formatInvestmentProfitLoss({
+    amount: '50.00', percentage: '8.33', direction: 'profit'
+  }, 'en'), { amount: '+50.00', percentage: '+8.33', direction: 'profit' });
+  assert.deepEqual(formatInvestmentProfitLoss({
+    amount: '9.55', percentage: '1.59', direction: 'loss'
+  }, 'zh'), { amount: '-9.55', percentage: '-1.59', direction: 'loss' });
+  assert.equal(formatInvestmentProfitLoss(null, 'zh'), null);
 });
 test('builds USDT buy payloads with the captured instant and stable retry IDs', () => {
   const draft = createTradeDraft(null, new Date('2026-11-25T08:09:27.456+08:00'));

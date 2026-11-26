@@ -2,6 +2,8 @@ export const investmentManagementMessages = Object.freeze({
   "zh": {
     "investmentMarketPrice": "{{price}} USDT",
     "investmentMarketPriceLabel": "{{symbol}} 当前价格 {{price}} USDT，来自 OKX",
+    "investmentProfitLoss": "{{amount}} USDT（{{percentage}}%）",
+    "investmentProfitLossLabel": "当前未实现盈亏 {{amount}} USDT，收益率 {{percentage}}%",
     "investmentTradeRow": "{{date}}，投入 {{amount}} USDT，单价 {{price}} USDT",
     "investmentManagementFeatureName": "投资管理",
     "investmentManagementFeatureDescription": "记录买入，计算开仓均价",
@@ -61,6 +63,8 @@ export const investmentManagementMessages = Object.freeze({
   "en": {
     "investmentMarketPrice": "{{price}} USDT",
     "investmentMarketPriceLabel": "{{symbol}} current price {{price}} USDT, from OKX",
+    "investmentProfitLoss": "{{amount}} USDT ({{percentage}}%)",
+    "investmentProfitLossLabel": "Current unrealized profit and loss {{amount}} USDT, return {{percentage}}%",
     "investmentTradeRow": "{{date}}, spent {{amount}} USDT at {{price}} USDT",
     "investmentManagementFeatureName": "Investment Management",
     "investmentManagementFeatureDescription": "Track buys and average entry price",

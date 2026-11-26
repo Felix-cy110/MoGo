@@ -6,6 +6,7 @@ import { InvestmentSummary } from './InvestmentSummary';
 import { InvestmentEditor } from './InvestmentEditor';
 import { investmentApi } from './investmentApi';
 import { InvestmentMarketPrice } from './InvestmentMarketPrice';
+import { InvestmentProfitLoss } from './InvestmentProfitLoss';
 import { useMarketPrices } from './useMarketPrices';
 export function InvestmentManagementScreen({ onBack, onOpenSettings, onOpenTarget, api = investmentApi, marketClient }) {
   const { t } = useTranslation();
@@ -21,7 +22,10 @@ export function InvestmentManagementScreen({ onBack, onOpenSettings, onOpenTarge
       {!model.items.length && <p className="py-4 text-sm text-slate-500 dark:text-slate-400">{t(model.query ? 'investmentNoMatches' : 'investmentEmpty')}</p>}
       {model.items.map(({ target, summary }) => <button type="button" key={target.id} onClick={() => onOpenTarget(target.id)}
         className="block w-full border-b border-slate-200 py-3 text-left dark:border-slate-800">
-        <div className="flex items-center justify-between gap-3"><span className="min-w-0 break-words font-medium">{target.symbol}<InvestmentMarketPrice target={target} price={prices[target.symbol]} /></span><span aria-hidden="true">›</span></div>
+        <div className="flex items-start justify-between gap-3">
+          <span className="min-w-0 flex-1 break-words font-medium">{target.symbol}<InvestmentMarketPrice target={target} price={prices[target.symbol]} /></span>
+          <InvestmentProfitLoss price={prices[target.symbol]} summary={summary} />
+        </div>
         <InvestmentSummary summary={summary} symbol={target.symbol} />
       </button>)}
     </>}
