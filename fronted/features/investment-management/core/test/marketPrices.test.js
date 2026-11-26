@@ -14,6 +14,7 @@ test('subscribers share one public socket, deduplicate pairs and release only un
   sockets[0].open();
   assert.deepEqual(commands(sockets[0]), [{ op: 'subscribe', args: [
     { channel: 'tickers', instId: 'BTC-USDT' }, { channel: 'tickers', instId: 'ETH-USDT' },
+    { channel: 'tickers', instId: 'SOL-USDT' },
   ] }]);
   sockets[0].receive(tick());
   sockets[0].receive(tick('ETH', { last: '2001.23' }));
@@ -22,7 +23,9 @@ test('subscribers share one public socket, deduplicate pairs and release only un
   assert.deepEqual(second.latest(), { BTC: '59045.123456789012345678' });
   first.stop();
   assert.equal(sockets[0].closeCount, 0);
-  assert.deepEqual(commands(sockets[0]).at(-1), { op: 'unsubscribe', args: [{ channel: 'tickers', instId: 'ETH-USDT' }] });
+  assert.deepEqual(commands(sockets[0]).at(-1), { op: 'unsubscribe', args: [
+    { channel: 'tickers', instId: 'ETH-USDT' }, { channel: 'tickers', instId: 'SOL-USDT' },
+  ] });
   second.stop();
   second.stop();
   assert.equal(sockets[0].closeCount, 1);
@@ -46,10 +49,22 @@ test('adding a consumer changes the subscription without reconnecting', t => {
   assert.deepEqual(first.latest(), { BTC: '59045.123456789012345678' });
 });
 
-test('unsupported symbols never open sockets', t => {
+test('malformed symbols never open sockets', t => {
   const { sockets, subscribe } = setupMarket(t);
-  assert.deepEqual(subscribe(['SOL', 'toString']).latest(), {});
+  assert.deepEqual(subscribe(['bad symbol', '']).latest(), {});
   assert.equal(sockets.length, 0);
+});
+
+test('common coin names and lowercase codes share one dynamic subscription', t => {
+  const { sockets, subscribe, advance } = setupMarket(t);
+  const result = subscribe(['Solana', 'sol', 'SOL']);
+  sockets[0].open();
+  assert.deepEqual(commands(sockets[0]), [{
+    op: 'subscribe', args: [{ channel: 'tickers', instId: 'SOL-USDT' }],
+  }]);
+  sockets[0].receive(tick('SOL', { last: '142.50' }));
+  advance(500);
+  assert.deepEqual(result.latest(), { SOL: '142.50' });
 });
 
 test('bursts publish the newest quote once per interval and unchanged prices do not rerender', t => {

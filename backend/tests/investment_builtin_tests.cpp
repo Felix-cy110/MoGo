@@ -39,12 +39,10 @@ void rejectsSql(SqliteDatabase& db, const std::string& sql) {
 }
 void freshDatabase() {
     TemporaryData file;
-    std::int64_t btc_id{}, eth_id{};
     {
         SqliteInvestmentRepository repo(file.path.string()); InvestmentService service(repo);
         check(service.list().size() == 2, "Exactly two defaults");
         auto btc = builtin(service, "BTC"); auto eth = builtin(service, "ETH");
-        btc_id = btc.id; eth_id = eth.id;
         for (auto value : {btc, eth}) {
             check(service.detail(value.id).symbol_locked, "Default symbols locked before trading");
             value.symbol = "SOL";
@@ -64,17 +62,23 @@ void freshDatabase() {
         check(!custom.builtin_code, "Clients cannot forge built-in identity");
         SqliteDatabase raw(file.path.string());
         const auto id = std::to_string(eth.id);
-        rejectsSql(raw, "DELETE FROM investment_targets WHERE id=" + id);
         rejectsSql(raw, "UPDATE investment_targets SET builtin_code=NULL WHERE id=" + id);
         rejectsSql(raw, "UPDATE investment_targets SET symbol='SOL' WHERE id=" + id);
         rejectsSql(raw, "UPDATE investment_targets SET archived_at='now' WHERE id=" + id);
         rejectsSql(raw, "INSERT OR REPLACE INTO investment_targets(id,name,symbol,created_at,updated_at) VALUES(" + id + ",'replacement','SOL','now','now')");
+        service.deleteTarget(eth.id);
+        service.deleteTarget(custom.id);
+        service.deleteTarget(btc.id);
+        check(service.list().empty(), "Any default or custom target is deletable");
+        Statement history(raw.handle(), "SELECT COUNT(*) FROM investment_trades WHERE target_id = ?");
+        history.bind(1, btc.id);
+        check(history.row() && history.integer(0) == 1, "Soft deletion retains historical trades");
     }
     SqliteInvestmentRepository reopened(file.path.string()); InvestmentService service(reopened);
-    check(service.list().size() == 3, "Reopen never duplicates defaults");
-    const auto btc = builtin(service, "BTC");
-    check(btc.id == btc_id && builtin(service, "ETH").id == eth_id, "Stable default IDs");
-    check(btc.name == "My Bitcoin" && btc.note == "Keep my note", "Reopen preserves edited name and note");
+    check(service.list().empty(), "Deleted defaults stay deleted after reopening");
+    Target replacement; replacement.name = "ETH"; replacement.symbol = "eth";
+    replacement = service.saveTarget(replacement);
+    check(!replacement.builtin_code && replacement.symbol == "ETH", "Deleted default names can be reused normally");
 }
 void migrateExisting(bool use_audit) {
     TemporaryData file;
@@ -135,6 +139,6 @@ void concurrentInitialization() {
 int main() {
     try {
         freshDatabase(); migrateExisting(false); migrateExisting(true); migrateNameConflicts(); concurrentInitialization();
-        std::cout << "Built-in defaults, upgrade compatibility and protection passed\n";
+        std::cout << "Default initialization, deletion and upgrade compatibility passed\n";
     } catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }
 }

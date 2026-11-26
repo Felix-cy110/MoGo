@@ -57,6 +57,13 @@ Target InvestmentService::saveTarget(Target input) {
     });
     return input;
 }
+void InvestmentService::deleteTarget(std::int64_t id) {
+    std::lock_guard lock(mutex_);
+    repository_.transaction([&] {
+        requireTarget(id);
+        repository_.deleteTarget(id);
+    });
+}
 Trade InvestmentService::addTrade(Trade input) {
     validateTrade(input, true);
     std::lock_guard lock(mutex_);

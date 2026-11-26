@@ -8,6 +8,7 @@ public:
     std::vector<TargetView> list();
     Detail detail(std::int64_t target_id);
     Target saveTarget(Target input);
+    void deleteTarget(std::int64_t id);
     Trade addTrade(Trade input);
     Trade updateTrade(std::int64_t id, Trade input);
     void deleteTrade(std::int64_t id);

@@ -13,7 +13,7 @@ import { useMarketPrices as useWebMarketPrices } from '../../web/src/features/in
 
 const btc = { id: 1, name: 'BTC', symbol: 'BTC', quoteCurrency: 'USDT', builtinCode: 'BTC' };
 const eth = { ...btc, id: 2, name: 'ETH', symbol: 'ETH', builtinCode: 'ETH' };
-const sol = { ...btc, id: 3, name: 'BTC', symbol: 'SOL', builtinCode: null };
+const sol = { ...btc, id: 3, name: 'Solana', symbol: 'SOLANA', builtinCode: null };
 const summary = { totalQuoteAmount: '600', totalQuantity: '0.01', averageEntryPrice: '60000', buyCount: 1 };
 const initialAppState = AppState.currentState;
 let tree;
@@ -77,8 +77,8 @@ test('deduplicates subscriptions, preserves them across target reordering and re
   const client = marketClient();
   const props = { targets: [btc, btc, eth, sol], enabled: true, client };
   await render(<Probe {...props} />);
-  expect(client.subscribe.mock.calls[0][0]).toEqual(['BTC', 'ETH']);
-  expect(prices).toEqual({ BTC: '59045.1', ETH: '2001.23' });
+  expect(client.subscribe.mock.calls[0][0]).toEqual(['BTC', 'ETH', 'SOL']);
+  expect(prices).toEqual({ BTC: '59045.1', ETH: '2001.23', SOLANA: '2001.23' });
   await update(<Probe {...props} targets={[btc, eth, btc, sol]} />);
   expect(client.subscribe).toHaveBeenCalledTimes(1);
   await push(client, { ETH: '2002' });
@@ -124,9 +124,9 @@ test('changing target or client ignores messages from the previous subscription'
   expect(prices).toEqual({ ETH: '2001.23' });
   expect(oldClient.subscribe.mock.results[0].value).toHaveBeenCalledTimes(1);
   await update(<Probe targets={[sol]} enabled client={client} />);
-  expect(prices).toEqual({});
+  expect(prices).toEqual({ SOLANA: '2001.23' });
   expect(client.subscribe.mock.results[0].value).toHaveBeenCalledTimes(1);
-  expect(client.subscribe).toHaveBeenCalledTimes(1);
+  expect(client.subscribe).toHaveBeenCalledTimes(2);
 });
 
 test.each([['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark']])(
@@ -149,7 +149,7 @@ test.each([['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark']])(
       }),
     );
     expect(json).toContain('60,000');
-    expect(client.subscribe.mock.calls[0][0]).toEqual(['BTC', 'ETH']);
+    expect(client.subscribe.mock.calls[0][0]).toEqual(['BTC', 'ETH', 'SOL']);
     await update(<PreferencesProvider><InvestmentTargetScreen api={api} marketClient={client} targetId={1} /></PreferencesProvider>);
     await push(client, { BTC: '59050' });
     expect(JSON.stringify(tree.toJSON())).toContain('59,050 USDT');

@@ -45,6 +45,9 @@ void InvestmentHttpRoutes::registerRoutes(hv::HttpService& router) {
     router.PUT("/api/investment/targets/:id", [this](const HttpContextPtr& c) {
         return respond(c, [&] { auto value = wire::targetInput(body(c)); value.id = pathId(c); return wire::targetJson<Json>(service_.saveTarget(value)); });
     });
+    router.Delete("/api/investment/targets/:id", [this](const HttpContextPtr& c) {
+        return respond(c, [&] { service_.deleteTarget(pathId(c)); return Json::object(); });
+    });
     router.POST("/api/investment/trades", [this](const HttpContextPtr& c) {
         return respond(c, [&] { return wire::tradeJson<Json>(service_.addTrade(wire::tradeInput(body(c), true))); });
     });

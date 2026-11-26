@@ -9,18 +9,18 @@ Target read(const Statement& s) {
 }
 }
 std::vector<Target> SqliteInvestmentRepository::targets() {
-    Statement query(database_.handle(), selectTarget + " ORDER BY id DESC");
+    Statement query(database_.handle(), selectTarget + " WHERE deleted_at IS NULL ORDER BY id DESC");
     std::vector<Target> result;
     while (query.row()) result.push_back(read(query));
     return result;
 }
 std::optional<Target> SqliteInvestmentRepository::target(std::int64_t id) {
-    Statement query(database_.handle(), selectTarget + " WHERE id = ?");
+    Statement query(database_.handle(), selectTarget + " WHERE id = ? AND deleted_at IS NULL");
     query.bind(1, id);
     return query.row() ? std::optional{read(query)} : std::nullopt;
 }
 bool SqliteInvestmentRepository::nameExists(const std::string& name, std::int64_t except_id) {
-    Statement query(database_.handle(), "SELECT id FROM investment_targets WHERE name = ? COLLATE NOCASE AND quote_currency = 'USDT' AND id <> ?");
+    Statement query(database_.handle(), "SELECT id FROM investment_targets WHERE deleted_at IS NULL AND name = ? COLLATE NOCASE AND quote_currency = 'USDT' AND id <> ?");
     query.bind(1, name); query.bind(2, except_id);
     return query.row();
 }
@@ -37,5 +37,10 @@ Target SqliteInvestmentRepository::saveTarget(const Target& value) {
     auto result = value;
     if (!result.id) result.id = sqlite3_last_insert_rowid(database_.handle());
     return result;
+}
+void SqliteInvestmentRepository::deleteTarget(std::int64_t id) {
+    Statement statement(database_.handle(), "UPDATE investment_targets SET deleted_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?");
+    statement.bind(1, id);
+    statement.execute();
 }
 }

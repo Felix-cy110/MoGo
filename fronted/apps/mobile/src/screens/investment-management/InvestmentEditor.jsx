@@ -85,7 +85,7 @@ export default function InvestmentEditor({
       <View style={styles.actions}>
         {onDelete && (
           <Action
-            title={t('investmentDeleteTrade')}
+            title={t(target ? 'investmentDeleteTarget' : 'investmentDeleteTrade')}
             disabled={saving}
             danger
             onPress={onDelete}

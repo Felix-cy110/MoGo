@@ -10,6 +10,7 @@ public:
     std::optional<Target> target(std::int64_t id) override;
     bool nameExists(const std::string& name, std::int64_t except_id) override;
     Target saveTarget(const Target& value) override;
+    void deleteTarget(std::int64_t id) override;
     std::vector<Trade> trades(std::int64_t target_id, bool include_deleted = false) override;
     std::optional<Trade> trade(std::int64_t id) override;
     std::optional<Trade> request(const std::string& request_id) override;
