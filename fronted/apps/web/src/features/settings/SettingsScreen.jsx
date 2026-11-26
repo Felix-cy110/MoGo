@@ -2,14 +2,12 @@ import React, { useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FormFieldRow } from '../../components/FormFieldRow';
-import { useColorTheme } from '../../hooks/useColorTheme';
 import { LanguageSwitcher } from '../personal-finance/components/LanguageSwitcher';
 import { ThemeSwitcher } from '../personal-finance/components/ThemeSwitcher';
 
-export function SettingsScreen({ onBack }) {
+export function SettingsScreen({ onBack, isDark, onToggleTheme }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
-  const { isDark, toggleTheme } = useColorTheme();
 
   useEffect(() => {
     document.title = `${t('settings')} · ${t('toolboxName')}`;
@@ -37,7 +35,7 @@ export function SettingsScreen({ onBack }) {
           </FormFieldRow>
           <FormFieldRow label={t('appearance')} htmlFor="settings-theme">
             <div id="settings-theme" className="flex justify-end">
-              <ThemeSwitcher t={t} isDark={isDark} onToggle={toggleTheme} />
+              <ThemeSwitcher t={t} isDark={isDark} onToggle={onToggleTheme} />
             </div>
           </FormFieldRow>
         </div>
