@@ -5,6 +5,7 @@ import { AnalyticsScreen } from './features/personal-finance/AnalyticsScreen';
 import { ToolboxHome } from './features/toolbox/ToolboxHome';
 import { UserProfileScreen } from './features/user-profile/UserProfileScreen';
 import { SettingsScreen } from './features/settings/SettingsScreen';
+import { DataManagementScreen } from './features/settings/DataManagementScreen';
 import { LeetCodeInterviewScreen } from './features/leetcode-interview/LeetCodeInterviewScreen';
 import { InvestmentManagementScreen } from './features/investment-management/InvestmentManagementScreen';
 import { InvestmentTargetScreen } from './features/investment-management/InvestmentTargetScreen';
@@ -16,12 +17,14 @@ const CATEGORY_MANAGEMENT_PATH = '/finance/categories';
 const ANALYTICS_PATH = '/finance/analytics';
 const PROFILE_PATH = '/profile';
 const SETTINGS_PATH = '/settings';
+const DATA_MANAGEMENT_PATH = '/settings/data-management';
 const LEETCODE_INTERVIEW_PATH = '/leetcode-interview';
 const INVESTMENT_MANAGEMENT_PATH = '/investment-management';
 
 const resolveScreen = path => {
   if (/^\/investment-management\/targets\/[1-9]\d*$/.test(path)) return 'investmentTarget';
   if (path === INVESTMENT_MANAGEMENT_PATH) return 'investmentManagement';
+  if (path === DATA_MANAGEMENT_PATH) return 'dataManagement';
   if (path === SETTINGS_PATH) return 'settings';
   if (path === LEETCODE_INTERVIEW_PATH) return 'leetcodeInterview';
   if (path === PROFILE_PATH) return 'profile';
@@ -53,8 +56,12 @@ function App() {
     navigate(SETTINGS_PATH);
   };
 
+  if (screen === 'dataManagement') {
+    return <DataManagementScreen onBack={() => navigate(SETTINGS_PATH)} />;
+  }
+
   if (screen === 'settings') {
-    return <SettingsScreen isDark={isDark} onToggleTheme={toggleTheme} onBack={() => navigate(settingsReturnPath === SETTINGS_PATH ? HOME_PATH : settingsReturnPath)} />;
+    return <SettingsScreen isDark={isDark} onToggleTheme={toggleTheme} onOpenDataManagement={() => navigate(DATA_MANAGEMENT_PATH)} onBack={() => navigate(settingsReturnPath === SETTINGS_PATH ? HOME_PATH : settingsReturnPath)} />;
   }
 
   if (screen === 'profile') {

@@ -1,15 +1,6 @@
 import React, { useState } from 'react';
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
-import {
-  BACKUP_CONFLICT_POLICY,
-  backupErrorKey,
-} from '@mogo/core-shared';
+import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { BACKUP_CONFLICT_POLICY, backupErrorKey } from '@mogo/core-shared';
 import {
   errorCodes,
   isErrorWithCode,
@@ -19,12 +10,18 @@ import {
 import Share from 'react-native-share';
 import { useTranslation } from 'react-i18next';
 import FormDialog from '../../components/FormDialog';
-import { Action, Label, Row, Section } from '../../components/Primitives';
+import {
+  Action,
+  Label,
+  LinkRow,
+  Page,
+  Section,
+} from '../../components/Primitives';
 import { usePreferences } from '../../platform/PreferencesProvider';
 
 const MAX_BACKUP_FILE_SIZE = 350 * 1024 * 1024;
 
-export default function DataBackupSection({ api }) {
+export default function DataManagementScreen({ api }) {
   const { t } = useTranslation();
   const { colors } = usePreferences();
   const [mode, setMode] = useState(null);
@@ -48,12 +45,18 @@ export default function DataBackupSection({ api }) {
   const openImport = async () => {
     try {
       const [selected] = await pick({ type: types.allFiles, mode: 'import' });
-      if (!selected.name?.toLowerCase().endsWith('.mogo')) return notify('backupFileRequired');
-      if (selected.size != null && selected.size > MAX_BACKUP_FILE_SIZE) return notify('backupFileTooLarge');
+      if (!selected.name?.toLowerCase().endsWith('.mogo'))
+        return notify('backupFileRequired');
+      if (selected.size != null && selected.size > MAX_BACKUP_FILE_SIZE)
+        return notify('backupFileTooLarge');
       setFile(selected);
       setMode('import');
     } catch (error) {
-      if (isErrorWithCode(error) && error.code === errorCodes.OPERATION_CANCELED) return;
+      if (
+        isErrorWithCode(error) &&
+        error.code === errorCodes.OPERATION_CANCELED
+      )
+        return;
       notify('backupRestoreFailed');
     }
   };
@@ -63,7 +66,10 @@ export default function DataBackupSection({ api }) {
     setBusy(true);
     try {
       const exported = await api.exportData(password);
-      const uri = await api.writeBackupFile(exported.fileName, exported.content);
+      const uri = await api.writeBackupFile(
+        exported.fileName,
+        exported.content,
+      );
       await Share.open({
         url: uri,
         type: 'application/vnd.mogo.backup',
@@ -103,34 +109,15 @@ export default function DataBackupSection({ api }) {
 
   return (
     <>
-      <Section title={t('dataManagement')}>
-        <Row
-          label={t('exportData')}
-          action={
-            <Action
-              compact
-              title={t('exportData')}
-              disabled={!api}
-              onPress={() => setMode('export')}
-            />
-          }
-        >
-          <Label muted>{t('dataBackupDescription')}</Label>
-        </Row>
-        <Row
-          label={t('importData')}
-          action={
-            <Action
-              compact
-              title={t('importData')}
-              disabled={!api}
-              onPress={openImport}
-            />
-          }
-        >
-          <Label muted>{t('conflictPolicy')}</Label>
-        </Row>
-      </Section>
+      <Page>
+        <Label muted style={styles.description}>
+          {t('dataBackupDescription')}
+        </Label>
+        <Section>
+          <LinkRow title={t('exportData')} onPress={() => setMode('export')} />
+          <LinkRow title={t('importData')} onPress={openImport} />
+        </Section>
+      </Page>
 
       <FormDialog
         visible={Boolean(mode)}
@@ -152,9 +139,14 @@ export default function DataBackupSection({ api }) {
             secureTextEntry
             value={password}
             onChangeText={setPassword}
-            style={[styles.input, { color: colors.text, borderColor: colors.line }]}
+            style={[
+              styles.input,
+              { color: colors.text, borderColor: colors.line },
+            ]}
           />
-          <Label muted style={styles.hint}>{t('backupPasswordHint')}</Label>
+          <Label muted style={styles.hint}>
+            {t('backupPasswordHint')}
+          </Label>
         </View>
         {mode === 'export' && (
           <View style={styles.fieldBlock}>
@@ -166,7 +158,10 @@ export default function DataBackupSection({ api }) {
               secureTextEntry
               value={confirmation}
               onChangeText={setConfirmation}
-              style={[styles.input, { color: colors.text, borderColor: colors.line }]}
+              style={[
+                styles.input,
+                { color: colors.text, borderColor: colors.line },
+              ]}
             />
           </View>
         )}
@@ -195,7 +190,9 @@ export default function DataBackupSection({ api }) {
               </Pressable>
             ))}
             {conflictPolicy === BACKUP_CONFLICT_POLICY.KEEP_EXISTING && (
-              <Label muted style={styles.hint}>{t('keepExistingDataHint')}</Label>
+              <Label muted style={styles.hint}>
+                {t('keepExistingDataHint')}
+              </Label>
             )}
           </View>
         )}
@@ -214,10 +211,21 @@ export default function DataBackupSection({ api }) {
 }
 
 const styles = StyleSheet.create({
+  description: { marginBottom: 16 },
   fieldBlock: { gap: 6, marginBottom: 16 },
-  input: { minHeight: 44, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 10 },
+  input: {
+    minHeight: 44,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 10,
+  },
   hint: { fontSize: 12, lineHeight: 18 },
-  policy: { minHeight: 48, justifyContent: 'center', borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 12, marginTop: 8 },
+  policy: {
+    minHeight: 48,
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 12,
+    marginTop: 8,
+  },
   selected: { fontWeight: '600' },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
 });

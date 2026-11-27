@@ -1,13 +1,11 @@
 import React, { useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FormFieldRow } from '../../components/FormFieldRow';
 import { LanguageSwitcher } from '../personal-finance/components/LanguageSwitcher';
 import { ThemeSwitcher } from '../personal-finance/components/ThemeSwitcher';
-import { DataBackupSettings } from './DataBackupSettings';
-import { backupApi } from '../../services/api';
 
-export function SettingsScreen({ onBack, isDark, onToggleTheme, dataBackupApi = backupApi }) {
+export function SettingsScreen({ onBack, isDark, onToggleTheme, onOpenDataManagement }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
 
@@ -40,8 +38,11 @@ export function SettingsScreen({ onBack, isDark, onToggleTheme, dataBackupApi = 
               <ThemeSwitcher t={t} isDark={isDark} onToggle={onToggleTheme} />
             </div>
           </FormFieldRow>
+          <button className="settings-link-row" type="button" onClick={onOpenDataManagement}>
+            <span>{t('dataManagement')}</span>
+            <ChevronRight size={18} aria-hidden="true" />
+          </button>
         </div>
-        <DataBackupSettings api={dataBackupApi} />
       </div>
     </main>
   );

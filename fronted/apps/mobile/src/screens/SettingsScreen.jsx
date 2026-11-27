@@ -1,10 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePreferences } from '../platform/PreferencesProvider';
-import { Page, Section } from '../components/Primitives';
+import { LinkRow, Page, Section } from '../components/Primitives';
 import ChoiceField from '../components/ChoiceField';
-import DataBackupSection from './settings/DataBackupSection';
-export default function SettingsScreen({ api }) {
+export default function SettingsScreen({ navigate = () => {} }) {
   const { t, i18n } = useTranslation();
   const { theme, update } = usePreferences();
   return (
@@ -29,7 +28,12 @@ export default function SettingsScreen({ api }) {
           ]}
         />
       </Section>
-      <DataBackupSection api={api} />
+      <Section>
+        <LinkRow
+          title={t('dataManagement')}
+          onPress={() => navigate('dataManagement')}
+        />
+      </Section>
     </Page>
   );
 }

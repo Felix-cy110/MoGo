@@ -89,8 +89,7 @@ export function DataBackupSettings({ api }) {
 
   return (
     <>
-      <p className="section-label mb-3 mt-7">{t('dataManagement')}</p>
-      <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">{t('dataBackupDescription')}</p>
+      <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">{t('dataBackupDescription')}</p>
       <div className="form-sheet">
         <FormFieldRow label={t('exportData')} htmlFor="settings-export-data">
           <button id="settings-export-data" className="form-row-action grid size-9 place-items-center" type="button" onClick={() => open('export')} aria-label={t('exportData')} title={t('exportData')}>

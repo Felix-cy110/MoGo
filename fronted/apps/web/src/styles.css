@@ -195,8 +195,28 @@ button, input, select, textarea { font: inherit; }
 .form-row-submit:hover { color: #0f172a; }
 .form-row-action:focus-visible,
 .form-row-submit:focus-visible { outline: 2px solid #64748b; outline-offset: 2px; }
+.settings-link-row {
+  display: flex;
+  width: 100%;
+  min-height: 3.75rem;
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  background: transparent;
+  padding: 0 1rem;
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.settings-link-row:first-child { border-top: 0; }
+.settings-link-row:hover { background: #f1f5f9; }
+.settings-link-row:focus-visible { outline: 2px solid #64748b; outline-offset: -2px; }
 .dark .form-sheet { border-color: #1e293b; background: #0f172a; }
 .dark .form-row + .form-row { border-color: #1e293b; }
+.dark .settings-link-row { border-color: #1e293b; color: #e2e8f0; }
+.dark .settings-link-row:hover { background: #1e293b; }
 .dark .form-row-label { color: #e2e8f0; }
 .dark .form-row-field { border-color: transparent; background: transparent; }
 .dark .form-row-field:focus { border-color: transparent; box-shadow: none; }
