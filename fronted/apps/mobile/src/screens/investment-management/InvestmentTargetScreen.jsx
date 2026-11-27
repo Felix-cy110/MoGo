@@ -84,29 +84,28 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
                     {data.target.symbol}
                   </Label>
                 </Pressable>
-                <Label muted style={styles.marketPairSuffix}>
-                  {' / '}{data.target.quoteCurrency}
-                </Label>
               </View>
               <InvestmentMarketPrice
                 target={data.target}
                 price={prices[data.target.symbol]}
+                prominent
               />
             </View>
             <InvestmentProfitLoss
               price={prices[data.target.symbol]}
               summary={data.summary}
+              prominent
             />
           </View>
           <InvestmentSummary
             summary={data.summary}
             symbol={data.target.symbol}
-            centered
+            detail
           />
           {Boolean(data.target.note) && (
             <Label style={styles.hint}>{data.target.note}</Label>
           )}
-          <View style={styles.tradesHeader}>
+          <View style={[styles.tradesHeader, { borderColor: colors.line }]}>
             <Label accessibilityRole="header" style={styles.title}>
               {t('investmentTrades')}
             </Label>
@@ -184,21 +183,20 @@ const styles = StyleSheet.create({
   content: { width: '100%', maxWidth: 560, alignSelf: 'center' },
   marketSummary: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'baseline',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 8,
   },
   marketQuote: {
     flex: 1,
     minWidth: 0,
     flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    gap: 8,
   },
-  marketPair: { flexDirection: 'row', alignItems: 'center' },
-  marketPairSuffix: { fontSize: 14, fontWeight: '500' },
+  marketPair: { flexDirection: 'row', alignItems: 'baseline' },
   targetSymbol: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
@@ -210,6 +208,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minHeight: 44,
     marginTop: 4,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   pressed: { opacity: 0.65 },
   trade: {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pencil, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   useInvestmentDetail,
@@ -52,27 +52,25 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpen
   return <InvestmentLayout title={data?.target.symbol || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} model={model}>
     {data && !model.loading && !model.loadError && <div className="w-full">
       <section>
-        <div className="mb-1 flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-1 flex-wrap items-center text-sm">
+        <div className="mb-1 flex items-baseline justify-between gap-2 sm:gap-4">
+          <div className="flex min-w-0 items-baseline gap-2 whitespace-nowrap">
             <button
               type="button"
-              className="inline-flex items-center gap-1 border-b border-dashed border-blue-600 pb-0.5 font-semibold text-blue-700 hover:text-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-blue-400 dark:text-blue-300 dark:hover:text-blue-200"
+              className="inline-flex shrink-0 items-center gap-1 border-b border-dashed border-blue-600 pb-0.5 text-lg font-semibold text-slate-900 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:text-xl dark:border-blue-400 dark:text-slate-100 dark:hover:text-blue-200"
               aria-label={t('investmentEditTarget')}
               title={t('investmentEditTarget')}
               onClick={() => setEditor({ kind: 'target', value: data.target })}
             >
               {data.target.symbol}
-              <Pencil size={13} aria-hidden="true" />
             </button>
-            <span className="text-slate-500 dark:text-slate-400"> / {data.target.quoteCurrency}</span>
-            <InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} />
+            <InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} prominent />
           </div>
-          <InvestmentProfitLoss price={prices[data.target.symbol]} summary={data.summary} />
+          <InvestmentProfitLoss price={prices[data.target.symbol]} summary={data.summary} prominent />
         </div>
-        <InvestmentSummary summary={data.summary} symbol={data.target.symbol} centered />
+        <InvestmentSummary summary={data.summary} symbol={data.target.symbol} detail />
         {data.target.note && <p className="mb-3 break-words text-center text-sm text-slate-600 dark:text-slate-300">{data.target.note}</p>}
       </section>
-      <div className="mb-1 flex min-h-9 items-center justify-between">
+      <div className="mb-1 flex min-h-9 items-center justify-between border-t border-slate-200/70 pt-3 dark:border-slate-800/70">
         <h2 className="text-sm font-semibold">{t('investmentTrades')}</h2>
         <button
           type="button"
