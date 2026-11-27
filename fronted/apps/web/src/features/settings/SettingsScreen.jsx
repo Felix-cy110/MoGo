@@ -4,8 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { FormFieldRow } from '../../components/FormFieldRow';
 import { LanguageSwitcher } from '../personal-finance/components/LanguageSwitcher';
 import { ThemeSwitcher } from '../personal-finance/components/ThemeSwitcher';
+import { DataBackupSettings } from './DataBackupSettings';
+import { backupApi } from '../../services/api';
 
-export function SettingsScreen({ onBack, isDark, onToggleTheme }) {
+export function SettingsScreen({ onBack, isDark, onToggleTheme, dataBackupApi = backupApi }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
 
@@ -39,6 +41,7 @@ export function SettingsScreen({ onBack, isDark, onToggleTheme }) {
             </div>
           </FormFieldRow>
         </div>
+        <DataBackupSettings api={dataBackupApi} />
       </div>
     </main>
   );

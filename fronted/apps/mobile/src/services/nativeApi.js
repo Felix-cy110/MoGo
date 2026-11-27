@@ -51,5 +51,27 @@ export const createNativeApis = bridge => {
       getProfile: () => call('profile.getProfile'),
       saveProfile: payload => call('profile.saveProfile', payload),
     }),
+    backup: Object.freeze({
+      exportData: password => call('backup.exportData', { password }),
+      importData: payload => call('backup.importData', payload),
+      writeBackupFile: (fileName, content) => {
+        if (!bridge?.writeBackupFile)
+          throw new ApiError(
+            'NATIVE_UNAVAILABLE',
+            'Native file export is not installed',
+            503,
+          );
+        return bridge.writeBackupFile(fileName, content);
+      },
+      readBackupFile: uri => {
+        if (!bridge?.readBackupFile)
+          throw new ApiError(
+            'NATIVE_UNAVAILABLE',
+            'Native file import is not installed',
+            503,
+          );
+        return bridge.readBackupFile(uri);
+      },
+    }),
   });
 };

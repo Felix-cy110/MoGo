@@ -1,6 +1,12 @@
 #pragma once
 #include <nlohmann/json.hpp>
 #include <string>
+#ifdef MOGO_FEATURE_DATA_BACKUP
+#include "mogo/data_backup/application/backup_service.hpp"
+namespace mogo::native {
+nlohmann::json backupCommand(data_backup::BackupService&, const std::string&, const nlohmann::json&);
+}
+#endif
 #ifdef MOGO_FEATURE_PERSONAL_FINANCE
 #include "mogo/personal_finance/application/finance_service.hpp"
 namespace mogo::native {

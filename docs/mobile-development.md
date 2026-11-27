@@ -123,3 +123,9 @@ Android 裁剪：`./gradlew assembleDebug -PmogoFeatureInvestmentManagement=OFF`
 本次检查覆盖双平台 Codegen、双平台 release JS Bundle、宿主机 C++ 及 feature 开关组合、RN 测试，并用临时浏览器适配预览检查 320/390 宽度、中英文、明暗主题下的 RN 页面与表单。这些检查不替代 Android/iOS 真机验证；当前主机缺少完整 Xcode 和 Android SDK。后续需要检查原生 Intl/BigInt、软键盘、表单与系统弹窗焦点、飞行模式及强制重开后的持久化。
 
 行情网络状态使用 `@react-native-community/netinfo` 原生模块；更新依赖后需重新构建安装 App，iOS 先重新安装 Pods，单独刷新 Metro 不能补齐原生模块。
+
+## 加密数据备份
+
+设置页通过 `@react-native-documents/picker` 选择 `.mogo` 文件，通过 `react-native-share` 调用系统分享／存储面板。TurboModule 的 `readBackupFile`、`writeBackupFile` 只处理已经加密的文本容器；密码派生、认证解密、SQLite 快照与恢复均在 C++ 串行队列完成。
+
+新增或更新上述原生依赖后必须重新安装 Pods 并重建 App。当前工作机已验证 RN Codegen、JS 测试和宿主机 Native Core，尚未完成 Android/iOS 原生编译与系统文件选择器、分享面板的模拟器或真机验收。

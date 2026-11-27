@@ -33,6 +33,7 @@ int main() {
             const auto capabilities = call(core, "capabilities").at("features");
             check(std::find(capabilities.begin(), capabilities.end(), "personal-finance") != capabilities.end(), "Finance capability");
             check(std::find(capabilities.begin(), capabilities.end(), "user-profile") != capabilities.end(), "Profile capability");
+            check(std::find(capabilities.begin(), capabilities.end(), "data-backup") != capabilities.end(), "Backup capability");
             const auto categories = call(core, "finance.getCategories");
             check(categories.size() == 4, "Seed categories");
             std::int64_t other_id = 0;
@@ -55,6 +56,16 @@ int main() {
             check(dashboard.at("expenses")[0].at("categoryName") == "咖啡☕", "Historical category preserved");
             check(call(core, "finance.getAnalytics", {{"startDate", "2026-11-01"}, {"endDate", "2026-11-19"}}).at("totalAmountCents") == 10100, "Analytics contract");
             call(core, "profile.saveProfile", {{"name", "离线用户🐶"}, {"monthlyIncomeCents", 123456}});
+            const auto backup = call(core, "backup.exportData", {{"password", "native-password"}});
+            check(backup.at("fileName").get<std::string>().ends_with(".mogo"), "Backup file contract");
+            call(core, "profile.saveProfile", {{"name", "changed"}});
+            const auto imported = call(core, "backup.importData", {
+                {"content", backup.at("content")}, {"password", "native-password"}, {"conflictPolicy", "OVERWRITE"}});
+            check(imported.at("databaseImported") && imported.at("profileImported"), "Native backup import");
+            check(call(core, "profile.getProfile").at("name") == "离线用户🐶", "Native services reload after import");
+            rejects(core, "backup.importData", {
+                {"content", backup.at("content")}, {"password", "wrong-password"}, {"conflictPolicy", "OVERWRITE"}},
+                "BACKUP_DECRYPT_FAILED");
             rejects(core, "profile.saveProfile", {{"monthlyIncomeCents", -1}}, "PROFILE_MONTHLY_INCOME_INVALID");
             rejects(core, "finance.saveBudget", {{"date", "2026-11-19"}, {"amountCents", 1.5}}, "VALIDATION_ERROR");
             rejects(core, "unknown", Json::object(), "FEATURE_UNAVAILABLE");

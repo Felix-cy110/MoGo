@@ -19,6 +19,8 @@ HTTP API 仅服务于 Web 调试端，默认监听 `127.0.0.1:8080`。未来 Rea
 | `PUT` | `/api/budgets/daily` | 新增或更新每日预算 |
 | `POST` | `/api/expenses` | 新增消费并返回本次跨越的预警阈值 |
 | `PUT` | `/api/expenses/{expenseId}` | 编辑已有消费，保持记录 ID 和发生时间不变 |
+| `POST` | `/api/backup/export` | 使用用户密码导出 SQLite 与资料 JSON 的加密备份 |
+| `POST` | `/api/backup/import` | 解密并按冲突策略恢复本地数据 |
 
 内置 `code=OTHER`（“其他”）分类禁止修改和删除，两种操作均返回 `403 CATEGORY_PROTECTED`。其他默认分类和自定义分类仍可编辑、软删除；保护规则与分类显示名称无关。
 
@@ -70,6 +72,36 @@ HTTP API 仅服务于 Web 调试端，默认监听 `127.0.0.1:8080`。未来 Rea
 | `500` | `INTERNAL_ERROR` | 未映射的服务端错误 |
 
 客户端应使用 `code` 映射 i18n 文案，不应依赖后端中文 `message`。
+
+## 本地数据备份
+
+导出请求：
+
+```json
+{ "password": "至少八个字符" }
+```
+
+响应中的 `content` 是 `MOGO-BACKUP/1` 文本封装的认证密文，Web 将它下载为 `.mogo` 文件；客户端不得把解密后的 SQLite 或 JSON 暴露给 JS。
+
+导入请求：
+
+```json
+{
+  "content": "MOGO-BACKUP/1\\n...",
+  "password": "至少八个字符",
+  "conflictPolicy": "OVERWRITE"
+}
+```
+
+`OVERWRITE` 整包恢复备份并在失败时回滚；`KEEP_EXISTING` 保留已经存在的本地文件，只补入缺失文件，不进行可能破坏外键关系的逐表合并。错误密码与密文篡改统一返回 `BACKUP_DECRYPT_FAILED`，避免泄露校验细节。具体格式和安全约束见 [data-backup.md](data-backup.md)。
+
+| HTTP 状态 | code | 说明 |
+| --- | --- | --- |
+| `400` | `BACKUP_PASSWORD_INVALID` | 密码少于 8 个字符或超过长度限制 |
+| `400` | `BACKUP_DECRYPT_FAILED` | 密码错误、文件损坏或认证失败 |
+| `400` | `BACKUP_INVALID` | 解密成功但备份内容不完整或版本不支持 |
+| `500` | `BACKUP_EXPORT_FAILED` | 无法生成 SQLite 快照或加密文件 |
+| `500` | `BACKUP_RESTORE_FAILED` | 恢复失败，已尝试回滚原有数据 |
 
 ## 用户资料契约
 

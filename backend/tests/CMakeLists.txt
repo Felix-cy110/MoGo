@@ -10,6 +10,12 @@ if(MOGO_FEATURE_USER_PROFILE)
   add_test(NAME user_profile COMMAND mogo_user_profile_tests)
 endif()
 
+if(MOGO_FEATURE_DATA_BACKUP)
+  add_executable(mogo_data_backup_tests data_backup_tests.cpp)
+  target_link_libraries(mogo_data_backup_tests PRIVATE mogo_data_backup_local SQLite::SQLite3)
+  add_test(NAME data_backup COMMAND mogo_data_backup_tests)
+endif()
+
 if(MOGO_ENABLE_NATIVE AND MOGO_FEATURE_PERSONAL_FINANCE AND MOGO_FEATURE_USER_PROFILE)
   add_executable(mogo_native_core_tests native_core_tests.cpp)
   target_link_libraries(mogo_native_core_tests PRIVATE mogo_native_core nlohmann_json::nlohmann_json)

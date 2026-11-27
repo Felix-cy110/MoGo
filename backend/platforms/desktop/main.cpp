@@ -1,5 +1,9 @@
 #include "hv/HttpServer.h"
 #include "hv/hlog.h"
+#ifdef MOGO_FEATURE_DATA_BACKUP
+#include "mogo/data_backup/local/local_backup_service.hpp"
+#include "mogo/http/data_backup_http_routes.hpp"
+#endif
 #ifdef MOGO_FEATURE_PERSONAL_FINANCE
 #include "mogo/http/finance_http_routes.hpp"
 #include "mogo/personal_finance/application/finance_service.hpp"
@@ -63,6 +67,12 @@ int main(int argc, char** argv) {
         router.GET("/api/health", [](const HttpContextPtr& context) {
             return context->sendJson(hv::Json{{"status", "ok"}, {"runtime", "cpp20-libhv"}});
         });
+
+#ifdef MOGO_FEATURE_DATA_BACKUP
+        mogo::data_backup::LocalBackupService backup_service(options.database, options.profile);
+        mogo::http::DataBackupHttpRoutes backup_routes(backup_service);
+        backup_routes.registerRoutes(router);
+#endif
 
 #ifdef MOGO_FEATURE_PERSONAL_FINANCE
         mogo::personal_finance::SqliteFinanceRepository repository(options.database);

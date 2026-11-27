@@ -1,6 +1,9 @@
 #include "mogo/native/native_core.hpp"
 #include "mogo/core_shared/error.hpp"
 #include "commands.hpp"
+#ifdef MOGO_FEATURE_DATA_BACKUP
+#include "mogo/data_backup/local/local_backup_service.hpp"
+#endif
 #ifdef MOGO_FEATURE_PERSONAL_FINANCE
 #include "mogo/personal_finance/sqlite/sqlite_finance_repository.hpp"
 #endif
@@ -16,6 +19,10 @@ namespace mogo::native {
 using Json = nlohmann::json;
 using core_shared::ApplicationError;
 struct NativeCore::Impl {
+    std::filesystem::path directory;
+#ifdef MOGO_FEATURE_DATA_BACKUP
+    std::unique_ptr<data_backup::LocalBackupService> backup;
+#endif
 #ifdef MOGO_FEATURE_INVESTMENT_MANAGEMENT
     std::unique_ptr<investment::SqliteInvestmentRepository> investment_repository;
     std::unique_ptr<investment::InvestmentService> investment;
@@ -28,11 +35,15 @@ struct NativeCore::Impl {
     std::unique_ptr<user_profile::JsonProfileRepository> profile_repository;
     std::unique_ptr<user_profile::ProfileService> profile;
 #endif
-    explicit Impl(const std::filesystem::path& directory) {
+    explicit Impl(const std::filesystem::path& data_directory) : directory(data_directory) {
         if (directory.empty() || !directory.is_absolute()) {
             throw std::invalid_argument("Private absolute directory required");
         }
         std::filesystem::create_directories(directory);
+        initializeFeatures();
+    }
+
+    void initializeFeatures() {
 #ifdef MOGO_FEATURE_INVESTMENT_MANAGEMENT
         investment_repository = std::make_unique<investment::SqliteInvestmentRepository>((directory / "mogo.db").string());
         investment = std::make_unique<investment::InvestmentService>(*investment_repository);
@@ -47,6 +58,25 @@ struct NativeCore::Impl {
             directory / "user-profile.json");
         profile = std::make_unique<user_profile::ProfileService>(*profile_repository);
 #endif
+#ifdef MOGO_FEATURE_DATA_BACKUP
+        backup = std::make_unique<data_backup::LocalBackupService>(directory / "mogo.db", directory / "user-profile.json");
+#endif
+    }
+
+    void reloadFeaturesAfterImport() {
+#ifdef MOGO_FEATURE_INVESTMENT_MANAGEMENT
+        investment.reset();
+        investment_repository.reset();
+#endif
+#ifdef MOGO_FEATURE_PERSONAL_FINANCE
+        finance.reset();
+        finance_repository.reset();
+#endif
+#ifdef MOGO_FEATURE_USER_PROFILE
+        profile.reset();
+        profile_repository.reset();
+#endif
+        initializeFeatures();
     }
     Json dispatch(const std::string& method, const Json& payload) {
         if (method == "capabilities") {
@@ -60,6 +90,9 @@ struct NativeCore::Impl {
 #ifdef MOGO_FEATURE_USER_PROFILE
             features.push_back("user-profile");
 #endif
+#ifdef MOGO_FEATURE_DATA_BACKUP
+            features.push_back("data-backup");
+#endif
             return {{"features", features}};
         }
 #ifdef MOGO_FEATURE_PERSONAL_FINANCE
@@ -70,6 +103,13 @@ struct NativeCore::Impl {
 #endif
 #ifdef MOGO_FEATURE_INVESTMENT_MANAGEMENT
         if (method.starts_with("investment.")) return investmentCommand(*investment, method.substr(11), payload);
+#endif
+#ifdef MOGO_FEATURE_DATA_BACKUP
+        if (method.starts_with("backup.")) {
+            auto result = backupCommand(*backup, method.substr(7), payload);
+            if (method == "backup.importData" && result.value("databaseImported", false)) reloadFeaturesAfterImport();
+            return result;
+        }
 #endif
         throw ApplicationError(400, "FEATURE_UNAVAILABLE", "Unknown or disabled native operation");
     }

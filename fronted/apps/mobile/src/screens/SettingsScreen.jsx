@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { usePreferences } from '../platform/PreferencesProvider';
 import { Page, Section } from '../components/Primitives';
 import ChoiceField from '../components/ChoiceField';
-export default function SettingsScreen() {
+import DataBackupSection from './settings/DataBackupSection';
+export default function SettingsScreen({ api }) {
   const { t, i18n } = useTranslation();
   const { theme, update } = usePreferences();
   return (
@@ -28,6 +29,7 @@ export default function SettingsScreen() {
           ]}
         />
       </Section>
+      <DataBackupSection api={api} />
     </Page>
   );
 }

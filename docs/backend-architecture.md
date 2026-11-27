@@ -2,6 +2,8 @@
 
 MoGo 后端以 C++20 业务核心为中心。Web 调试端通过 libhv HTTP 适配器调用；未来 React Native 手机端通过 C++ Turbo Native Module 直接调用同一业务核心，不在手机内启动 localhost HTTP 服务。
 
+加密备份位于 `backend/features/data_backup`。应用层只定义导入导出契约，本地基础设施负责 SQLite snapshot/restore、JSON 文件替换、版本化容器和认证加密；HTTP 与 Native Adapter 只映射参数和稳定错误码。该模块不进入个人财务或投资管理内部仓储，也不在 JS 中复制持久化规则。
+
 ## 依赖方向
 
 ```text

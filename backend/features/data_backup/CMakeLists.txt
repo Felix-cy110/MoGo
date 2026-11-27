@@ -1,0 +1,10 @@
+add_library(mogo_data_backup_application INTERFACE)
+target_include_directories(mogo_data_backup_application INTERFACE application/include)
+target_link_libraries(mogo_data_backup_application INTERFACE mogo_core_shared)
+
+add_library(mogo_data_backup_local infrastructure/local/src/local_backup_service.cpp)
+target_include_directories(mogo_data_backup_local PUBLIC infrastructure/local/include)
+target_link_libraries(mogo_data_backup_local
+  PUBLIC mogo_data_backup_application
+  PRIVATE mogo_crypto mogo_sqlite nlohmann_json::nlohmann_json
+)

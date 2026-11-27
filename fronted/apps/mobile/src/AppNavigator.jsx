@@ -107,7 +107,7 @@ export default function AppNavigator({ apis = nativeApis }) {
         content = <ProfileScreen api={apis.profile} />;
         break;
       case 'settings':
-        content = <SettingsScreen />;
+        content = <SettingsScreen api={apis.backup} />;
         break;
       case 'investmentManagement':
         content = (
