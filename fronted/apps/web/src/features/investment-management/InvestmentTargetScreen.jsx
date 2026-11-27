@@ -49,16 +49,17 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpen
     return saved;
   };
   return <InvestmentLayout title={data?.target.symbol || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} model={model}>
-    {data && !model.loading && !model.loadError && <div className="mx-auto w-full max-w-md">
-      <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 flex-1 text-sm text-slate-500 dark:text-slate-400">{data.target.symbol} / {data.target.quoteCurrency}<InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} /></p>
-        <InvestmentProfitLoss price={prices[data.target.symbol]} summary={data.summary} />
-      </div>
-      <InvestmentSummary summary={data.summary} symbol={data.target.symbol} />
-      {data.target.note && <p className="mb-3 break-words text-sm">{data.target.note}</p>}
-      <div className="mb-5 flex flex-wrap justify-center gap-2">
-        <button className="button-primary" onClick={() => setEditor({ kind: 'trade', openedAt: new Date() })}>{t('investmentAddTrade')}</button>
-        <button className="button-secondary" onClick={() => setEditor({ kind: 'target', value: data.target })}>{t('investmentEditTarget')}</button>
+    {data && !model.loading && !model.loadError && <div className="w-full">
+      <section className="text-center">
+        <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">{data.target.symbol} / {data.target.quoteCurrency}</p>
+        <InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} prominent />
+        <InvestmentProfitLoss price={prices[data.target.symbol]} summary={data.summary} centered />
+        <InvestmentSummary summary={data.summary} symbol={data.target.symbol} centered />
+        {data.target.note && <p className="mb-3 break-words text-sm text-slate-600 dark:text-slate-300">{data.target.note}</p>}
+      </section>
+      <div className="mb-6 grid grid-cols-2 gap-2">
+        <button className="button-primary min-h-11 w-full" onClick={() => setEditor({ kind: 'trade', openedAt: new Date() })}>{t('investmentAddTrade')}</button>
+        <button className="button-secondary min-h-11 w-full" onClick={() => setEditor({ kind: 'target', value: data.target })}>{t('investmentEditTarget')}</button>
       </div>
       <h2 className="mb-2 text-sm font-semibold">{t('investmentTrades')}</h2>
       {!data.trades.length && <p className="py-3 text-sm text-slate-500 dark:text-slate-400">{t('investmentNoTrades')}</p>}

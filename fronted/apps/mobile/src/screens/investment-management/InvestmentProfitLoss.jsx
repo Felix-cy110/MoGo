@@ -8,7 +8,7 @@ import {
 import { Label } from '../../components/Primitives';
 import { usePreferences } from '../../platform/PreferencesProvider';
 
-export default function InvestmentProfitLoss({ price, summary }) {
+export default function InvestmentProfitLoss({ price, summary, centered = false }) {
   const { t, i18n } = useTranslation();
   const { colors } = usePreferences();
   const profitLoss = formatInvestmentProfitLoss(
@@ -25,7 +25,7 @@ export default function InvestmentProfitLoss({ price, summary }) {
 
   return (
     <Label
-      style={[styles.value, { color }]}
+      style={[styles.value, centered && styles.centered, { color }]}
       accessibilityLabel={t('investmentProfitLossLabel', profitLoss)}
     >
       {t('investmentProfitLoss', profitLoss)}
@@ -42,4 +42,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
+  centered: { maxWidth: '100%', textAlign: 'center' },
 });

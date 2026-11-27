@@ -7,7 +7,7 @@ import {
 } from '@mogo/investment-management-core';
 import { Label } from '../../components/Primitives';
 import { usePreferences } from '../../platform/PreferencesProvider';
-export default function InvestmentSummary({ summary, symbol }) {
+export default function InvestmentSummary({ summary, symbol, centered = false }) {
   const { t, i18n } = useTranslation();
   const { colors } = usePreferences();
   const values = [
@@ -17,16 +17,16 @@ export default function InvestmentSummary({ summary, symbol }) {
     ['investmentBuyCount', String(summary.buyCount), formatInvestmentDecimal],
   ];
   return (
-    <View style={styles.grid}>
+    <View style={[styles.grid, centered && styles.centeredGrid]}>
       {values.map(([key, value, formatter]) => {
         const highlighted = key === 'investmentAveragePrice';
         const highlightColor = highlighted && { color: colors.highlight };
         return (
-          <View key={key} style={styles.item}>
+          <View key={key} style={[styles.item, centered && styles.centeredItem]}>
             <Label muted style={[styles.label, highlightColor]}>
               {t(key, { symbol })}
             </Label>
-            <Label style={[highlightColor, highlighted && styles.highlightValue]}>
+            <Label style={[centered && styles.centeredValue, highlightColor, highlighted && styles.highlightValue]}>
               {formatter(value, i18n.resolvedLanguage)}
             </Label>
           </View>
@@ -43,6 +43,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   item: { width: '47%' },
+  centeredGrid: { gap: 16, paddingVertical: 16 },
+  centeredItem: { alignItems: 'center' },
+  centeredValue: { fontSize: 16 },
   label: { fontSize: 12 },
   highlightValue: { fontWeight: '600' },
 });

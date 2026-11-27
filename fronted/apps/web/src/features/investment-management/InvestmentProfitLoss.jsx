@@ -5,7 +5,7 @@ import {
   formatInvestmentProfitLoss,
 } from '@mogo/investment-management-core';
 
-export function InvestmentProfitLoss({ price, summary }) {
+export function InvestmentProfitLoss({ price, summary, centered = false }) {
   const { t, i18n } = useTranslation();
   const profitLoss = formatInvestmentProfitLoss(
     calculateInvestmentProfitLoss({ price, summary }),
@@ -18,10 +18,13 @@ export function InvestmentProfitLoss({ price, summary }) {
     : profitLoss.direction === 'loss'
       ? 'text-red-700 dark:text-red-400'
       : 'text-slate-500 dark:text-slate-400';
+  const alignment = centered
+    ? 'mt-1 block max-w-full text-center'
+    : 'max-w-[55%] shrink-0 text-right';
 
   return (
     <span
-      className={`max-w-[55%] shrink-0 text-right text-sm font-medium tabular-nums ${color}`}
+      className={`${alignment} text-sm font-medium tabular-nums ${color}`}
       aria-label={t('investmentProfitLossLabel', profitLoss)}
     >
       {t('investmentProfitLoss', profitLoss)}

@@ -67,24 +67,25 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
       )}
       {data && !model.loading && !model.loadError && (
         <View style={styles.content}>
-          <View style={styles.heading}>
-            <View style={styles.headingText}>
-              <Label accessibilityRole="header" style={styles.targetTitle}>
-                {data.target.symbol}
-              </Label>
-              <Label muted>
-                {data.target.symbol} / {data.target.quoteCurrency}
-                <InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} />
-              </Label>
-            </View>
+          <View style={styles.marketSummary}>
+            <Label muted style={styles.marketPair}>
+              {data.target.symbol} / {data.target.quoteCurrency}
+            </Label>
+            <InvestmentMarketPrice
+              target={data.target}
+              price={prices[data.target.symbol]}
+              prominent
+            />
             <InvestmentProfitLoss
               price={prices[data.target.symbol]}
               summary={data.summary}
+              centered
             />
           </View>
           <InvestmentSummary
             summary={data.summary}
             symbol={data.target.symbol}
+            centered
           />
           {Boolean(data.target.note) && (
             <Label style={styles.hint}>{data.target.note}</Label>
@@ -94,10 +95,13 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
               ref={addButton}
               title={t('investmentAddTrade')}
               variant="primary"
+              style={styles.action}
               onPress={() => setEditor({ kind: 'trade', openedAt: new Date() })}
             />
             <Action
               title={t('investmentEditTarget')}
+              variant="secondary"
+              style={styles.action}
               onPress={() => setEditor({ kind: 'target', value: data.target })}
             />
           </View>
@@ -167,24 +171,17 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
   );
 }
 const styles = StyleSheet.create({
-  content: { width: '100%', maxWidth: 480, alignSelf: 'center' },
-  heading: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  headingText: { flex: 1, minWidth: 0 },
-  targetTitle: { fontWeight: '600', fontSize: 16 },
+  content: { width: '100%', maxWidth: 560, alignSelf: 'center' },
+  marketSummary: { alignItems: 'center', gap: 4 },
+  marketPair: { fontSize: 14, fontWeight: '500' },
   title: { fontWeight: '600', fontSize: 16, marginBottom: 8 },
-  hint: { fontSize: 12, marginBottom: 12 },
+  hint: { fontSize: 12, marginBottom: 12, textAlign: 'center' },
   actions: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
     gap: 8,
-    marginBottom: 20,
+    marginBottom: 24,
   },
+  action: { flex: 1 },
   trade: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingVertical: 12,
