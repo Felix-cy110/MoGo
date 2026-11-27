@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AppControls } from '../../components/AppControls';
 import { NoticeDialog } from '../../components/NoticeDialog';
-export function InvestmentLayout({ title, backKey, onBack, onOpenSettings, model, children }) {
+export function InvestmentLayout({ title, backKey, onBack, onOpenProfile, onOpenSettings, model, children }) {
   const { t } = useTranslation();
   useEffect(() => { document.title = `${title} · ${t('toolboxName')}`; }, [title, t]);
   return (
@@ -12,7 +12,7 @@ export function InvestmentLayout({ title, backKey, onBack, onOpenSettings, model
         <div className="mx-auto flex max-w-xl items-center gap-3 px-5 py-2">
           <button type="button" className="back-button shrink-0" aria-label={t(backKey)} onClick={onBack}><ArrowLeft size={18} aria-hidden="true" /></button>
           <h1 className="min-w-0 flex-1 truncate text-lg font-semibold">{title}</h1>
-          <AppControls onOpenSettings={onOpenSettings} />
+          <AppControls onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} />
         </div>
       </header>
       <div className="mx-auto max-w-xl px-5 py-4">

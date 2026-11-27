@@ -185,7 +185,7 @@ export default function AppNavigator({ apis = nativeApis }) {
         <View
           style={[styles.headerActions, homeScreen && styles.homeHeaderActions]}
         >
-          {homeScreen && features?.includes('user-profile') && (
+          {screen !== 'profile' && features?.includes('user-profile') && (
             <IconButton
               backgroundColor={
                 homeScreen ? toolboxPalette.controlBackground : undefined
@@ -197,7 +197,7 @@ export default function AppNavigator({ apis = nativeApis }) {
               icon="user"
               label={t('userProfile')}
               onPress={() => navigate('profile')}
-              outlined
+              outlined={homeScreen}
             />
           )}
           {(homeScreen ||

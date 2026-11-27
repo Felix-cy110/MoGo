@@ -17,7 +17,7 @@ function BackButton({ label, onClick }) {
   );
 }
 
-export function CategoryManagementScreen({ onBack, onOpenSettings }) {
+export function CategoryManagementScreen({ onBack, onOpenProfile, onOpenSettings }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
   const management = useCategoryManagement({ api });
@@ -54,7 +54,7 @@ export function CategoryManagementScreen({ onBack, onOpenSettings }) {
             <BackButton label={t('financeFeatureName')} onClick={onBack} />
             <h1 className="truncate text-xl font-semibold">{t('manageCategories')}</h1>
           </div>
-          <AppControls onOpenSettings={onOpenSettings} />
+          <AppControls onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} />
         </div>
       </header>
 

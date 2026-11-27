@@ -39,6 +39,7 @@ function App() {
   const [path, setPath] = useState(() => globalThis.location?.pathname || HOME_PATH);
   const screen = resolveScreen(path);
   const [settingsReturnPath, setSettingsReturnPath] = useState(HOME_PATH);
+  const [profileReturnPath, setProfileReturnPath] = useState(HOME_PATH);
 
   useEffect(() => {
     const handlePopState = () => setPath(globalThis.location?.pathname || HOME_PATH);
@@ -56,32 +57,37 @@ function App() {
     navigate(SETTINGS_PATH);
   };
 
+  const openProfile = () => {
+    setProfileReturnPath(globalThis.location?.pathname || HOME_PATH);
+    navigate(PROFILE_PATH);
+  };
+
   if (screen === 'dataManagement') {
-    return <DataManagementScreen onBack={() => navigate(SETTINGS_PATH)} />;
+    return <DataManagementScreen onBack={() => navigate(SETTINGS_PATH)} onOpenProfile={openProfile} />;
   }
 
   if (screen === 'settings') {
-    return <SettingsScreen isDark={isDark} onToggleTheme={toggleTheme} onOpenDataManagement={() => navigate(DATA_MANAGEMENT_PATH)} onBack={() => navigate(settingsReturnPath === SETTINGS_PATH ? HOME_PATH : settingsReturnPath)} />;
+    return <SettingsScreen isDark={isDark} onToggleTheme={toggleTheme} onOpenDataManagement={() => navigate(DATA_MANAGEMENT_PATH)} onOpenProfile={openProfile} onBack={() => navigate(settingsReturnPath === SETTINGS_PATH ? HOME_PATH : settingsReturnPath)} />;
   }
 
   if (screen === 'profile') {
-    return <UserProfileScreen onBack={() => navigate(HOME_PATH)} onOpenSettings={openSettings} />;
+    return <UserProfileScreen onBack={() => navigate(profileReturnPath === PROFILE_PATH ? HOME_PATH : profileReturnPath)} onOpenSettings={openSettings} />;
   }
   if (screen === 'investmentTarget') {
     const targetId = Number(path.split('/').at(-1));
-    return <InvestmentTargetScreen key={targetId} targetId={targetId} onBack={() => navigate(INVESTMENT_MANAGEMENT_PATH)} onOpenSettings={openSettings} />;
+    return <InvestmentTargetScreen key={targetId} targetId={targetId} onBack={() => navigate(INVESTMENT_MANAGEMENT_PATH)} onOpenProfile={openProfile} onOpenSettings={openSettings} />;
   }
   if (screen === 'investmentManagement') {
-    return <InvestmentManagementScreen onOpenTarget={id => navigate(`${INVESTMENT_MANAGEMENT_PATH}/targets/${id}`)} onBack={() => navigate(HOME_PATH)} onOpenSettings={openSettings} />;
+    return <InvestmentManagementScreen onOpenTarget={id => navigate(`${INVESTMENT_MANAGEMENT_PATH}/targets/${id}`)} onBack={() => navigate(HOME_PATH)} onOpenProfile={openProfile} onOpenSettings={openSettings} />;
   }
   if (screen === 'leetcodeInterview') {
-    return <LeetCodeInterviewScreen onBack={() => navigate(HOME_PATH)} onOpenSettings={openSettings} />;
+    return <LeetCodeInterviewScreen onBack={() => navigate(HOME_PATH)} onOpenProfile={openProfile} onOpenSettings={openSettings} />;
   }
   if (screen === 'analytics') {
-    return <AnalyticsScreen onBack={() => navigate(FINANCE_PATH)} onOpenSettings={openSettings} />;
+    return <AnalyticsScreen onBack={() => navigate(FINANCE_PATH)} onOpenProfile={openProfile} onOpenSettings={openSettings} />;
   }
   if (screen === 'categories') {
-    return <CategoryManagementScreen onBack={() => navigate(FINANCE_PATH)} onOpenSettings={openSettings} />;
+    return <CategoryManagementScreen onBack={() => navigate(FINANCE_PATH)} onOpenProfile={openProfile} onOpenSettings={openSettings} />;
   }
   if (screen === 'finance') {
     return (
@@ -89,11 +95,12 @@ function App() {
         onBack={() => navigate(HOME_PATH)}
         onManageCategories={() => navigate(CATEGORY_MANAGEMENT_PATH)}
         onOpenAnalytics={() => navigate(ANALYTICS_PATH)}
+        onOpenProfile={openProfile}
         onOpenSettings={openSettings}
       />
     );
   }
-  return <ToolboxHome onOpenFinance={() => navigate(FINANCE_PATH)} onOpenLeetCodeInterview={() => navigate(LEETCODE_INTERVIEW_PATH)} onOpenInvestmentManagement={() => navigate(INVESTMENT_MANAGEMENT_PATH)} onOpenProfile={() => navigate(PROFILE_PATH)} onOpenSettings={openSettings} />;
+  return <ToolboxHome onOpenFinance={() => navigate(FINANCE_PATH)} onOpenLeetCodeInterview={() => navigate(LEETCODE_INTERVIEW_PATH)} onOpenInvestmentManagement={() => navigate(INVESTMENT_MANAGEMENT_PATH)} onOpenProfile={openProfile} onOpenSettings={openSettings} />;
 }
 
 export default App;

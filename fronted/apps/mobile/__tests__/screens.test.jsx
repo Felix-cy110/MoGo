@@ -474,3 +474,58 @@ test('navigation honors native capabilities and returns from investment settings
     tree.root.findAllByType(ToolboxFeatureRow).map(row => row.props.title),
   ).toContain(i18n.t('investmentManagementFeatureName'));
 });
+
+test('profile entry stays available across navigated top bars and returns to the source page', async () => {
+  const AppNavigator = require('../src/AppNavigator').default;
+  const IconButton = require('../src/components/IconButton').default;
+  await render(
+    <AppNavigator
+      apis={{
+        capabilities: async () => ({
+          features: ['investment-management', 'user-profile'],
+        }),
+        investment: { listTargets: async () => [] },
+        profile: {
+          getProfile: async () => ({}),
+          saveProfile: jest.fn(),
+        },
+      }}
+    />,
+  );
+  const icon = name =>
+    tree.root.findAllByType(IconButton).find(item => item.props.icon === name);
+
+  expect(icon('user').props.outlined).toBe(true);
+  await act(async () =>
+    tree.root
+      .findAllByType(ToolboxFeatureRow)
+      .find(
+        row => row.props.title === i18n.t('investmentManagementFeatureName'),
+      )
+      .props.onPress(),
+  );
+  expect(icon('user').props.outlined).toBe(false);
+
+  await act(async () => icon('user').props.onPress());
+  expect(icon('user')).toBeUndefined();
+  expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('profileSave'));
+  await act(async () => icon('back').props.onPress());
+  expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('investmentEmpty'));
+
+  await act(async () => icon('settings').props.onPress());
+  expect(icon('user')).toBeDefined();
+  await act(async () =>
+    tree.root
+      .findAllByType(LinkRow)
+      .find(row => row.props.title === i18n.t('dataManagement'))
+      .props.onPress(),
+  );
+  expect(icon('user')).toBeDefined();
+
+  await act(async () => icon('user').props.onPress());
+  await act(async () => icon('back').props.onPress());
+  expect(tree.root.findAllByType(LinkRow).map(row => row.props.title)).toEqual([
+    i18n.t('exportData'),
+    i18n.t('importData'),
+  ]);
+});
