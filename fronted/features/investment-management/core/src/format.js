@@ -1,11 +1,31 @@
 export const formatInvestmentDecimal = (value, language) => {
   if (value == null) return '—';
-  const [integer, fraction] = value.split('.');
-  const whole = new Intl.NumberFormat(language, { maximumFractionDigits: 0 }).format(BigInt(integer));
+  const [integer, fraction] = String(value).split('.');
+  const digitFormatter = new Intl.NumberFormat(language, { useGrouping: false });
+  const localizeDigits = digits => [...digits].map(digit => digitFormatter.format(Number(digit))).join('');
+  const sampleParts = new Intl.NumberFormat(language, { maximumFractionDigits: 0 })
+    .formatToParts(1234567890123);
+  const integerParts = sampleParts.filter(part => part.type === 'integer').map(part => part.value.length);
+  const group = sampleParts.find(part => part.type === 'group')?.value;
+  const primaryGroupSize = integerParts.at(-1) ?? integer.length;
+  const secondaryGroupSize = integerParts.at(-2) ?? primaryGroupSize;
+  const sign = integer.startsWith('-') ? '-' : '';
+  let remaining = sign ? integer.slice(1) : integer;
+  const groups = [];
+  let groupSize = primaryGroupSize;
+  while (remaining.length > groupSize && group) {
+    groups.unshift(remaining.slice(-groupSize));
+    remaining = remaining.slice(0, -groupSize);
+    groupSize = secondaryGroupSize;
+  }
+  groups.unshift(remaining);
+  const minusSign = sign
+    ? new Intl.NumberFormat(language).formatToParts(-1).find(part => part.type === 'minusSign')?.value ?? '-'
+    : '';
+  const whole = minusSign + groups.map(localizeDigits).join(group ?? '');
   if (!fraction) return whole;
   const separator = new Intl.NumberFormat(language).formatToParts(1.1).find(part => part.type === 'decimal').value;
-  const digitFormatter = new Intl.NumberFormat(language, { useGrouping: false });
-  return whole + separator + [...fraction].map(digit => digitFormatter.format(Number(digit))).join('');
+  return whole + separator + localizeDigits(fraction);
 };
 
 const roundToFractionDigits = (value, fractionDigits) => {
