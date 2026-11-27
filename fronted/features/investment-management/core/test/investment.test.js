@@ -22,6 +22,25 @@ test('formats total bought quantities with two significant digits without changi
   assert.equal(precise, '123456789012345678.126999999999999999');
   assert.equal(formatInvestmentQuantity(null, 'zh'), '—');
 });
+test('formats exact decimals when Intl rejects BigInt like Hermes', () => {
+  const NumberFormat = Intl.NumberFormat;
+  Intl.NumberFormat = function (...args) {
+    const formatter = new NumberFormat(...args);
+    return {
+      format(value) {
+        if (typeof value === 'bigint') throw new TypeError('Cannot convert BigInt to number');
+        return formatter.format(value);
+      },
+      formatToParts(value) { return formatter.formatToParts(value); },
+    };
+  };
+  try {
+    assert.equal(formatInvestmentDecimal('999999999999999999.123456789012345678', 'en'), '999,999,999,999,999,999.123456789012345678');
+    assert.equal(formatInvestmentQuantity('123456789012345678.126999999999999999', 'en'), '120,000,000,000,000,000');
+  } finally {
+    Intl.NumberFormat = NumberFormat;
+  }
+});
 test('calculates unrealized profit and loss with exact decimal arithmetic', () => {
   const summary = {
     totalQuoteAmount: '600',
