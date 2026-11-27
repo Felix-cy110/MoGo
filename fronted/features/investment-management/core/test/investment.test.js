@@ -98,6 +98,16 @@ test('normalizes targets and keeps both languages complete', () => {
   assert.equal(validateTargetDraft({...draft, symbol:'btc/usdt'}), 'investmentSymbolInvalid');
   assert.deepEqual(Object.keys(investmentManagementMessages.zh).sort(), Object.keys(investmentManagementMessages.en).sort());
 });
+test('buy form labels keep the currency out of titles and optional text in the note placeholder', () => {
+  assert.equal(investmentManagementMessages.zh.investmentUnitPrice, '买入单价');
+  assert.equal(investmentManagementMessages.zh.investmentQuoteAmount, '投入金额');
+  assert.equal(investmentManagementMessages.zh.investmentNote, '备注');
+  assert.equal(investmentManagementMessages.zh.investmentNotePlaceholder, '选填');
+  assert.equal(investmentManagementMessages.en.investmentUnitPrice, 'Price');
+  assert.equal(investmentManagementMessages.en.investmentQuoteAmount, 'Spent');
+  assert.equal(investmentManagementMessages.en.investmentNote, 'Note');
+  assert.equal(investmentManagementMessages.en.investmentNotePlaceholder, 'Optional');
+});
 test('uses the same Chinese investment terminology across screens and dialogs', () => {
   const keys = [
     'investmentTargetDetail',

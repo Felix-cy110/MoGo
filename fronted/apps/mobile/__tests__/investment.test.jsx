@@ -94,7 +94,11 @@ test.each([
         item.props.onPress,
     )[0];
     await act(async () => row.props.onPress());
+    expect(field('investmentUnitPrice')).toBeDefined();
     expect(field('investmentQuoteAmount').props.value).toBe('600');
+    expect(field('investmentNote').props.placeholder).toBe(
+      i18n.t('investmentNotePlaceholder'),
+    );
     await act(async () =>
       field('investmentQuoteAmount').props.onChangeText('900'),
     );

@@ -25,7 +25,9 @@ export function InvestmentEditor({ kind, value, openedAt, symbolLocked = false, 
           {field('unitPrice', 'investmentUnitPrice', { inputMode: 'decimal', autoFocus: true })}
           {field('quoteAmount', 'investmentQuoteAmount', { inputMode: 'decimal' })}
         </>}
-        {field('note', 'investmentNote')}
+        {field('note', 'investmentNote', {
+          placeholder: t('investmentNotePlaceholder'),
+        })}
       </div>
       <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">{t(target ? investmentTargetHintKey(value) : 'investmentCalculationNote')}</p>
       <div className="mt-5 flex flex-wrap justify-end gap-2">
