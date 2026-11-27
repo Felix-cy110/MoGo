@@ -1,7 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useInvestmentDetail } from '@mogo/investment-management-react';
+import {
+  useInvestmentDetail,
+  useInvestmentMarket,
+  useInvestmentMarketSnapshot,
+} from '@mogo/investment-management-react';
 import {
   formatInvestmentDecimal,
   formatInvestmentTime,
@@ -21,7 +25,14 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
   const addButton = useRef(null);
   useFeedback(model.feedback, model.clearFeedback);
   const data = model.data;
-  const prices = useMarketPrices(data ? [data.target] : [], marketClient);
+  const applicationMarket = useInvestmentMarket();
+  const applicationPrices = useInvestmentMarketSnapshot(applicationMarket?.store);
+  const localPrices = useMarketPrices(
+    data ? [data.target] : [],
+    marketClient,
+    !applicationMarket,
+  );
+  const prices = applicationMarket ? applicationPrices : localPrices;
   const confirm = (key, action, afterDelete) =>
     Alert.alert(t(key), '', [
       { text: t('investmentCancel'), style: 'cancel' },
@@ -36,6 +47,14 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
       },
     ]);
   const number = value => formatInvestmentDecimal(value, i18n.resolvedLanguage);
+  const saveEditor = async draft => {
+    const target = editor.kind === 'target';
+    const saved = target
+      ? await model.saveTarget(draft)
+      : await model.saveTrade(draft, editor.value?.id);
+    if (saved && target) await applicationMarket?.refreshTargets();
+    return saved;
+  };
   return (
     <Page plain>
       {model.loading && <Loading />}
@@ -124,13 +143,13 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
           saving={model.saving}
           onClose={() => setEditor(null)}
           returnFocusRef={addButton}
-          onSave={draft =>
-            editor.kind === 'target'
-              ? model.saveTarget(draft)
-              : model.saveTrade(draft, editor.value?.id)
-          }
+          onSave={saveEditor}
           onDelete={editor.value ? () => editor.kind === 'target'
-            ? confirm('investmentDeleteTargetConfirm', model.deleteTarget, onBack)
+            ? confirm('investmentDeleteTargetConfirm', async () => {
+              const deleted = await model.deleteTarget();
+              if (deleted) await applicationMarket?.refreshTargets();
+              return deleted;
+            }, onBack)
             : confirm('investmentDeleteConfirm', () => model.deleteTrade(editor.value.id))
             : undefined}
         />

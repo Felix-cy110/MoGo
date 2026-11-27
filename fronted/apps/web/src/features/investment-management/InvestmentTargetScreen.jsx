@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useInvestmentDetail } from '@mogo/investment-management-react';
+import {
+  useInvestmentDetail,
+  useInvestmentMarket,
+  useInvestmentMarketSnapshot,
+} from '@mogo/investment-management-react';
 import { formatInvestmentDecimal, formatInvestmentTime } from '@mogo/investment-management-core';
 import { InvestmentLayout } from './InvestmentLayout';
 import { InvestmentSummary } from './InvestmentSummary';
@@ -15,7 +19,14 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpen
   const [editor, setEditor] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
   const data = model.data;
-  const prices = useMarketPrices(data ? [data.target] : [], marketClient);
+  const applicationMarket = useInvestmentMarket();
+  const applicationPrices = useInvestmentMarketSnapshot(applicationMarket?.store);
+  const localPrices = useMarketPrices(
+    data ? [data.target] : [],
+    marketClient,
+    !applicationMarket,
+  );
+  const prices = applicationMarket ? applicationPrices : localPrices;
   const number = value => formatInvestmentDecimal(value, i18n.resolvedLanguage);
   const confirm = async () => {
     const target = confirmation === 'target';
@@ -23,7 +34,18 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpen
     setConfirmation(null);
     if (!done) return;
     setEditor(null);
-    if (target) onBack();
+    if (target) {
+      await applicationMarket?.refreshTargets();
+      onBack();
+    }
+  };
+  const saveEditor = async draft => {
+    const target = editor.kind === 'target';
+    const saved = target
+      ? await model.saveTarget(draft)
+      : await model.saveTrade(draft, editor.value?.id);
+    if (saved && target) await applicationMarket?.refreshTargets();
+    return saved;
   };
   return <InvestmentLayout title={data?.target.symbol || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} model={model}>
     {data && !model.loading && !model.loadError && <>
@@ -48,7 +70,7 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpen
     </>}
     {editor && <InvestmentEditor key={`${editor.kind}-${editor.value?.id || 'new'}`} {...editor} symbolLocked={data?.symbolLocked}
       saving={model.saving} onClose={() => setEditor(null)}
-      onSave={draft => editor.kind === 'target' ? model.saveTarget(draft) : model.saveTrade(draft, editor.value?.id)}
+      onSave={saveEditor}
       onDelete={editor.value ? () => setConfirmation(editor.kind) : undefined} />}
     {confirmation && <InvestmentConfirm busy={model.saving} onClose={() => setConfirmation(null)} onConfirm={confirm}
       messageKey={confirmation === 'target' ? 'investmentDeleteTargetConfirm' : 'investmentDeleteConfirm'} />}

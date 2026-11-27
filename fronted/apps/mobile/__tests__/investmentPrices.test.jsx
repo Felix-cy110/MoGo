@@ -3,12 +3,20 @@ import renderer, { act } from 'react-test-renderer';
 import { AppState, Alert } from 'react-native';
 import { useNetInfoInstance } from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useInvestmentPrices } from '@mogo/investment-management-react';
+import {
+  useInvestmentMarket,
+  useInvestmentMarketSnapshot,
+  useInvestmentPrices,
+} from '@mogo/investment-management-react';
 import i18n from '../src/platform/i18n';
 import { PreferencesProvider } from '../src/platform/PreferencesProvider';
+import ApplicationInvestmentMarketProvider from '../src/platform/ApplicationInvestmentMarketProvider';
+import AppNavigator from '../src/AppNavigator';
+import IconButton from '../src/components/IconButton';
 import InvestmentManagementScreen from '../src/screens/InvestmentManagementScreen';
 import InvestmentTargetScreen from '../src/screens/investment-management/InvestmentTargetScreen';
 import InvestmentMarketPrice from '../src/screens/investment-management/InvestmentMarketPrice';
+import ToolboxFeatureRow from '../src/screens/ToolboxFeatureRow';
 import { useMarketPrices as useWebMarketPrices } from '../../web/src/features/investment-management/useMarketPrices';
 
 const btc = { id: 1, name: 'BTC', symbol: 'BTC', quoteCurrency: 'USDT', builtinCode: 'BTC' };
@@ -18,9 +26,25 @@ const summary = { totalQuoteAmount: '600', totalQuantity: '0.01', averageEntryPr
 const initialAppState = AppState.currentState;
 let tree;
 let prices;
+let applicationMarket;
+let applicationPrices;
+let passiveRenders;
 let appStateListeners;
 let removeAppState;
 function Probe(props) { prices = useInvestmentPrices(props); return null; }
+function ApplicationMarketProbe() {
+  applicationMarket = useInvestmentMarket();
+  return null;
+}
+function ApplicationPriceProbe() {
+  const market = useInvestmentMarket();
+  applicationPrices = useInvestmentMarketSnapshot(market?.store);
+  return null;
+}
+function PassiveProbe() {
+  passiveRenders += 1;
+  return null;
+}
 const marketClient = () => ({
   subscribe: jest.fn((symbols, listener) => {
     listener(Object.fromEntries(symbols.map(symbol => [symbol, symbol === 'BTC' ? '59045.1' : '2001.23'])));
@@ -51,6 +75,9 @@ beforeEach(() => {
   jest.useFakeTimers();
   AppState.currentState = 'active';
   useNetInfoInstance.mockReturnValue({ netInfo: { isConnected: true } });
+  applicationMarket = null;
+  applicationPrices = null;
+  passiveRenders = 0;
   appStateListeners = new Set();
   removeAppState = jest.fn();
   jest.spyOn(AppState, 'addEventListener').mockImplementation((event, listener) => {
@@ -127,6 +154,91 @@ test('changing target or client ignores messages from the previous subscription'
   expect(prices).toEqual({ SOLANA: '2001.23' });
   expect(client.subscribe.mock.results[0].value).toHaveBeenCalledTimes(1);
   expect(client.subscribe).toHaveBeenCalledTimes(2);
+});
+
+test('application subscription stays active while navigating outside investment screens', async () => {
+  const client = marketClient();
+  const investment = {
+    listTargets: jest.fn(async () => [{ target: btc, summary }]),
+  };
+  await render(
+    <PreferencesProvider>
+      <AppNavigator
+        apis={{
+          capabilities: async () => ({ features: ['investment-management'] }),
+          investment,
+        }}
+        marketClient={client}
+      />
+    </PreferencesProvider>,
+  );
+
+  expect(client.subscribe).toHaveBeenCalledTimes(1);
+  expect(client.subscribe.mock.calls[0][0]).toEqual(['BTC']);
+  const unsubscribe = client.subscribe.mock.results[0].value;
+  const row = title =>
+    tree.root
+      .findAllByType(ToolboxFeatureRow)
+      .find(item => item.props.title === i18n.t(title));
+
+  await act(async () => row('leetcodeInterviewFeatureName').props.onPress());
+  expect(unsubscribe).not.toHaveBeenCalled();
+  await act(async () =>
+    tree.root
+      .findAllByType(IconButton)
+      .find(item => item.props.label === i18n.t('back'))
+      .props.onPress(),
+  );
+  await act(async () => row('investmentManagementFeatureName').props.onPress());
+
+  expect(client.subscribe).toHaveBeenCalledTimes(1);
+  expect(JSON.stringify(tree.toJSON())).toContain('59,045.1 USDT');
+  await act(async () => tree.unmount());
+  tree = null;
+  expect(unsubscribe).toHaveBeenCalledTimes(1);
+});
+
+test('application subscription refreshes when the target collection changes', async () => {
+  const client = marketClient();
+  let targets = [{ target: btc, summary }];
+  const api = { listTargets: jest.fn(async () => targets) };
+  await render(
+    <ApplicationInvestmentMarketProvider
+      api={api}
+      enabled
+      marketClient={client}
+    >
+      <ApplicationMarketProbe />
+    </ApplicationInvestmentMarketProvider>,
+  );
+
+  expect(client.subscribe.mock.calls[0][0]).toEqual(['BTC']);
+  const unsubscribe = client.subscribe.mock.results[0].value;
+  targets = [{ target: btc, summary }, { target: eth, summary }];
+  await act(async () => applicationMarket.refreshTargets());
+
+  expect(unsubscribe).toHaveBeenCalledTimes(1);
+  expect(client.subscribe.mock.calls[1][0]).toEqual(['BTC', 'ETH']);
+});
+
+test('application price pushes rerender market consumers without rerendering passive children', async () => {
+  const client = marketClient();
+  await render(
+    <ApplicationInvestmentMarketProvider
+      api={{ listTargets: async () => [{ target: btc, summary }] }}
+      enabled
+      marketClient={client}
+    >
+      <ApplicationPriceProbe />
+      <PassiveProbe />
+    </ApplicationInvestmentMarketProvider>,
+  );
+
+  expect(applicationPrices).toEqual({ BTC: '59045.1' });
+  expect(passiveRenders).toBe(1);
+  await push(client, { BTC: '59050' });
+  expect(applicationPrices).toEqual({ BTC: '59050' });
+  expect(passiveRenders).toBe(1);
 });
 
 test.each([['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark']])(

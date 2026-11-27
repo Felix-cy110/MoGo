@@ -1,7 +1,11 @@
 import React, { useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useInvestmentTargets } from '@mogo/investment-management-react';
+import {
+  useInvestmentMarket,
+  useInvestmentMarketSnapshot,
+  useInvestmentTargets,
+} from '@mogo/investment-management-react';
 import { Action, Label, Loading, Page } from '../components/Primitives';
 import useFeedback from '../components/useFeedback';
 import { usePreferences } from '../platform/PreferencesProvider';
@@ -14,10 +18,22 @@ export default function InvestmentManagementScreen({ api, navigate, marketClient
   const { t } = useTranslation();
   const { colors } = usePreferences();
   const model = useInvestmentTargets({ api });
-  const prices = useMarketPrices(model.items.map(item => item.target), marketClient);
+  const applicationMarket = useInvestmentMarket();
+  const applicationPrices = useInvestmentMarketSnapshot(applicationMarket?.store);
+  const localPrices = useMarketPrices(
+    model.items.map(item => item.target),
+    marketClient,
+    !applicationMarket,
+  );
+  const prices = applicationMarket ? applicationPrices : localPrices;
   const [adding, setAdding] = useState(false);
   const addButton = useRef(null);
   useFeedback(model.feedback, model.clearFeedback);
+  const saveTarget = async draft => {
+    const saved = await model.save(draft);
+    if (saved) await applicationMarket?.refreshTargets();
+    return saved;
+  };
   return (
     <Page plain>
       <View style={styles.toolbar}>
@@ -86,7 +102,7 @@ export default function InvestmentManagementScreen({ api, navigate, marketClient
         <InvestmentEditor
           kind="target"
           saving={model.saving}
-          onSave={model.save}
+          onSave={saveTarget}
           onClose={() => setAdding(false)}
           returnFocusRef={addButton}
         />
