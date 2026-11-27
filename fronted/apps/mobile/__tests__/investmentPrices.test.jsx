@@ -16,6 +16,7 @@ import IconButton from '../src/components/IconButton';
 import InvestmentManagementScreen from '../src/screens/InvestmentManagementScreen';
 import InvestmentTargetScreen from '../src/screens/investment-management/InvestmentTargetScreen';
 import InvestmentMarketPrice from '../src/screens/investment-management/InvestmentMarketPrice';
+import InvestmentProfitLoss from '../src/screens/investment-management/InvestmentProfitLoss';
 import ToolboxFeatureRow from '../src/screens/ToolboxFeatureRow';
 import { useMarketPrices as useWebMarketPrices } from '../../web/src/features/investment-management/useMarketPrices';
 
@@ -263,8 +264,15 @@ test.each([['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark']])(
     expect(json).toContain('60,000');
     expect(client.subscribe.mock.calls[0][0]).toEqual(['BTC', 'ETH', 'SOL']);
     await update(<PreferencesProvider><InvestmentTargetScreen api={api} marketClient={client} targetId={1} /></PreferencesProvider>);
+    expect(tree.root.findAllByType(InvestmentProfitLoss)).toHaveLength(1);
     await push(client, { BTC: '59050' });
     expect(JSON.stringify(tree.toJSON())).toContain('59,050 USDT');
+    expect(JSON.stringify(tree.toJSON())).toContain(
+      i18n.t('investmentProfitLoss', {
+        amount: '-9.50',
+        percentage: '-1.58',
+      }),
+    );
     expect(JSON.stringify(tree.toJSON())).toContain('60,000');
     expect(Alert.alert).not.toHaveBeenCalled();
   },

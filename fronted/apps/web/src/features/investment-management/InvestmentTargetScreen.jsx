@@ -12,6 +12,7 @@ import { InvestmentEditor } from './InvestmentEditor';
 import { InvestmentConfirm } from './InvestmentConfirm';
 import { investmentApi } from './investmentApi';
 import { InvestmentMarketPrice } from './InvestmentMarketPrice';
+import { InvestmentProfitLoss } from './InvestmentProfitLoss';
 import { useMarketPrices } from './useMarketPrices';
 export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpenSettings, api = investmentApi, marketClient }) {
   const { t, i18n } = useTranslation();
@@ -48,11 +49,14 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpen
     return saved;
   };
   return <InvestmentLayout title={data?.target.symbol || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} model={model}>
-    {data && !model.loading && !model.loadError && <>
-      <p className="text-sm text-slate-500 dark:text-slate-400">{data.target.symbol} / {data.target.quoteCurrency}<InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} /></p>
+    {data && !model.loading && !model.loadError && <div className="mx-auto w-full max-w-md">
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 flex-1 text-sm text-slate-500 dark:text-slate-400">{data.target.symbol} / {data.target.quoteCurrency}<InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} /></p>
+        <InvestmentProfitLoss price={prices[data.target.symbol]} summary={data.summary} />
+      </div>
       <InvestmentSummary summary={data.summary} symbol={data.target.symbol} />
       {data.target.note && <p className="mb-3 break-words text-sm">{data.target.note}</p>}
-      <div className="mb-5 flex flex-wrap gap-2">
+      <div className="mb-5 flex flex-wrap justify-center gap-2">
         <button className="button-primary" onClick={() => setEditor({ kind: 'trade', openedAt: new Date() })}>{t('investmentAddTrade')}</button>
         <button className="button-secondary" onClick={() => setEditor({ kind: 'target', value: data.target })}>{t('investmentEditTarget')}</button>
       </div>
@@ -67,7 +71,7 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpen
         </dl>
         {trade.note && <span className="mt-2 block break-words text-sm">{trade.note}</span>}
       </button>)}
-    </>}
+    </div>}
     {editor && <InvestmentEditor key={`${editor.kind}-${editor.value?.id || 'new'}`} {...editor} symbolLocked={data?.symbolLocked}
       saving={model.saving} onClose={() => setEditor(null)}
       onSave={saveEditor}
