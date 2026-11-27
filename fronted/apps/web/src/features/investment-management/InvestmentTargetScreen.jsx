@@ -29,7 +29,6 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpen
     {data && !model.loading && !model.loadError && <>
       <p className="text-sm text-slate-500 dark:text-slate-400">{data.target.symbol} / {data.target.quoteCurrency}<InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} /></p>
       <InvestmentSummary summary={data.summary} symbol={data.target.symbol} />
-      <p className="mb-3 text-xs leading-5 text-slate-500 dark:text-slate-400">{t('investmentCalculationNote')}</p>
       {data.target.note && <p className="mb-3 break-words text-sm">{data.target.note}</p>}
       <div className="mb-5 flex flex-wrap gap-2">
         <button className="button-primary" onClick={() => setEditor({ kind: 'trade', openedAt: new Date() })}>{t('investmentAddTrade')}</button>

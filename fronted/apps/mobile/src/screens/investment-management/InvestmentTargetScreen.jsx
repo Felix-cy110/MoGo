@@ -58,9 +58,6 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
             summary={data.summary}
             symbol={data.target.symbol}
           />
-          <Label muted style={styles.hint}>
-            {t('investmentCalculationNote')}
-          </Label>
           {Boolean(data.target.note) && (
             <Label style={styles.hint}>{data.target.note}</Label>
           )}
