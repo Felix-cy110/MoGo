@@ -6,6 +6,7 @@ import i18n from '../src/platform/i18n';
 import { PreferencesProvider } from '../src/platform/PreferencesProvider';
 import { Action, Label } from '../src/components/Primitives';
 import InvestmentTargetScreen from '../src/screens/investment-management/InvestmentTargetScreen';
+import InvestmentSummary from '../src/screens/investment-management/InvestmentSummary';
 import InvestmentManagementScreen from '../src/screens/InvestmentManagementScreen';
 import HomeScreen from '../src/screens/HomeScreen';
 import ToolboxFeatureRow from '../src/screens/ToolboxFeatureRow';
@@ -228,6 +229,22 @@ test('disabled builds hide investment and native adapter keeps decimal strings',
     'investment.deleteTarget',
     JSON.stringify({ id: 7 }),
   );
+});
+
+test('total bought quantity uses two significant digits in the mobile summary', async () => {
+  await render(
+    <InvestmentSummary
+      summary={{
+        totalQuoteAmount: '100',
+        totalQuantity: '0.00123456789',
+        averageEntryPrice: '81000',
+        buyCount: 1,
+      }}
+      symbol="BTC"
+    />,
+  );
+  expect(JSON.stringify(tree.toJSON())).toContain('0.0012');
+  expect(JSON.stringify(tree.toJSON())).not.toContain('0.00123456789');
 });
 
 for (const builtinCode of ['BTC', 'ETH']) {
