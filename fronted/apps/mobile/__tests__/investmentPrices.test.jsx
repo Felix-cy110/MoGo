@@ -5,6 +5,7 @@ import { useNetInfoInstance } from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   useInvestmentMarket,
+  useInvestmentMarketSnapshot,
   useInvestmentPrices,
 } from '@mogo/investment-management-react';
 import i18n from '../src/platform/i18n';
@@ -26,11 +27,22 @@ const initialAppState = AppState.currentState;
 let tree;
 let prices;
 let applicationMarket;
+let applicationPrices;
+let passiveRenders;
 let appStateListeners;
 let removeAppState;
 function Probe(props) { prices = useInvestmentPrices(props); return null; }
 function ApplicationMarketProbe() {
   applicationMarket = useInvestmentMarket();
+  return null;
+}
+function ApplicationPriceProbe() {
+  const market = useInvestmentMarket();
+  applicationPrices = useInvestmentMarketSnapshot(market?.store);
+  return null;
+}
+function PassiveProbe() {
+  passiveRenders += 1;
   return null;
 }
 const marketClient = () => ({
@@ -63,6 +75,9 @@ beforeEach(() => {
   jest.useFakeTimers();
   AppState.currentState = 'active';
   useNetInfoInstance.mockReturnValue({ netInfo: { isConnected: true } });
+  applicationMarket = null;
+  applicationPrices = null;
+  passiveRenders = 0;
   appStateListeners = new Set();
   removeAppState = jest.fn();
   jest.spyOn(AppState, 'addEventListener').mockImplementation((event, listener) => {
@@ -204,6 +219,26 @@ test('application subscription refreshes when the target collection changes', as
 
   expect(unsubscribe).toHaveBeenCalledTimes(1);
   expect(client.subscribe.mock.calls[1][0]).toEqual(['BTC', 'ETH']);
+});
+
+test('application price pushes rerender market consumers without rerendering passive children', async () => {
+  const client = marketClient();
+  await render(
+    <ApplicationInvestmentMarketProvider
+      api={{ listTargets: async () => [{ target: btc, summary }] }}
+      enabled
+      marketClient={client}
+    >
+      <ApplicationPriceProbe />
+      <PassiveProbe />
+    </ApplicationInvestmentMarketProvider>,
+  );
+
+  expect(applicationPrices).toEqual({ BTC: '59045.1' });
+  expect(passiveRenders).toBe(1);
+  await push(client, { BTC: '59050' });
+  expect(applicationPrices).toEqual({ BTC: '59050' });
+  expect(passiveRenders).toBe(1);
 });
 
 test.each([['zh', 'light'], ['zh', 'dark'], ['en', 'light'], ['en', 'dark']])(

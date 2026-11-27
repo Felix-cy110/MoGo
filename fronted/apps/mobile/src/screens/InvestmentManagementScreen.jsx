@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
   useInvestmentMarket,
+  useInvestmentMarketSnapshot,
   useInvestmentTargets,
 } from '@mogo/investment-management-react';
 import { Action, Label, Loading, Page } from '../components/Primitives';
@@ -18,12 +19,13 @@ export default function InvestmentManagementScreen({ api, navigate, marketClient
   const { colors } = usePreferences();
   const model = useInvestmentTargets({ api });
   const applicationMarket = useInvestmentMarket();
+  const applicationPrices = useInvestmentMarketSnapshot(applicationMarket?.store);
   const localPrices = useMarketPrices(
     model.items.map(item => item.target),
     marketClient,
     !applicationMarket,
   );
-  const prices = applicationMarket?.prices ?? localPrices;
+  const prices = applicationMarket ? applicationPrices : localPrices;
   const [adding, setAdding] = useState(false);
   const addButton = useRef(null);
   useFeedback(model.feedback, model.clearFeedback);

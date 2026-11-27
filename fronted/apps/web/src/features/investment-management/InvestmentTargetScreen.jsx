@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useInvestmentDetail, useInvestmentMarket } from '@mogo/investment-management-react';
+import {
+  useInvestmentDetail,
+  useInvestmentMarket,
+  useInvestmentMarketSnapshot,
+} from '@mogo/investment-management-react';
 import { formatInvestmentDecimal, formatInvestmentTime } from '@mogo/investment-management-core';
 import { InvestmentLayout } from './InvestmentLayout';
 import { InvestmentSummary } from './InvestmentSummary';
@@ -16,12 +20,13 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpen
   const [confirmation, setConfirmation] = useState(null);
   const data = model.data;
   const applicationMarket = useInvestmentMarket();
+  const applicationPrices = useInvestmentMarketSnapshot(applicationMarket?.store);
   const localPrices = useMarketPrices(
     data ? [data.target] : [],
     marketClient,
     !applicationMarket,
   );
-  const prices = applicationMarket?.prices ?? localPrices;
+  const prices = applicationMarket ? applicationPrices : localPrices;
   const number = value => formatInvestmentDecimal(value, i18n.resolvedLanguage);
   const confirm = async () => {
     const target = confirmation === 'target';

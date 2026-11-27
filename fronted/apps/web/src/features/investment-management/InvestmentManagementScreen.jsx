@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useInvestmentMarket, useInvestmentTargets } from '@mogo/investment-management-react';
+import {
+  useInvestmentMarket,
+  useInvestmentMarketSnapshot,
+  useInvestmentTargets,
+} from '@mogo/investment-management-react';
 import { InvestmentLayout } from './InvestmentLayout';
 import { InvestmentSummary } from './InvestmentSummary';
 import { InvestmentEditor } from './InvestmentEditor';
@@ -12,12 +16,13 @@ export function InvestmentManagementScreen({ onBack, onOpenProfile, onOpenSettin
   const { t } = useTranslation();
   const model = useInvestmentTargets({ api });
   const applicationMarket = useInvestmentMarket();
+  const applicationPrices = useInvestmentMarketSnapshot(applicationMarket?.store);
   const localPrices = useMarketPrices(
     model.items.map(item => item.target),
     marketClient,
     !applicationMarket,
   );
-  const prices = applicationMarket?.prices ?? localPrices;
+  const prices = applicationMarket ? applicationPrices : localPrices;
   const [adding, setAdding] = useState(false);
   const saveTarget = async draft => {
     const saved = await model.save(draft);

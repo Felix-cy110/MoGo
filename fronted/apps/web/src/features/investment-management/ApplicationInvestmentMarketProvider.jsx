@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
+  createInvestmentMarketStore,
   InvestmentMarketProvider,
   useInvestmentMarketTargets,
 } from '@mogo/investment-management-react';
 import { investmentApi } from './investmentApi';
-import { useMarketPrices } from './useMarketPrices';
+import { useMarketPriceFeed } from './useMarketPrices';
 
 export function ApplicationInvestmentMarketProvider({
   children,
@@ -15,10 +16,11 @@ export function ApplicationInvestmentMarketProvider({
     api,
     enabled: true,
   });
-  const prices = useMarketPrices(targets, marketClient);
+  const [store] = useState(createInvestmentMarketStore);
+  useMarketPriceFeed(targets, store, marketClient);
   const value = useMemo(
-    () => ({ prices, refreshTargets }),
-    [prices, refreshTargets],
+    () => ({ store, refreshTargets }),
+    [store, refreshTargets],
   );
 
   return (

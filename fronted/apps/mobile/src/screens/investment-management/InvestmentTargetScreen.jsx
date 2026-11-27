@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   useInvestmentDetail,
   useInvestmentMarket,
+  useInvestmentMarketSnapshot,
 } from '@mogo/investment-management-react';
 import {
   formatInvestmentDecimal,
@@ -25,12 +26,13 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
   useFeedback(model.feedback, model.clearFeedback);
   const data = model.data;
   const applicationMarket = useInvestmentMarket();
+  const applicationPrices = useInvestmentMarketSnapshot(applicationMarket?.store);
   const localPrices = useMarketPrices(
     data ? [data.target] : [],
     marketClient,
     !applicationMarket,
   );
-  const prices = applicationMarket?.prices ?? localPrices;
+  const prices = applicationMarket ? applicationPrices : localPrices;
   const confirm = (key, action, afterDelete) =>
     Alert.alert(t(key), '', [
       { text: t('investmentCancel'), style: 'cancel' },
