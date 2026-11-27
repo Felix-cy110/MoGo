@@ -1,21 +1,24 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { formatInvestmentDecimal } from '@mogo/investment-management-core';
+import {
+  formatInvestmentDecimal,
+  formatInvestmentQuantity,
+} from '@mogo/investment-management-core';
 import { Label } from '../../components/Primitives';
 import { usePreferences } from '../../platform/PreferencesProvider';
 export default function InvestmentSummary({ summary, symbol }) {
   const { t, i18n } = useTranslation();
   const { colors } = usePreferences();
   const values = [
-    ['investmentTotalAmount', summary.totalQuoteAmount],
-    ['investmentTotalQuantity', summary.totalQuantity],
-    ['investmentAveragePrice', summary.averageEntryPrice],
-    ['investmentBuyCount', String(summary.buyCount)],
+    ['investmentTotalAmount', summary.totalQuoteAmount, formatInvestmentDecimal],
+    ['investmentTotalQuantity', summary.totalQuantity, formatInvestmentQuantity],
+    ['investmentAveragePrice', summary.averageEntryPrice, formatInvestmentDecimal],
+    ['investmentBuyCount', String(summary.buyCount), formatInvestmentDecimal],
   ];
   return (
     <View style={styles.grid}>
-      {values.map(([key, value]) => {
+      {values.map(([key, value, formatter]) => {
         const highlighted = key === 'investmentAveragePrice';
         const highlightColor = highlighted && { color: colors.highlight };
         return (
@@ -24,7 +27,7 @@ export default function InvestmentSummary({ summary, symbol }) {
               {t(key, { symbol })}
             </Label>
             <Label style={[highlightColor, highlighted && styles.highlightValue]}>
-              {formatInvestmentDecimal(value, i18n.resolvedLanguage)}
+              {formatter(value, i18n.resolvedLanguage)}
             </Label>
           </View>
         );

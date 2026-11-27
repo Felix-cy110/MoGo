@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateInvestmentProfitLoss, createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, formatInvestmentProfitLoss, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
+import { calculateInvestmentProfitLoss, createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, formatInvestmentQuantity, formatInvestmentProfitLoss, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
 
 test('validates exact decimal strings without numeric conversion', () => {
   for (const value of ['0.000000000000000001', '999999999999999999.999999999999999999', '0001.200']) assert.ok(validInvestmentDecimal(value));
@@ -8,6 +8,19 @@ test('validates exact decimal strings without numeric conversion', () => {
   assert.equal(normalizeInvestmentDecimal('0001.200'), '1.2');
   assert.equal(formatInvestmentDecimal('999999999999999999.123456789012345678', 'en'), '999,999,999,999,999,999.123456789012345678');
   assert.equal(formatInvestmentDecimal('0.000000000000000001', 'zh'), '0.000000000000000001');
+});
+test('formats total bought quantities with two significant digits without changing source precision', () => {
+  const precise = '123456789012345678.126999999999999999';
+  assert.equal(formatInvestmentQuantity(precise, 'en'), '120,000,000,000,000,000');
+  assert.equal(formatInvestmentQuantity('0.001234', 'zh'), '0.0012');
+  assert.equal(formatInvestmentQuantity('0.00999', 'en'), '0.010');
+  assert.equal(formatInvestmentQuantity('0.0999', 'en'), '0.10');
+  assert.equal(formatInvestmentQuantity('0.00000001', 'en'), '0.000000010');
+  assert.equal(formatInvestmentQuantity('1.26', 'en'), '1.3');
+  assert.equal(formatInvestmentQuantity('126', 'en'), '130');
+  assert.equal(formatInvestmentQuantity('0', 'zh'), '0');
+  assert.equal(precise, '123456789012345678.126999999999999999');
+  assert.equal(formatInvestmentQuantity(null, 'zh'), '—');
 });
 test('calculates unrealized profit and loss with exact decimal arithmetic', () => {
   const summary = {
