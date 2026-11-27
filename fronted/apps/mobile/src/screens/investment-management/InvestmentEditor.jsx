@@ -77,7 +77,9 @@ export default function InvestmentEditor({
             {field('quoteAmount', 'investmentQuoteAmount', { numeric: true })}
           </>
         )}
-        {field('note', 'investmentNote')}
+        {field('note', 'investmentNote', {
+          placeholder: t('investmentNotePlaceholder'),
+        })}
       </FormSheet>
       <Label muted style={styles.hint}>
         {t(target ? investmentTargetHintKey(value) : 'investmentCalculationNote')}
