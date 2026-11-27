@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Pencil, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   useInvestmentDetail,
@@ -51,17 +52,36 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpen
   return <InvestmentLayout title={data?.target.symbol || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} model={model}>
     {data && !model.loading && !model.loadError && <div className="w-full">
       <section className="text-center">
-        <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">{data.target.symbol} / {data.target.quoteCurrency}</p>
+        <div className="mb-1 flex items-center justify-center text-sm">
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 border-b border-dashed border-blue-600 pb-0.5 font-semibold text-blue-700 hover:text-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-blue-400 dark:text-blue-300 dark:hover:text-blue-200"
+            aria-label={t('investmentEditTarget')}
+            title={t('investmentEditTarget')}
+            onClick={() => setEditor({ kind: 'target', value: data.target })}
+          >
+            {data.target.symbol}
+            <Pencil size={13} aria-hidden="true" />
+          </button>
+          <span className="text-slate-500 dark:text-slate-400"> / {data.target.quoteCurrency}</span>
+        </div>
         <InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} prominent />
         <InvestmentProfitLoss price={prices[data.target.symbol]} summary={data.summary} centered />
         <InvestmentSummary summary={data.summary} symbol={data.target.symbol} centered />
         {data.target.note && <p className="mb-3 break-words text-sm text-slate-600 dark:text-slate-300">{data.target.note}</p>}
       </section>
-      <div className="mb-6 grid grid-cols-2 gap-2">
-        <button className="button-primary min-h-11 w-full" onClick={() => setEditor({ kind: 'trade', openedAt: new Date() })}>{t('investmentAddTrade')}</button>
-        <button className="button-secondary min-h-11 w-full" onClick={() => setEditor({ kind: 'target', value: data.target })}>{t('investmentEditTarget')}</button>
+      <div className="mb-1 flex min-h-9 items-center justify-between">
+        <h2 className="text-sm font-semibold">{t('investmentTrades')}</h2>
+        <button
+          type="button"
+          className="grid size-8 shrink-0 place-items-center rounded-full border border-slate-300 text-slate-600 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
+          aria-label={t('investmentAddTrade')}
+          title={t('investmentAddTrade')}
+          onClick={() => setEditor({ kind: 'trade', openedAt: new Date() })}
+        >
+          <Plus size={18} aria-hidden="true" />
+        </button>
       </div>
-      <h2 className="mb-2 text-sm font-semibold">{t('investmentTrades')}</h2>
       {!data.trades.length && <p className="py-3 text-sm text-slate-500 dark:text-slate-400">{t('investmentNoTrades')}</p>}
       {data.trades.map(trade => <button key={trade.id} type="button"
         className="block w-full border-b border-slate-200 py-3 text-left dark:border-slate-800" onClick={() => setEditor({ kind: 'trade', value: trade })}>

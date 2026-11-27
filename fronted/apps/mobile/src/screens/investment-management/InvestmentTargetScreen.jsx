@@ -11,6 +11,7 @@ import {
   formatInvestmentTime,
 } from '@mogo/investment-management-core';
 import { Action, Label, Loading, Page } from '../../components/Primitives';
+import IconButton from '../../components/IconButton';
 import useFeedback from '../../components/useFeedback';
 import { usePreferences } from '../../platform/PreferencesProvider';
 import InvestmentSummary from './InvestmentSummary';
@@ -24,6 +25,7 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
   const model = useInvestmentDetail({ api, targetId, marketClient });
   const [editor, setEditor] = useState(null);
   const addButton = useRef(null);
+  const targetButton = useRef(null);
   useFeedback(model.feedback, model.clearFeedback);
   const data = model.data;
   const applicationMarket = useInvestmentMarket();
@@ -68,9 +70,23 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
       {data && !model.loading && !model.loadError && (
         <View style={styles.content}>
           <View style={styles.marketSummary}>
-            <Label muted style={styles.marketPair}>
-              {data.target.symbol} / {data.target.quoteCurrency}
-            </Label>
+            <View style={styles.marketPair}>
+              <Pressable
+                ref={targetButton}
+                accessibilityRole="button"
+                accessibilityLabel={t('investmentEditTarget')}
+                hitSlop={8}
+                onPress={() => setEditor({ kind: 'target', value: data.target })}
+                style={({ pressed }) => pressed && styles.pressed}
+              >
+                <Label style={[styles.targetSymbol, { color: colors.accent }]}>
+                  {data.target.symbol}
+                </Label>
+              </Pressable>
+              <Label muted style={styles.marketPairSuffix}>
+                {' / '}{data.target.quoteCurrency}
+              </Label>
+            </View>
             <InvestmentMarketPrice
               target={data.target}
               price={prices[data.target.symbol]}
@@ -90,24 +106,18 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
           {Boolean(data.target.note) && (
             <Label style={styles.hint}>{data.target.note}</Label>
           )}
-          <View style={styles.actions}>
-            <Action
+          <View style={styles.tradesHeader}>
+            <Label accessibilityRole="header" style={styles.title}>
+              {t('investmentTrades')}
+            </Label>
+            <IconButton
               ref={addButton}
-              title={t('investmentAddTrade')}
-              variant="primary"
-              style={styles.action}
+              icon="plus"
+              label={t('investmentAddTrade')}
+              color={colors.accent}
               onPress={() => setEditor({ kind: 'trade', openedAt: new Date() })}
             />
-            <Action
-              title={t('investmentEditTarget')}
-              variant="secondary"
-              style={styles.action}
-              onPress={() => setEditor({ kind: 'target', value: data.target })}
-            />
           </View>
-          <Label accessibilityRole="header" style={styles.title}>
-            {t('investmentTrades')}
-          </Label>
           {!data.trades.length && (
             <Label muted>{t('investmentNoTrades')}</Label>
           )}
@@ -155,7 +165,7 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
           symbolLocked={data?.symbolLocked}
           saving={model.saving}
           onClose={() => setEditor(null)}
-          returnFocusRef={addButton}
+          returnFocusRef={editor.kind === 'target' ? targetButton : addButton}
           onSave={saveEditor}
           onDelete={editor.value ? () => editor.kind === 'target'
             ? confirm('investmentDeleteTargetConfirm', async () => {
@@ -173,15 +183,23 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
 const styles = StyleSheet.create({
   content: { width: '100%', maxWidth: 560, alignSelf: 'center' },
   marketSummary: { alignItems: 'center', gap: 4 },
-  marketPair: { fontSize: 14, fontWeight: '500' },
-  title: { fontWeight: '600', fontSize: 16, marginBottom: 8 },
-  hint: { fontSize: 12, marginBottom: 12, textAlign: 'center' },
-  actions: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 24,
+  marketPair: { flexDirection: 'row', alignItems: 'center' },
+  marketPairSuffix: { fontSize: 14, fontWeight: '500' },
+  targetSymbol: {
+    fontSize: 14,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
-  action: { flex: 1 },
+  title: { fontWeight: '600', fontSize: 16 },
+  hint: { fontSize: 12, marginBottom: 12, textAlign: 'center' },
+  tradesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 44,
+    marginTop: 4,
+  },
+  pressed: { opacity: 0.65 },
   trade: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingVertical: 12,

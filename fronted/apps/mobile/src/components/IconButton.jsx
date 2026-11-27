@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { usePreferences } from '../platform/PreferencesProvider';
@@ -24,7 +24,7 @@ import { usePreferences } from '../platform/PreferencesProvider';
 const SETTINGS_OUTLINE =
   'M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915';
 
-export default function IconButton({
+const IconButton = forwardRef(function IconButton({
   backgroundColor,
   borderColor,
   color,
@@ -32,12 +32,13 @@ export default function IconButton({
   label,
   onPress,
   outlined = false,
-}) {
+}, ref) {
   const { colors } = usePreferences();
   const iconColor = color ?? colors.text;
   const iconSize = outlined ? 18 : 22;
   return (
     <Pressable
+      ref={ref}
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={outlined ? 6 : undefined}
@@ -68,6 +69,11 @@ export default function IconButton({
             <Circle cx={12} cy={8} r={3.5} />
             <Path d="M5 21v-2a7 7 0 0 1 14 0v2" />
           </>
+        ) : icon === 'plus' ? (
+          <>
+            <Path d="M12 5v14" />
+            <Path d="M5 12h14" />
+          </>
         ) : (
           <>
             <Circle cx={12} cy={12} r={3} />
@@ -77,7 +83,8 @@ export default function IconButton({
       </Svg>
     </Pressable>
   );
-}
+});
+export default IconButton;
 const styles = StyleSheet.create({
   button: {
     width: 44,
