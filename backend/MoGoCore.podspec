@@ -10,12 +10,18 @@ Pod::Spec.new do |s|
   investment = ENV.fetch('MOGO_FEATURE_INVESTMENT_MANAGEMENT', 'ON') != 'OFF'
   finance = ENV.fetch('MOGO_FEATURE_PERSONAL_FINANCE', 'ON') != 'OFF'
   profile = ENV.fetch('MOGO_FEATURE_USER_PROFILE', 'ON') != 'OFF'
+  backup = ENV.fetch('MOGO_FEATURE_DATA_BACKUP', 'ON') != 'OFF'
   sources = ['core_shared/**/*.hpp', 'transports/native/include/**/*.hpp', 'transports/native/src/native_core.cpp', 'transports/native/src/commands.hpp', 'third_party/**/*.hpp']
   includes = ['core_shared/include', 'transports/native/include', 'transports/native/src', 'transports/contracts/include', 'third_party']
   definitions = ['$(inherited)']
-  if finance || investment
+  if finance || investment || backup
     sources += ['core_shared/src/*.cpp']
     s.libraries = 'sqlite3'
+  end
+  if backup
+    sources += ['features/data_backup/**/*.{hpp,cpp}', 'transports/native/src/backup_commands.cpp', 'third_party/monocypher.{c,h}']
+    includes += ['features/data_backup/application/include', 'features/data_backup/infrastructure/local/include']
+    definitions << 'MOGO_FEATURE_DATA_BACKUP=1'
   end
   if investment
     sources += ['features/investment_management/**/*.{hpp,cpp}', 'transports/native/src/investment_commands.cpp', 'transports/contracts/include/mogo/contracts/investment_json.hpp']

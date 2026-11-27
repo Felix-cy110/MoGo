@@ -1,6 +1,8 @@
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
 import { Alert, Appearance, TextInput } from 'react-native';
+import { pick } from '@react-native-documents/picker';
+import Share from 'react-native-share';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n, { resources } from '../src/platform/i18n';
 import { PreferencesProvider } from '../src/platform/PreferencesProvider';
@@ -10,11 +12,13 @@ import FinanceScreen from '../src/screens/personal-finance/FinanceScreen';
 import AnalyticsScreen from '../src/screens/personal-finance/AnalyticsScreen';
 import CategoriesScreen from '../src/screens/personal-finance/CategoriesScreen';
 import SettingsScreen from '../src/screens/SettingsScreen';
+import DataManagementScreen from '../src/screens/settings/DataManagementScreen';
 import InvestmentManagementScreen from '../src/screens/InvestmentManagementScreen';
 import { Action, LinkRow } from '../src/components/Primitives';
 
 let tree;
 beforeEach(() => {
+  jest.clearAllMocks();
   jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 });
 afterEach(async () => {
@@ -239,6 +243,91 @@ test('legacy system theme is replaced by the scheduled appearance', async () => 
   );
 });
 
+test('mobile settings opens data management before export and import', async () => {
+  const navigate = jest.fn();
+  await render(<SettingsScreen navigate={navigate} />);
+  const rows = tree.root.findAllByType(LinkRow);
+  expect(rows.map(row => row.props.title)).toContain(i18n.t('dataManagement'));
+  expect(rows.map(row => row.props.title)).not.toContain(i18n.t('exportData'));
+  await act(async () =>
+    rows
+      .find(row => row.props.title === i18n.t('dataManagement'))
+      .props.onPress(),
+  );
+  expect(navigate).toHaveBeenCalledWith('dataManagement');
+});
+
+test('mobile data management exports and imports encrypted backup files', async () => {
+  const api = {
+    exportData: jest.fn(async () => ({
+      fileName: 'mogo-backup.mogo',
+      content: 'MOGO-BACKUP/1\nencrypted',
+    })),
+    writeBackupFile: jest.fn(async () => 'file:///mogo-backup.mogo'),
+    readBackupFile: jest.fn(async () => 'MOGO-BACKUP/1\nencrypted'),
+    importData: jest.fn(async () => ({
+      databaseImported: false,
+      profileImported: false,
+    })),
+  };
+  await render(<DataManagementScreen api={api} />);
+  const link = title =>
+    tree.root.findAllByType(LinkRow).find(item => item.props.title === title);
+  const action = title =>
+    tree.root.findAllByType(Action).find(item => item.props.title === title);
+  await act(async () => link(i18n.t('exportData')).props.onPress());
+  const passwordInputs = tree.root.findAllByType(TextInput);
+  await act(async () =>
+    passwordInputs[0].props.onChangeText('backup-password'),
+  );
+  await act(async () =>
+    passwordInputs[1].props.onChangeText('backup-password'),
+  );
+  await act(async () => action(i18n.t('confirmExport')).props.onPress());
+  expect(api.exportData).toHaveBeenCalledWith('backup-password');
+  expect(Share.open).toHaveBeenCalledWith(
+    expect.objectContaining({ url: 'file:///mogo-backup.mogo' }),
+  );
+  expect(Alert.alert).toHaveBeenLastCalledWith(
+    i18n.t('backupExported'),
+    '',
+    expect.any(Array),
+    expect.any(Object),
+  );
+
+  pick.mockResolvedValue([
+    {
+      uri: 'content://backup',
+      name: 'mogo-backup.mogo',
+      size: 120,
+    },
+  ]);
+  await act(async () => link(i18n.t('importData')).props.onPress());
+  await act(async () =>
+    tree.root
+      .findByProps({ accessibilityLabel: i18n.t('backupPassword') })
+      .props.onChangeText('backup-password'),
+  );
+  const policies = tree.root.findAll(
+    item =>
+      item.props.accessibilityRole === 'radio' &&
+      typeof item.props.onPress === 'function',
+  );
+  await act(async () => policies[1].props.onPress());
+  await act(async () => action(i18n.t('confirmImport')).props.onPress());
+  expect(api.importData).toHaveBeenCalledWith({
+    content: 'MOGO-BACKUP/1\nencrypted',
+    password: 'backup-password',
+    conflictPolicy: 'KEEP_EXISTING',
+  });
+  expect(Alert.alert).toHaveBeenLastCalledWith(
+    i18n.t('backupKeptExisting'),
+    '',
+    expect.any(Array),
+    expect.any(Object),
+  );
+});
+
 test('finance requires Other notes and shows budget alerts after insertion', async () => {
   const api = {
     getCategories: async () => categories,
@@ -338,11 +427,23 @@ test('navigation honors native capabilities and returns from investment settings
       .props.onPress(),
   );
   expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('appearance'));
+  await act(async () =>
+    tree.root
+      .findAllByType(LinkRow)
+      .find(row => row.props.title === i18n.t('dataManagement'))
+      .props.onPress(),
+  );
+  expect(tree.root.findAllByType(LinkRow).map(row => row.props.title)).toEqual([
+    i18n.t('exportData'),
+    i18n.t('importData'),
+  ]);
   const back = () =>
     tree.root
       .findAllByType(IconButton)
       .find(button => button.props.label === i18n.t('back'))
       .props.onPress();
+  await act(async () => back());
+  expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('appearance'));
   await act(async () => back());
   expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('investmentEmpty'));
   await act(async () => back());

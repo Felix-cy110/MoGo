@@ -5,12 +5,25 @@ test('native adapter keeps shared Hook method contracts without fetch', async ()
     execute: jest.fn(async () =>
       JSON.stringify({ ok: true, data: { saved: true } }),
     ),
+    writeBackupFile: jest.fn(async () => 'file:///backup.mogo'),
+    readBackupFile: jest.fn(async () => 'MOGO-BACKUP/1'),
   };
   const apis = createNativeApis(bridge);
   await apis.finance.saveBudget('2026-11-19', 20000);
   expect(bridge.execute).toHaveBeenLastCalledWith(
     'finance.saveBudget',
     '{"date":"2026-11-19","amountCents":20000}',
+  );
+  await apis.backup.exportData('password');
+  expect(bridge.execute).toHaveBeenLastCalledWith(
+    'backup.exportData',
+    '{"password":"password"}',
+  );
+  await expect(apis.backup.writeBackupFile('backup.mogo', 'encrypted')).resolves.toBe(
+    'file:///backup.mogo',
+  );
+  await expect(apis.backup.readBackupFile('content://backup')).resolves.toBe(
+    'MOGO-BACKUP/1',
   );
   await apis.finance.updateExpense(7, {
     amountCents: 2000,

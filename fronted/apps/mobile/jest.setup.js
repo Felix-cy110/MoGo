@@ -13,3 +13,13 @@ jest.mock('@react-native-community/netinfo', () => ({
     refresh: jest.fn(),
   })),
 }));
+jest.mock('@react-native-documents/picker', () => ({
+  pick: jest.fn(),
+  types: { allFiles: '*/*' },
+  errorCodes: { OPERATION_CANCELED: 'OPERATION_CANCELED' },
+  isErrorWithCode: error => Boolean(error?.code),
+}));
+jest.mock('react-native-share', () => ({
+  __esModule: true,
+  default: { open: jest.fn(async () => ({ success: true })) },
+}));

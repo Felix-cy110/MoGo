@@ -5,6 +5,8 @@
 #include <memory>
 #include <stdexcept>
 
+static const NSUInteger MoGoMaxBackupBytes = 350UL * 1024UL * 1024UL;
+
 @implementation MoGoNativeModule {
     dispatch_queue_t _worker;
     std::atomic_bool _invalidated;
@@ -30,6 +32,48 @@ RCT_EXPORT_MODULE(NativeMoGo)
             resolve([[NSString alloc] initWithBytes:response.data() length:response.size() encoding:NSUTF8StringEncoding]);
         } catch (const std::exception&) {
             reject(@"NATIVE_STORAGE_FAILED", @"Native storage failed", nil);
+        }
+    });
+}
+- (void)writeBackupFile:(NSString *)fileName content:(NSString *)content resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    dispatch_async(_worker, ^{
+        @try {
+            if (self->_invalidated.load()) @throw [NSException exceptionWithName:@"MoGoInvalidated" reason:@"Native module is invalidated" userInfo:nil];
+            if (![[fileName lastPathComponent] isEqualToString:fileName] || ![[fileName pathExtension] isEqualToString:@"mogo"]) {
+                @throw [NSException exceptionWithName:@"MoGoFileName" reason:@"Invalid backup file name" userInfo:nil];
+            }
+            NSURL *directory = [[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] firstObject];
+            directory = [directory URLByAppendingPathComponent:@"MoGoBackups" isDirectory:YES];
+            NSError *error = nil;
+            [[NSFileManager defaultManager] createDirectoryAtURL:directory withIntermediateDirectories:YES attributes:nil error:&error];
+            NSURL *file = [directory URLByAppendingPathComponent:fileName];
+            if (error || ![content writeToURL:file atomically:YES encoding:NSUTF8StringEncoding error:&error]) {
+                @throw [NSException exceptionWithName:@"MoGoWriteFailed" reason:@"Unable to write backup file" userInfo:nil];
+            }
+            resolve(file.absoluteString);
+        } @catch (NSException *exception) {
+            reject(@"NATIVE_STORAGE_FAILED", exception.reason, nil);
+        }
+    });
+}
+- (void)readBackupFile:(NSString *)uri resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    dispatch_async(_worker, ^{
+        NSURL *url = [NSURL URLWithString:uri];
+        BOOL scoped = [url startAccessingSecurityScopedResource];
+        @try {
+            if (self->_invalidated.load()) @throw [NSException exceptionWithName:@"MoGoInvalidated" reason:@"Native module is invalidated" userInfo:nil];
+            NSError *error = nil;
+            NSData *data = [NSData dataWithContentsOfURL:url options:NSDataReadingMappedIfSafe error:&error];
+            if (error || !data || data.length > MoGoMaxBackupBytes) {
+                @throw [NSException exceptionWithName:@"MoGoReadFailed" reason:@"Unable to read backup file" userInfo:nil];
+            }
+            NSString *content = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+            if (!content) @throw [NSException exceptionWithName:@"MoGoEncoding" reason:@"Invalid backup encoding" userInfo:nil];
+            resolve(content);
+        } @catch (NSException *exception) {
+            reject(@"NATIVE_STORAGE_FAILED", exception.reason, nil);
+        } @finally {
+            if (scoped) [url stopAccessingSecurityScopedResource];
         }
     });
 }

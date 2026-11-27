@@ -1,5 +1,8 @@
 add_executable(mogo_backend main.cpp)
 target_link_libraries(mogo_backend PRIVATE mogo_http_transport)
+if(MOGO_FEATURE_DATA_BACKUP)
+  target_link_libraries(mogo_backend PRIVATE mogo_data_backup_local)
+endif()
 if(MOGO_FEATURE_PERSONAL_FINANCE)
   target_link_libraries(mogo_backend PRIVATE mogo_personal_finance_sqlite)
 endif()

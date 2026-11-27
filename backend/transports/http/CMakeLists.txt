@@ -1,6 +1,14 @@
 add_library(mogo_http_transport INTERFACE)
 target_link_libraries(mogo_http_transport INTERFACE hv_static)
 
+if(MOGO_FEATURE_DATA_BACKUP)
+  add_library(mogo_data_backup_http src/data_backup_http_routes.cpp)
+  target_include_directories(mogo_data_backup_http PUBLIC include)
+  target_link_libraries(mogo_data_backup_http PUBLIC mogo_data_backup_application hv_static)
+  target_link_libraries(mogo_http_transport INTERFACE mogo_data_backup_http)
+  target_compile_definitions(mogo_http_transport INTERFACE MOGO_FEATURE_DATA_BACKUP=1)
+endif()
+
 if(MOGO_FEATURE_PERSONAL_FINANCE)
   add_library(mogo_finance_http src/finance_http_json.cpp src/finance_http_routes.cpp)
   target_include_directories(mogo_finance_http PUBLIC include ../contracts/include)

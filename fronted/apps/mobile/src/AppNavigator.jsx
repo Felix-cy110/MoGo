@@ -19,6 +19,7 @@ import CategoriesScreen from './screens/personal-finance/CategoriesScreen';
 import AnalyticsScreen from './screens/personal-finance/AnalyticsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import DataManagementScreen from './screens/settings/DataManagementScreen';
 import LeetCodeScreen from './screens/LeetCodeScreen';
 import InvestmentManagementScreen from './screens/InvestmentManagementScreen';
 import InvestmentTargetScreen from './screens/investment-management/InvestmentTargetScreen';
@@ -30,6 +31,7 @@ const titles = {
   analytics: 'expenseAnalysis',
   profile: 'userProfile',
   settings: 'settings',
+  dataManagement: 'dataManagement',
   leetcode: 'leetcodeInterviewTitle',
   investmentManagement: 'investmentManagementTitle',
   investmentTarget: 'investmentTargetDetail',
@@ -107,7 +109,10 @@ export default function AppNavigator({ apis = nativeApis }) {
         content = <ProfileScreen api={apis.profile} />;
         break;
       case 'settings':
-        content = <SettingsScreen />;
+        content = <SettingsScreen navigate={navigate} />;
+        break;
+      case 'dataManagement':
+        content = <DataManagementScreen api={apis.backup} />;
         break;
       case 'investmentManagement':
         content = (

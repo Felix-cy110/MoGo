@@ -1,9 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePreferences } from '../platform/PreferencesProvider';
-import { Page, Section } from '../components/Primitives';
+import { LinkRow, Page, Section } from '../components/Primitives';
 import ChoiceField from '../components/ChoiceField';
-export default function SettingsScreen() {
+export default function SettingsScreen({ navigate = () => {} }) {
   const { t, i18n } = useTranslation();
   const { theme, update } = usePreferences();
   return (
@@ -26,6 +26,12 @@ export default function SettingsScreen() {
             { value: 'light', label: t('lightTheme') },
             { value: 'dark', label: t('darkTheme') },
           ]}
+        />
+      </Section>
+      <Section>
+        <LinkRow
+          title={t('dataManagement')}
+          onPress={() => navigate('dataManagement')}
         />
       </Section>
     </Page>
