@@ -88,6 +88,10 @@ test.each([
     expect(JSON.stringify(tree.toJSON())).toContain(
       i18n.t('investmentAveragePrice'),
     );
+    const removedCalculationNote = language === 'zh'
+      ? '按投入 USDT 和单价推算数量，均价暂不计手续费。'
+      : 'Quantity is derived from USDT spent and unit price. Fees are excluded.';
+    expect(JSON.stringify(tree.toJSON())).not.toContain(removedCalculationNote);
     const row = tree.root.findAll(
       item =>
         item.props.accessibilityLabel?.includes('600 USDT') &&
@@ -99,6 +103,7 @@ test.each([
     expect(field('investmentNote').props.placeholder).toBe(
       i18n.t('investmentNotePlaceholder'),
     );
+    expect(JSON.stringify(tree.toJSON())).not.toContain(removedCalculationNote);
     await act(async () =>
       field('investmentQuoteAmount').props.onChangeText('900'),
     );

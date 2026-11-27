@@ -81,9 +81,11 @@ export default function InvestmentEditor({
           placeholder: t('investmentNotePlaceholder'),
         })}
       </FormSheet>
-      <Label muted style={styles.hint}>
-        {t(target ? investmentTargetHintKey(value) : 'investmentCalculationNote')}
-      </Label>
+      {target && (
+        <Label muted style={styles.hint}>
+          {t(investmentTargetHintKey(value))}
+        </Label>
+      )}
       <View style={styles.actions}>
         {onDelete && (
           <Action

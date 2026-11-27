@@ -29,7 +29,7 @@ export function InvestmentEditor({ kind, value, openedAt, symbolLocked = false, 
           placeholder: t('investmentNotePlaceholder'),
         })}
       </div>
-      <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">{t(target ? investmentTargetHintKey(value) : 'investmentCalculationNote')}</p>
+      {target && <p className="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400">{t(investmentTargetHintKey(value))}</p>}
       <div className="mt-5 flex flex-wrap justify-end gap-2">
         {onDelete && <button type="button" className="button-secondary mr-auto text-red-700 dark:text-red-300" disabled={saving} onClick={onDelete}>{t(target ? 'investmentDeleteTarget' : 'investmentDeleteTrade')}</button>}
         <button type="button" className="button-secondary" disabled={saving} onClick={onClose}>{t('investmentCancel')}</button>
