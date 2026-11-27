@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AppControls } from './AppControls';
 
-export function FeaturePlanningScreen({ titleKey, descriptionKey, backKey, onBack, onOpenSettings }) {
+export function FeaturePlanningScreen({ titleKey, descriptionKey, backKey, onBack, onOpenProfile, onOpenSettings }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
 
@@ -21,7 +21,7 @@ export function FeaturePlanningScreen({ titleKey, descriptionKey, backKey, onBac
             </button>
             <h1 className="truncate text-lg font-semibold">{t(titleKey)}</h1>
           </div>
-          <AppControls onOpenSettings={onOpenSettings} />
+          <AppControls onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} />
         </div>
       </header>
 

@@ -8,12 +8,12 @@ import { investmentApi } from './investmentApi';
 import { InvestmentMarketPrice } from './InvestmentMarketPrice';
 import { InvestmentProfitLoss } from './InvestmentProfitLoss';
 import { useMarketPrices } from './useMarketPrices';
-export function InvestmentManagementScreen({ onBack, onOpenSettings, onOpenTarget, api = investmentApi, marketClient }) {
+export function InvestmentManagementScreen({ onBack, onOpenProfile, onOpenSettings, onOpenTarget, api = investmentApi, marketClient }) {
   const { t } = useTranslation();
   const model = useInvestmentTargets({ api });
   const prices = useMarketPrices(model.items.map(item => item.target), marketClient);
   const [adding, setAdding] = useState(false);
-  return <InvestmentLayout title={t('investmentManagementTitle')} backKey="investmentManagementBack" onBack={onBack} onOpenSettings={onOpenSettings} model={model}>
+  return <InvestmentLayout title={t('investmentManagementTitle')} backKey="investmentManagementBack" onBack={onBack} onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} model={model}>
     <div className="mb-3 flex items-center gap-2 text-sm">
       <input type="search" className="field min-h-11 min-w-0 flex-1" aria-label={t('investmentSearch')} placeholder={t('investmentSearch')} value={model.query} onChange={event => model.setQuery(event.target.value)} />
       <button type="button" className="button-secondary min-h-11 shrink-0 whitespace-nowrap" disabled={model.loading || Boolean(model.loadError)} onClick={() => setAdding(true)}>{t('investmentAddTarget')}</button>

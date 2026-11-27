@@ -11,7 +11,7 @@ import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseEditDialog } from './components/ExpenseEditDialog';
 import { ExpenseList } from './components/ExpenseList';
 
-export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onOpenSettings }) {
+export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onOpenProfile, onOpenSettings }) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage || i18n.language;
   const finance = useDailyFinance({ api });
@@ -54,7 +54,7 @@ export function FinanceScreen({ onBack, onManageCategories, onOpenAnalytics, onO
               <h1 className="truncate text-xl font-semibold">{t('financeFeatureName')}</h1>
             </div>
           </div>
-          <AppControls onOpenSettings={onOpenSettings} />
+          <AppControls onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} />
         </div>
       </header>
 

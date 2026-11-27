@@ -12,9 +12,11 @@ export function AppControls({ onOpenProfile, onOpenSettings }) {
           <UserRound size={18} aria-hidden="true" />
         </button>
       )}
-      <button className="theme-switcher" type="button" onClick={onOpenSettings} aria-label={t('settings')} title={t('settings')}>
-        <Settings size={18} aria-hidden="true" />
-      </button>
+      {onOpenSettings && (
+        <button className="theme-switcher" type="button" onClick={onOpenSettings} aria-label={t('settings')} title={t('settings')}>
+          <Settings size={18} aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 }

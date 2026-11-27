@@ -9,7 +9,7 @@ import { InvestmentConfirm } from './InvestmentConfirm';
 import { investmentApi } from './investmentApi';
 import { InvestmentMarketPrice } from './InvestmentMarketPrice';
 import { useMarketPrices } from './useMarketPrices';
-export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api = investmentApi, marketClient }) {
+export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpenSettings, api = investmentApi, marketClient }) {
   const { t, i18n } = useTranslation();
   const model = useInvestmentDetail({ api, targetId });
   const [editor, setEditor] = useState(null);
@@ -25,7 +25,7 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenSettings, api =
     setEditor(null);
     if (target) onBack();
   };
-  return <InvestmentLayout title={data?.target.symbol || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenSettings={onOpenSettings} model={model}>
+  return <InvestmentLayout title={data?.target.symbol || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} model={model}>
     {data && !model.loading && !model.loadError && <>
       <p className="text-sm text-slate-500 dark:text-slate-400">{data.target.symbol} / {data.target.quoteCurrency}<InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} /></p>
       <InvestmentSummary summary={data.summary} symbol={data.target.symbol} />
