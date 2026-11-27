@@ -24,21 +24,39 @@ import { usePreferences } from '../platform/PreferencesProvider';
 const SETTINGS_OUTLINE =
   'M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915';
 
-export default function IconButton({ icon, label, onPress }) {
+export default function IconButton({
+  backgroundColor,
+  borderColor,
+  color,
+  icon,
+  label,
+  onPress,
+  outlined = false,
+}) {
   const { colors } = usePreferences();
+  const iconColor = color ?? colors.text;
+  const iconSize = outlined ? 18 : 22;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      hitSlop={outlined ? 6 : undefined}
       onPress={onPress}
-      style={styles.button}
+      style={({ pressed }) => [
+        styles.button,
+        outlined && [
+          styles.outlinedButton,
+          { backgroundColor, borderColor },
+        ],
+        pressed && styles.pressed,
+      ]}
     >
       <Svg
-        width={22}
-        height={22}
+        width={iconSize}
+        height={iconSize}
         viewBox="0 0 24 24"
         fill="none"
-        stroke={colors.text}
+        stroke={iconColor}
         strokeWidth={1.7}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -67,4 +85,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  outlinedButton: {
+    width: 32,
+    height: 32,
+    borderWidth: 1,
+    borderRadius: 16,
+  },
+  pressed: { opacity: 0.65 },
 });

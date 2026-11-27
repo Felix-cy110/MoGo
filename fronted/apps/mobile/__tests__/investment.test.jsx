@@ -4,10 +4,11 @@ import { Alert, TextInput } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../src/platform/i18n';
 import { PreferencesProvider } from '../src/platform/PreferencesProvider';
-import { Action, Label, LinkRow } from '../src/components/Primitives';
+import { Action, Label } from '../src/components/Primitives';
 import InvestmentTargetScreen from '../src/screens/investment-management/InvestmentTargetScreen';
 import InvestmentManagementScreen from '../src/screens/InvestmentManagementScreen';
 import HomeScreen from '../src/screens/HomeScreen';
+import ToolboxFeatureRow from '../src/screens/ToolboxFeatureRow';
 import { createNativeApis } from '../src/services/nativeApi';
 
 let tree;
@@ -201,7 +202,7 @@ test('committed save followed by refresh failure is not offered as another save'
 test('disabled builds hide investment and native adapter keeps decimal strings', async () => {
   await render(<HomeScreen features={[]} navigate={jest.fn()} />);
   expect(
-    tree.root.findAllByType(LinkRow).map(item => item.props.title),
+    tree.root.findAllByType(ToolboxFeatureRow).map(item => item.props.title),
   ).not.toContain(i18n.t('investmentManagementFeatureName'));
   const bridge = {
     execute: jest.fn(async () => JSON.stringify({ ok: true, data: {} })),
