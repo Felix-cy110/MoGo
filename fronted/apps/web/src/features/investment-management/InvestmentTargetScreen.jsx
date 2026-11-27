@@ -51,24 +51,26 @@ export function InvestmentTargetScreen({ targetId, onBack, onOpenProfile, onOpen
   };
   return <InvestmentLayout title={data?.target.symbol || t('investmentTargetDetail')} backKey="investmentBackToList" onBack={onBack} onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} model={model}>
     {data && !model.loading && !model.loadError && <div className="w-full">
-      <section className="text-center">
-        <div className="mb-1 flex items-center justify-center text-sm">
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 border-b border-dashed border-blue-600 pb-0.5 font-semibold text-blue-700 hover:text-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-blue-400 dark:text-blue-300 dark:hover:text-blue-200"
-            aria-label={t('investmentEditTarget')}
-            title={t('investmentEditTarget')}
-            onClick={() => setEditor({ kind: 'target', value: data.target })}
-          >
-            {data.target.symbol}
-            <Pencil size={13} aria-hidden="true" />
-          </button>
-          <span className="text-slate-500 dark:text-slate-400"> / {data.target.quoteCurrency}</span>
+      <section>
+        <div className="mb-1 flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center text-sm">
+            <button
+              type="button"
+              className="inline-flex items-center gap-1 border-b border-dashed border-blue-600 pb-0.5 font-semibold text-blue-700 hover:text-blue-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-blue-400 dark:text-blue-300 dark:hover:text-blue-200"
+              aria-label={t('investmentEditTarget')}
+              title={t('investmentEditTarget')}
+              onClick={() => setEditor({ kind: 'target', value: data.target })}
+            >
+              {data.target.symbol}
+              <Pencil size={13} aria-hidden="true" />
+            </button>
+            <span className="text-slate-500 dark:text-slate-400"> / {data.target.quoteCurrency}</span>
+            <InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} />
+          </div>
+          <InvestmentProfitLoss price={prices[data.target.symbol]} summary={data.summary} />
         </div>
-        <InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} prominent />
-        <InvestmentProfitLoss price={prices[data.target.symbol]} summary={data.summary} centered />
         <InvestmentSummary summary={data.summary} symbol={data.target.symbol} centered />
-        {data.target.note && <p className="mb-3 break-words text-sm text-slate-600 dark:text-slate-300">{data.target.note}</p>}
+        {data.target.note && <p className="mb-3 break-words text-center text-sm text-slate-600 dark:text-slate-300">{data.target.note}</p>}
       </section>
       <div className="mb-1 flex min-h-9 items-center justify-between">
         <h2 className="text-sm font-semibold">{t('investmentTrades')}</h2>

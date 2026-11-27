@@ -70,32 +70,32 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
       {data && !model.loading && !model.loadError && (
         <View style={styles.content}>
           <View style={styles.marketSummary}>
-            <View style={styles.marketPair}>
-              <Pressable
-                ref={targetButton}
-                accessibilityRole="button"
-                accessibilityLabel={t('investmentEditTarget')}
-                hitSlop={8}
-                onPress={() => setEditor({ kind: 'target', value: data.target })}
-                style={({ pressed }) => pressed && styles.pressed}
-              >
-                <Label style={[styles.targetSymbol, { color: colors.accent }]}>
-                  {data.target.symbol}
+            <View style={styles.marketQuote}>
+              <View style={styles.marketPair}>
+                <Pressable
+                  ref={targetButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('investmentEditTarget')}
+                  hitSlop={8}
+                  onPress={() => setEditor({ kind: 'target', value: data.target })}
+                  style={({ pressed }) => pressed && styles.pressed}
+                >
+                  <Label style={[styles.targetSymbol, { color: colors.accent }]}>
+                    {data.target.symbol}
+                  </Label>
+                </Pressable>
+                <Label muted style={styles.marketPairSuffix}>
+                  {' / '}{data.target.quoteCurrency}
                 </Label>
-              </Pressable>
-              <Label muted style={styles.marketPairSuffix}>
-                {' / '}{data.target.quoteCurrency}
-              </Label>
+              </View>
+              <InvestmentMarketPrice
+                target={data.target}
+                price={prices[data.target.symbol]}
+              />
             </View>
-            <InvestmentMarketPrice
-              target={data.target}
-              price={prices[data.target.symbol]}
-              prominent
-            />
             <InvestmentProfitLoss
               price={prices[data.target.symbol]}
               summary={data.summary}
-              centered
             />
           </View>
           <InvestmentSummary
@@ -182,7 +182,19 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
 }
 const styles = StyleSheet.create({
   content: { width: '100%', maxWidth: 560, alignSelf: 'center' },
-  marketSummary: { alignItems: 'center', gap: 4 },
+  marketSummary: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  marketQuote: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
   marketPair: { flexDirection: 'row', alignItems: 'center' },
   marketPairSuffix: { fontSize: 14, fontWeight: '500' },
   targetSymbol: {
