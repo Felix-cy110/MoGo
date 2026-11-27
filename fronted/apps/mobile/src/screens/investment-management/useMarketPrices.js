@@ -8,17 +8,18 @@ const okxMarketClient = createOkxMarketClient({ createSocket: url => new WebSock
 
 // The OKX connection determines API availability; do not send separate probes to unrelated hosts.
 const networkConfiguration = { reachabilityShouldRun: () => false };
-export default function useMarketPrices(targets, client = okxMarketClient) {
+export default function useMarketPrices(targets, client = okxMarketClient, subscriptionEnabled = true) {
   const [active, setActive] = useState(
     AppState.currentState == null || AppState.currentState === 'active',
   );
   const { netInfo } = useNetInfoInstance(!active, networkConfiguration);
   useEffect(() => {
+    if (!subscriptionEnabled) return undefined;
     const subscription = AppState.addEventListener('change', state => {
       setActive(state === 'active');
     });
     return () => subscription.remove();
-  }, []);
-  const enabled = active && netInfo.isConnected === true;
+  }, [subscriptionEnabled]);
+  const enabled = subscriptionEnabled && active && netInfo.isConnected === true;
   return useInvestmentPrices({ targets, enabled, client });
 }

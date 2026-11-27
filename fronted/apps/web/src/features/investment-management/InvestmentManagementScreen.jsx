@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useInvestmentTargets } from '@mogo/investment-management-react';
+import { useInvestmentMarket, useInvestmentTargets } from '@mogo/investment-management-react';
 import { InvestmentLayout } from './InvestmentLayout';
 import { InvestmentSummary } from './InvestmentSummary';
 import { InvestmentEditor } from './InvestmentEditor';
@@ -11,8 +11,19 @@ import { useMarketPrices } from './useMarketPrices';
 export function InvestmentManagementScreen({ onBack, onOpenProfile, onOpenSettings, onOpenTarget, api = investmentApi, marketClient }) {
   const { t } = useTranslation();
   const model = useInvestmentTargets({ api });
-  const prices = useMarketPrices(model.items.map(item => item.target), marketClient);
+  const applicationMarket = useInvestmentMarket();
+  const localPrices = useMarketPrices(
+    model.items.map(item => item.target),
+    marketClient,
+    !applicationMarket,
+  );
+  const prices = applicationMarket?.prices ?? localPrices;
   const [adding, setAdding] = useState(false);
+  const saveTarget = async draft => {
+    const saved = await model.save(draft);
+    if (saved) await applicationMarket?.refreshTargets();
+    return saved;
+  };
   return <InvestmentLayout title={t('investmentManagementTitle')} backKey="investmentManagementBack" onBack={onBack} onOpenProfile={onOpenProfile} onOpenSettings={onOpenSettings} model={model}>
     <div className="mb-3 flex items-center gap-2 text-sm">
       <input type="search" className="field min-h-11 min-w-0 flex-1" aria-label={t('investmentSearch')} placeholder={t('investmentSearch')} value={model.query} onChange={event => model.setQuery(event.target.value)} />
@@ -29,6 +40,6 @@ export function InvestmentManagementScreen({ onBack, onOpenProfile, onOpenSettin
         <InvestmentSummary summary={summary} symbol={target.symbol} />
       </button>)}
     </>}
-    {adding && <InvestmentEditor kind="target" saving={model.saving} onSave={model.save} onClose={() => setAdding(false)} />}
+    {adding && <InvestmentEditor kind="target" saving={model.saving} onSave={saveTarget} onClose={() => setAdding(false)} />}
   </InvestmentLayout>;
 }

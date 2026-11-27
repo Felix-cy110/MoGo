@@ -24,6 +24,7 @@ import DataManagementScreen from './screens/settings/DataManagementScreen';
 import LeetCodeScreen from './screens/LeetCodeScreen';
 import InvestmentManagementScreen from './screens/InvestmentManagementScreen';
 import InvestmentTargetScreen from './screens/investment-management/InvestmentTargetScreen';
+import ApplicationInvestmentMarketProvider from './platform/ApplicationInvestmentMarketProvider';
 
 const titles = {
   home: 'toolboxName',
@@ -39,7 +40,7 @@ const titles = {
 };
 // Missing native linkage is shown as a retryable error, never silently replaced with HTTP or demo data.
 const nativeApis = createNativeApis(TurboModuleRegistry.get('NativeMoGo'));
-export default function AppNavigator({ apis = nativeApis }) {
+export default function AppNavigator({ apis = nativeApis, marketClient }) {
   const [stack, setStack] = useState(['home']);
   const [investmentTargetId, setInvestmentTargetId] = useState(null);
   const [features, setFeatures] = useState(null);
@@ -47,6 +48,7 @@ export default function AppNavigator({ apis = nativeApis }) {
   const { colors, mode, ready } = usePreferences();
   const { t } = useTranslation();
   const date = useLocalDay();
+  const investmentEnabled = features?.includes('investment-management') === true;
   const screen = stack[stack.length - 1];
   const homeScreen = screen === 'home';
   const toolboxPalette = getToolboxPalette(mode);
@@ -142,7 +144,12 @@ export default function AppNavigator({ apis = nativeApis }) {
         content = <HomeScreen features={features} navigate={navigate} />;
     }
   return (
-    <SafeAreaView
+    <ApplicationInvestmentMarketProvider
+      api={apis.investment}
+      enabled={investmentEnabled}
+      marketClient={marketClient}
+    >
+      <SafeAreaView
       style={[
         styles.root,
         {
@@ -222,6 +229,7 @@ export default function AppNavigator({ apis = nativeApis }) {
       </View>
       {content}
     </SafeAreaView>
+    </ApplicationInvestmentMarketProvider>
   );
 }
 const styles = StyleSheet.create({
