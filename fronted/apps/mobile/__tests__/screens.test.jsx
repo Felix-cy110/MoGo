@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n, { resources } from '../src/platform/i18n';
 import { PreferencesProvider } from '../src/platform/PreferencesProvider';
 import HomeScreen from '../src/screens/HomeScreen';
+import ToolboxFeatureRow from '../src/screens/ToolboxFeatureRow';
 import ProfileScreen from '../src/screens/ProfileScreen';
 import FinanceScreen from '../src/screens/personal-finance/FinanceScreen';
 import AnalyticsScreen from '../src/screens/personal-finance/AnalyticsScreen';
@@ -78,10 +79,25 @@ test.each([
       language,
       theme,
     );
-    const rows = tree.root.findAllByType(LinkRow);
+    const rows = tree.root.findAllByType(ToolboxFeatureRow);
     expect(rows[0].props.title).toBe(i18n.t('financeFeatureName'));
+    expect(rows[0].props.description).toBe(
+      i18n.t('financeFeatureDescription'),
+    );
     expect(rows[1].props.title).toBe(i18n.t('leetcodeInterviewFeatureName'));
+    expect(rows[1].props.description).toBe(
+      i18n.t('leetcodeInterviewFeatureDescription'),
+    );
     expect(rows[2].props.title).toBe(i18n.t('investmentManagementFeatureName'));
+    expect(rows[2].props.description).toBe(
+      i18n.t('investmentManagementFeatureDescription'),
+    );
+    expect(rows.map(row => row.props.icon)).toEqual([
+      'finance',
+      'leetcode',
+      'investment',
+    ]);
+    expect(rows.map(row => row.props.first)).toEqual([true, false, false]);
     await act(async () => tree.unmount());
     await render(
       <InvestmentManagementScreen
@@ -403,7 +419,9 @@ test('navigation honors native capabilities and returns from investment settings
       }}
     />,
   );
-  expect(tree.root.findAllByType(LinkRow).map(row => row.props.title)).toEqual([
+  expect(
+    tree.root.findAllByType(ToolboxFeatureRow).map(row => row.props.title),
+  ).toEqual([
     i18n.t('leetcodeInterviewFeatureName'),
     i18n.t('investmentManagementFeatureName'),
   ]);
@@ -411,9 +429,14 @@ test('navigation honors native capabilities and returns from investment settings
   expect(
     tree.root.findAllByType(IconButton).map(button => button.props.label),
   ).not.toContain(i18n.t('userProfile'));
+  expect(
+    tree.root
+      .findAllByType(IconButton)
+      .find(button => button.props.label === i18n.t('settings')).props.outlined,
+  ).toBe(true);
   await act(async () =>
     tree.root
-      .findAllByType(LinkRow)
+      .findAllByType(ToolboxFeatureRow)
       .find(
         row => row.props.title === i18n.t('investmentManagementFeatureName'),
       )
@@ -448,6 +471,6 @@ test('navigation honors native capabilities and returns from investment settings
   expect(JSON.stringify(tree.toJSON())).toContain(i18n.t('investmentEmpty'));
   await act(async () => back());
   expect(
-    tree.root.findAllByType(LinkRow).map(row => row.props.title),
+    tree.root.findAllByType(ToolboxFeatureRow).map(row => row.props.title),
   ).toContain(i18n.t('investmentManagementFeatureName'));
 });

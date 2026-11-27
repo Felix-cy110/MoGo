@@ -287,7 +287,8 @@ test('yesterday accepts an expense without a historical budget', async () => {
 test('finance settings entry returns to the financial page', async () => {
   const AppNavigator = require('../src/AppNavigator').default;
   const IconButton = require('../src/components/IconButton').default;
-  const { LinkRow } = require('../src/components/Primitives');
+  const ToolboxFeatureRow =
+    require('../src/screens/ToolboxFeatureRow').default;
   await render(
     <AppNavigator
       apis={{
@@ -299,7 +300,9 @@ test('finance settings entry returns to the financial page', async () => {
       }}
     />,
   );
-  await act(async () => tree.root.findAllByType(LinkRow)[0].props.onPress());
+  await act(async () =>
+    tree.root.findAllByType(ToolboxFeatureRow)[0].props.onPress(),
+  );
   const icon = name =>
     tree.root.findAllByType(IconButton).find(item => item.props.icon === name);
   await act(async () => icon('settings').props.onPress());
