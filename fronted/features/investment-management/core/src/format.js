@@ -80,11 +80,24 @@ const roundToSignificantDigits = (value, significantDigits) => {
     .padEnd(displayFractionDigits, '0')}`;
 };
 
-// Quantities are rounded only for display; persisted values and calculations retain full precision.
-export const formatInvestmentQuantity = (value, language) => {
+// Rounding is display-only; persisted values and calculations retain full precision.
+export const formatInvestmentSignificantDigits = (
+  value,
+  language,
+  significantDigits = 2,
+) => {
   if (value == null) return '—';
-  return formatInvestmentDecimal(roundToSignificantDigits(value, 2), language);
+  if (!Number.isInteger(significantDigits) || significantDigits < 1) {
+    throw new RangeError('significantDigits must be a positive integer');
+  }
+  return formatInvestmentDecimal(
+    roundToSignificantDigits(value, significantDigits),
+    language,
+  );
 };
+
+export const formatInvestmentQuantity = (value, language) =>
+  formatInvestmentSignificantDigits(value, language, 2);
 export const formatInvestmentTime = (value, language) => new Intl.DateTimeFormat(language, {
   year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
 }).format(new Date(value));

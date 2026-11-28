@@ -246,13 +246,13 @@ test('disabled builds hide investment and native adapter keeps decimal strings',
   );
 });
 
-test('total bought quantity uses two significant digits in the mobile summary', async () => {
+test('quantity and average entry price use two significant digits in the mobile summary', async () => {
   await render(
     <InvestmentSummary
       summary={{
         totalQuoteAmount: '100',
         totalQuantity: '0.00123456789',
-        averageEntryPrice: '81000',
+        averageEntryPrice: '81234.56',
         buyCount: 1,
       }}
       symbol="BTC"
@@ -260,6 +260,8 @@ test('total bought quantity uses two significant digits in the mobile summary', 
   );
   expect(JSON.stringify(tree.toJSON())).toContain('0.0012');
   expect(JSON.stringify(tree.toJSON())).not.toContain('0.00123456789');
+  expect(JSON.stringify(tree.toJSON())).toContain('81,000');
+  expect(JSON.stringify(tree.toJSON())).not.toContain('81,234.56');
 });
 
 for (const builtinCode of ['BTC', 'ETH']) {

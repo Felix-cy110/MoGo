@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateInvestmentProfitLoss, createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, formatInvestmentQuantity, formatInvestmentProfitLoss, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
+import { calculateInvestmentProfitLoss, createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, formatInvestmentQuantity, formatInvestmentSignificantDigits, formatInvestmentProfitLoss, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
 
 test('validates exact decimal strings without numeric conversion', () => {
   for (const value of ['0.000000000000000001', '999999999999999999.999999999999999999', '0001.200']) assert.ok(validInvestmentDecimal(value));
@@ -21,6 +21,16 @@ test('formats total bought quantities with two significant digits without changi
   assert.equal(formatInvestmentQuantity('0', 'zh'), '0');
   assert.equal(precise, '123456789012345678.126999999999999999');
   assert.equal(formatInvestmentQuantity(null, 'zh'), '—');
+});
+test('formats configurable significant digits for shared investment displays', () => {
+  assert.equal(formatInvestmentSignificantDigits('1728.89', 'en', 2), '1,700');
+  assert.equal(formatInvestmentSignificantDigits('1728.89', 'en', 3), '1,730');
+  assert.equal(formatInvestmentSignificantDigits('0.001234', 'zh', 3), '0.00123');
+  assert.equal(formatInvestmentSignificantDigits(null, 'zh', 3), '—');
+  assert.throws(
+    () => formatInvestmentSignificantDigits('1.23', 'en', 0),
+    /positive integer/,
+  );
 });
 test('formats exact decimals when Intl rejects BigInt like Hermes', () => {
   const NumberFormat = Intl.NumberFormat;
