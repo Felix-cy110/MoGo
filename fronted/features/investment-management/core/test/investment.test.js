@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateInvestmentProfitLoss, createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, formatInvestmentQuantity, formatInvestmentSignificantDigits, formatInvestmentProfitLoss, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
+import { calculateInvestmentProfitLoss, createInvestmentApi, investmentManagementMessages, validInvestmentDecimal, normalizeInvestmentDecimal, createTargetDraft, validateTargetDraft, targetPayload, createTradeDraft, validateTradeDraft, tradePayload, formatInvestmentDecimal, formatInvestmentQuantity, formatInvestmentFractionSignificantDigits, formatInvestmentProfitLoss, investmentTargetHintKey, investmentErrorKey } from '../src/index.js';
 
 test('validates exact decimal strings without numeric conversion', () => {
   for (const value of ['0.000000000000000001', '999999999999999999.999999999999999999', '0001.200']) assert.ok(validInvestmentDecimal(value));
@@ -11,24 +11,26 @@ test('validates exact decimal strings without numeric conversion', () => {
 });
 test('formats total bought quantities with two significant digits without changing source precision', () => {
   const precise = '123456789012345678.126999999999999999';
-  assert.equal(formatInvestmentQuantity(precise, 'en'), '120,000,000,000,000,000');
+  assert.equal(formatInvestmentQuantity(precise, 'en'), '123,456,789,012,345,678.13');
   assert.equal(formatInvestmentQuantity('0.001234', 'zh'), '0.0012');
   assert.equal(formatInvestmentQuantity('0.00999', 'en'), '0.010');
   assert.equal(formatInvestmentQuantity('0.0999', 'en'), '0.10');
   assert.equal(formatInvestmentQuantity('0.00000001', 'en'), '0.000000010');
-  assert.equal(formatInvestmentQuantity('1.26', 'en'), '1.3');
-  assert.equal(formatInvestmentQuantity('126', 'en'), '130');
+  assert.equal(formatInvestmentQuantity('1.26', 'en'), '1.26');
+  assert.equal(formatInvestmentQuantity('126', 'en'), '126');
   assert.equal(formatInvestmentQuantity('0', 'zh'), '0');
   assert.equal(precise, '123456789012345678.126999999999999999');
   assert.equal(formatInvestmentQuantity(null, 'zh'), '—');
 });
-test('formats configurable significant digits for shared investment displays', () => {
-  assert.equal(formatInvestmentSignificantDigits('1728.89', 'en', 2), '1,700');
-  assert.equal(formatInvestmentSignificantDigits('1728.89', 'en', 3), '1,730');
-  assert.equal(formatInvestmentSignificantDigits('0.001234', 'zh', 3), '0.00123');
-  assert.equal(formatInvestmentSignificantDigits(null, 'zh', 3), '—');
+test('preserves integers and formats configurable fractional significant digits', () => {
+  assert.equal(formatInvestmentFractionSignificantDigits('1728.89', 'en', 2), '1,728.89');
+  assert.equal(formatInvestmentFractionSignificantDigits('1728.8946', 'en', 3), '1,728.895');
+  assert.equal(formatInvestmentFractionSignificantDigits('0.001234', 'zh', 3), '0.00123');
+  assert.equal(formatInvestmentFractionSignificantDigits('12.00999', 'en', 2), '12.010');
+  assert.equal(formatInvestmentFractionSignificantDigits('-12.345', 'en', 2), '-12.35');
+  assert.equal(formatInvestmentFractionSignificantDigits(null, 'zh', 3), '—');
   assert.throws(
-    () => formatInvestmentSignificantDigits('1.23', 'en', 0),
+    () => formatInvestmentFractionSignificantDigits('1.23', 'en', 0),
     /positive integer/,
   );
 });
@@ -46,7 +48,7 @@ test('formats exact decimals when Intl rejects BigInt like Hermes', () => {
   };
   try {
     assert.equal(formatInvestmentDecimal('999999999999999999.123456789012345678', 'en'), '999,999,999,999,999,999.123456789012345678');
-    assert.equal(formatInvestmentQuantity('123456789012345678.126999999999999999', 'en'), '120,000,000,000,000,000');
+    assert.equal(formatInvestmentQuantity('123456789012345678.126999999999999999', 'en'), '123,456,789,012,345,678.13');
   } finally {
     Intl.NumberFormat = NumberFormat;
   }

@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
   formatInvestmentDecimal,
-  formatInvestmentSignificantDigits,
+  formatInvestmentFractionSignificantDigits,
 } from '@mogo/investment-management-core';
 import { Label } from '../../components/Primitives';
 import { usePreferences } from '../../platform/PreferencesProvider';
@@ -12,8 +12,8 @@ export default function InvestmentSummary({ summary, symbol, detail = false }) {
   const { colors } = usePreferences();
   const values = [
     ['investmentTotalAmount', summary.totalQuoteAmount, formatInvestmentDecimal],
-    ['investmentTotalQuantity', summary.totalQuantity, formatInvestmentSignificantDigits, 2],
-    ['investmentAveragePrice', summary.averageEntryPrice, formatInvestmentSignificantDigits, 2],
+    ['investmentTotalQuantity', summary.totalQuantity, formatInvestmentFractionSignificantDigits, 2],
+    ['investmentAveragePrice', summary.averageEntryPrice, formatInvestmentFractionSignificantDigits, 2],
     ['investmentBuyCount', String(summary.buyCount), formatInvestmentDecimal],
   ];
   return (

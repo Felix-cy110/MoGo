@@ -30,58 +30,44 @@ export const formatInvestmentDecimal = (value, language) => {
 
 const roundToFractionDigits = (value, fractionDigits) => {
   const [integer, fraction = ''] = value.split('.');
+  const negative = integer.startsWith('-');
+  const magnitudeInteger = negative ? integer.slice(1) : integer;
   const scale = 10n ** BigInt(fractionDigits);
   const retained = fraction.slice(0, fractionDigits).padEnd(fractionDigits, '0');
   const shouldRoundUp = Number(fraction[fractionDigits] ?? 0) >= 5;
-  const scaled = BigInt(integer) * scale + BigInt(retained || 0) + BigInt(shouldRoundUp);
+  const scaled = BigInt(magnitudeInteger) * scale
+    + BigInt(retained || 0)
+    + BigInt(shouldRoundUp);
   const roundedInteger = scaled / scale;
   const roundedFraction = (scaled % scale).toString().padStart(fractionDigits, '0');
+  const sign = negative && scaled !== 0n ? '-' : '';
   return fractionDigits > 0
-    ? `${roundedInteger}.${roundedFraction}`
-    : roundedInteger.toString();
+    ? `${sign}${roundedInteger}.${roundedFraction}`
+    : `${sign}${roundedInteger}`;
 };
 
-const roundToSignificantDigits = (value, significantDigits) => {
-  const exponentOf = decimal => {
-    const [integer, fraction = ''] = decimal.split('.');
-    const normalizedInteger = integer.replace(/^0+(?=\d)/, '');
-    if (normalizedInteger !== '0') return normalizedInteger.length - 1;
-    const firstFractionDigit = fraction.search(/[1-9]/);
-    return firstFractionDigit === -1 ? null : -(firstFractionDigit + 1);
-  };
+const roundFractionToSignificantDigits = (value, significantDigits) => {
+  const [, fraction = ''] = value.split('.');
+  const firstSignificantDigit = fraction.search(/[1-9]/);
+  if (firstSignificantDigit === -1) return value.split('.')[0];
 
-  const exponent = exponentOf(value);
-  if (exponent == null) return '0';
-  const fractionDigits = significantDigits - exponent - 1;
-  let rounded;
-  if (fractionDigits >= 0) {
-    rounded = roundToFractionDigits(value, fractionDigits);
-  } else {
-    const [integer] = value.split('.');
-    const factor = 10n ** BigInt(-fractionDigits);
-    const whole = BigInt(integer);
-    const quotient = whole / factor;
-    const remainder = whole % factor;
-    rounded = (
-      (quotient + (remainder * 2n >= factor ? 1n : 0n)) * factor
-    ).toString();
-  }
-
-  const roundedExponent = exponentOf(rounded);
-  const displayFractionDigits = Math.max(
-    0,
-    significantDigits - roundedExponent - 1,
+  const rounded = roundToFractionDigits(
+    value,
+    firstSignificantDigit + significantDigits,
   );
-  if (displayFractionDigits === 0) return rounded.split('.')[0];
-
   const [roundedInteger, roundedFraction = ''] = rounded.split('.');
+  const roundedFirstSignificantDigit = roundedFraction.search(/[1-9]/);
+  if (roundedFirstSignificantDigit === -1) return roundedInteger;
+
+  const displayFractionDigits =
+    roundedFirstSignificantDigit + significantDigits;
   return `${roundedInteger}.${roundedFraction
     .slice(0, displayFractionDigits)
     .padEnd(displayFractionDigits, '0')}`;
 };
 
-// Rounding is display-only; persisted values and calculations retain full precision.
-export const formatInvestmentSignificantDigits = (
+// Integer digits are preserved. Only the fractional part is rounded for display.
+export const formatInvestmentFractionSignificantDigits = (
   value,
   language,
   significantDigits = 2,
@@ -91,13 +77,13 @@ export const formatInvestmentSignificantDigits = (
     throw new RangeError('significantDigits must be a positive integer');
   }
   return formatInvestmentDecimal(
-    roundToSignificantDigits(value, significantDigits),
+    roundFractionToSignificantDigits(value, significantDigits),
     language,
   );
 };
 
 export const formatInvestmentQuantity = (value, language) =>
-  formatInvestmentSignificantDigits(value, language, 2);
+  formatInvestmentFractionSignificantDigits(value, language, 2);
 export const formatInvestmentTime = (value, language) => new Intl.DateTimeFormat(language, {
   year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
 }).format(new Date(value));

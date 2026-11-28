@@ -260,8 +260,7 @@ test('quantity and average entry price use two significant digits in the mobile 
   );
   expect(JSON.stringify(tree.toJSON())).toContain('0.0012');
   expect(JSON.stringify(tree.toJSON())).not.toContain('0.00123456789');
-  expect(JSON.stringify(tree.toJSON())).toContain('81,000');
-  expect(JSON.stringify(tree.toJSON())).not.toContain('81,234.56');
+  expect(JSON.stringify(tree.toJSON())).toContain('81,234.56');
 });
 
 for (const builtinCode of ['BTC', 'ETH']) {
