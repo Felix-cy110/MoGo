@@ -7,7 +7,7 @@ import {
 } from '@mogo/investment-management-core';
 import { Label } from '../../components/Primitives';
 import { usePreferences } from '../../platform/PreferencesProvider';
-export default function InvestmentSummary({ summary, symbol }) {
+export default function InvestmentSummary({ summary, symbol, detail = false }) {
   const { t, i18n } = useTranslation();
   const { colors } = usePreferences();
   const values = [
@@ -17,16 +17,19 @@ export default function InvestmentSummary({ summary, symbol }) {
     ['investmentBuyCount', String(summary.buyCount), formatInvestmentDecimal],
   ];
   return (
-    <View style={styles.grid}>
-      {values.map(([key, value, formatter]) => {
+    <View style={[styles.grid, detail && styles.detailGrid]}>
+      {values.map(([key, value, formatter], index) => {
         const highlighted = key === 'investmentAveragePrice';
         const highlightColor = highlighted && { color: colors.highlight };
+        const alignment = detail && (index % 2 === 0
+          ? styles.detailItemLeft
+          : styles.detailItemRight);
         return (
-          <View key={key} style={styles.item}>
+          <View key={key} style={[styles.item, alignment]}>
             <Label muted style={[styles.label, highlightColor]}>
               {t(key, { symbol })}
             </Label>
-            <Label style={[highlightColor, highlighted && styles.highlightValue]}>
+            <Label style={[detail && styles.detailValue, highlightColor, highlighted && styles.highlightValue]}>
               {formatter(value, i18n.resolvedLanguage)}
             </Label>
           </View>
@@ -43,6 +46,15 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   item: { width: '47%' },
+  detailGrid: {
+    columnGap: 0,
+    rowGap: 16,
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+  },
+  detailItemLeft: { alignItems: 'flex-start' },
+  detailItemRight: { alignItems: 'flex-end' },
+  detailValue: { fontSize: 16 },
   label: { fontSize: 12 },
   highlightValue: { fontWeight: '600' },
 });

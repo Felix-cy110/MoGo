@@ -11,6 +11,7 @@ import {
   formatInvestmentTime,
 } from '@mogo/investment-management-core';
 import { Action, Label, Loading, Page } from '../../components/Primitives';
+import IconButton from '../../components/IconButton';
 import useFeedback from '../../components/useFeedback';
 import { usePreferences } from '../../platform/PreferencesProvider';
 import InvestmentSummary from './InvestmentSummary';
@@ -24,6 +25,7 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
   const model = useInvestmentDetail({ api, targetId, marketClient });
   const [editor, setEditor] = useState(null);
   const addButton = useRef(null);
+  const targetButton = useRef(null);
   useFeedback(model.feedback, model.clearFeedback);
   const data = model.data;
   const applicationMarket = useInvestmentMarket();
@@ -67,43 +69,54 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
       )}
       {data && !model.loading && !model.loadError && (
         <View style={styles.content}>
-          <View style={styles.heading}>
-            <View style={styles.headingText}>
-              <Label accessibilityRole="header" style={styles.targetTitle}>
-                {data.target.symbol}
-              </Label>
-              <Label muted>
-                {data.target.symbol} / {data.target.quoteCurrency}
-                <InvestmentMarketPrice target={data.target} price={prices[data.target.symbol]} />
-              </Label>
+          <View style={styles.marketSummary}>
+            <View style={styles.marketQuote}>
+              <View style={styles.marketPair}>
+                <Pressable
+                  ref={targetButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('investmentEditTarget')}
+                  hitSlop={8}
+                  onPress={() => setEditor({ kind: 'target', value: data.target })}
+                  style={({ pressed }) => pressed && styles.pressed}
+                >
+                  <Label style={[styles.targetSymbol, { color: colors.accent }]}>
+                    {data.target.symbol}
+                  </Label>
+                </Pressable>
+              </View>
+              <InvestmentMarketPrice
+                target={data.target}
+                price={prices[data.target.symbol]}
+                prominent
+              />
             </View>
             <InvestmentProfitLoss
               price={prices[data.target.symbol]}
               summary={data.summary}
+              prominent
             />
           </View>
           <InvestmentSummary
             summary={data.summary}
             symbol={data.target.symbol}
+            detail
           />
           {Boolean(data.target.note) && (
             <Label style={styles.hint}>{data.target.note}</Label>
           )}
-          <View style={styles.actions}>
-            <Action
+          <View style={[styles.tradesHeader, { borderColor: colors.line }]}>
+            <Label accessibilityRole="header" style={styles.title}>
+              {t('investmentTrades')}
+            </Label>
+            <IconButton
               ref={addButton}
-              title={t('investmentAddTrade')}
-              variant="primary"
+              icon="plus"
+              label={t('investmentAddTrade')}
+              color={colors.accent}
               onPress={() => setEditor({ kind: 'trade', openedAt: new Date() })}
             />
-            <Action
-              title={t('investmentEditTarget')}
-              onPress={() => setEditor({ kind: 'target', value: data.target })}
-            />
           </View>
-          <Label accessibilityRole="header" style={styles.title}>
-            {t('investmentTrades')}
-          </Label>
           {!data.trades.length && (
             <Label muted>{t('investmentNoTrades')}</Label>
           )}
@@ -151,7 +164,7 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
           symbolLocked={data?.symbolLocked}
           saving={model.saving}
           onClose={() => setEditor(null)}
-          returnFocusRef={addButton}
+          returnFocusRef={editor.kind === 'target' ? targetButton : addButton}
           onSave={saveEditor}
           onDelete={editor.value ? () => editor.kind === 'target'
             ? confirm('investmentDeleteTargetConfirm', async () => {
@@ -167,24 +180,38 @@ export default function InvestmentTargetScreen({ api, targetId, marketClient, on
   );
 }
 const styles = StyleSheet.create({
-  content: { width: '100%', maxWidth: 480, alignSelf: 'center' },
-  heading: {
+  content: { width: '100%', maxWidth: 560, alignSelf: 'center' },
+  marketSummary: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'baseline',
     justifyContent: 'space-between',
-    gap: 12,
-  },
-  headingText: { flex: 1, minWidth: 0 },
-  targetTitle: { fontWeight: '600', fontSize: 16 },
-  title: { fontWeight: '600', fontSize: 16, marginBottom: 8 },
-  hint: { fontSize: 12, marginBottom: 12 },
-  actions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
     gap: 8,
-    marginBottom: 20,
   },
+  marketQuote: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+  },
+  marketPair: { flexDirection: 'row', alignItems: 'baseline' },
+  targetSymbol: {
+    fontSize: 18,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  title: { fontWeight: '600', fontSize: 16 },
+  hint: { fontSize: 12, marginBottom: 12, textAlign: 'center' },
+  tradesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 44,
+    marginTop: 4,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  pressed: { opacity: 0.65 },
   trade: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingVertical: 12,

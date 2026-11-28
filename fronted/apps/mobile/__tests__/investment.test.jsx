@@ -63,6 +63,12 @@ const action = key =>
   tree.root
     .findAllByType(Action)
     .find(item => item.props.title === i18n.t(key));
+const trigger = key =>
+  tree.root.findAll(
+    item =>
+      item.props.accessibilityRole === 'button' &&
+      item.props.accessibilityLabel === i18n.t(key),
+  )[0];
 const field = key =>
   tree.root
     .findAllByType(TextInput)
@@ -139,7 +145,7 @@ test.each([
   };
   await render(<InvestmentTargetScreen api={api} targetId={1} />, language, theme);
   await act(async () => {
-    action('investmentAddTrade').props.onPress();
+    trigger('investmentAddTrade').props.onPress();
     // A delayed render or save must not replace the instant captured by the button.
     jest.setSystemTime(new Date('2026-11-25T16:02:00.000Z'));
   });
@@ -163,7 +169,7 @@ test.each([
   expect(api.addTrade.mock.calls[0][0].occurredAt).toBe('2026-11-25T15:59:37.456Z');
   expect(api.addTrade.mock.calls[0][0]).toEqual(api.addTrade.mock.calls[1][0]);
   expect(api.addTrade.mock.calls[0][0].unitPrice).toBe('0.000000000000000001');
-  await act(async () => action('investmentAddTrade').props.onPress());
+  await act(async () => trigger('investmentAddTrade').props.onPress());
   await act(async () => field('investmentUnitPrice').props.onChangeText('60000'));
   await act(async () => field('investmentQuoteAmount').props.onChangeText('600'));
   await act(async () => action('investmentSave').props.onPress());
@@ -267,8 +273,8 @@ for (const builtinCode of ['BTC', 'ETH']) {
       deleteTarget: jest.fn(async () => ({})),
     };
     await render(<InvestmentTargetScreen api={api} targetId={1} />, language, theme);
-    expect(action('investmentAddTrade')).toBeDefined();
-    await act(async () => action('investmentEditTarget').props.onPress());
+    expect(trigger('investmentAddTrade')).toBeDefined();
+    await act(async () => trigger('investmentEditTarget').props.onPress());
     expect(field('investmentSymbol').props.editable).toBe(false);
     expect(field('investmentName').props.editable).toBe(true);
     expect(field('investmentNote').props.editable).toBe(true);
@@ -287,7 +293,7 @@ test('deleting an unused default confirms in a modal and returns to the list', a
   };
   const onBack = jest.fn();
   await render(<InvestmentTargetScreen api={api} targetId={1} onBack={onBack} />);
-  await act(async () => action('investmentEditTarget').props.onPress());
+  await act(async () => trigger('investmentEditTarget').props.onPress());
   await act(async () => action('investmentDeleteTarget').props.onPress());
   expect(Alert.alert).toHaveBeenLastCalledWith(
     i18n.t('investmentDeleteTargetConfirm'), '', expect.any(Array),
@@ -304,7 +310,7 @@ test('backend protection errors are shown in the shared modal feedback', async (
     updateTarget: jest.fn(async () => { throw { code: 'INVESTMENT_BUILTIN_PROTECTED' }; }),
   };
   await render(<InvestmentTargetScreen api={api} targetId={1} />);
-  await act(async () => action('investmentEditTarget').props.onPress());
+  await act(async () => trigger('investmentEditTarget').props.onPress());
   await act(async () => action('investmentSave').props.onPress());
   expect(Alert.alert).toHaveBeenLastCalledWith(i18n.t('investmentBuiltinProtected'), '', expect.any(Array), expect.any(Object));
 });
@@ -336,7 +342,9 @@ test.each([
   expect(navigate).toHaveBeenCalledWith('investmentTarget', 2);
   await act(async () => tree.unmount());
   await render(<InvestmentTargetScreen api={api} targetId={2} />, language, theme);
-  expect(tree.root.findAllByType(Action).map(item => item.props.title)).toEqual([i18n.t('investmentAddTrade'), i18n.t('investmentEditTarget')]);
+  expect(tree.root.findAllByType(Action)).toHaveLength(0);
+  expect(trigger('investmentAddTrade')).toBeDefined();
+  expect(trigger('investmentEditTarget')).toBeDefined();
   const buyRow = tree.root.findAll(item => item.props.accessibilityLabel?.includes('600 USDT') && item.props.onPress)[0];
   expect(buyRow.props.disabled).not.toBe(true);
   await act(async () => buyRow.props.onPress());
